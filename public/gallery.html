@@ -45,7 +45,7 @@
       var f = p.get('from');
 
       if (f === null || f === undefined) {
-        f = "";
+        return;
       }
 
       var m = f + "/manifest.json";
@@ -53,8 +53,9 @@
         itemsBaseURL: f + "/",
       };
 
-      $("#gallery").html("Loading...");
+      $("#preamble").html("Loading...");
       $.getJSON(m, function(payload) {
+        $("#preamble").html("");
         $("#gallery").nanogallery2($.extend({}, globalDefaults, galleryDefaults, payload));
       }).fail(function(xhr, status, error) {
         $("#gallery").html("Error: " + error + "<br>URL: " + m + "<br>" + JSON.stringify(xhr));
@@ -65,6 +66,13 @@
   </script>
 </head>
 <body translate="no">
-  <div id="gallery">Javascript required</div>
+  <span id="preamble">
+    <form action="/gallery.html" method="GET">
+      <label for="from">Base URL:</label>
+      <input type="text" id="from" name="from" value="" size="100">
+      <input type="submit" value="Load">
+    </form>
+  </span>
+  <div id="gallery"></div>
 </body>
 </html>
