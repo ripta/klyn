@@ -48,9 +48,10 @@
         return;
       }
 
-      var m = f + "/manifest.json";
+      var m = f.endsWith('/manifest.json') ? f : f + "/manifest.json";
+      var baseURL = f.endsWith('/manifest.json') ? f.replace(/\/manifest\.json$/, '/') : f + "/";
       var galleryDefaults = {
-        itemsBaseURL: f + "/",
+        itemsBaseURL: baseURL,
       };
 
       $("#preamble").html("Loading...");
