@@ -1,3 +1,5 @@
+# klyn
+
 klyn: a collection of purely client-side single page appetizers ("apps")
 
 Often times, I just want a straight-forward single page that includes: markup,
@@ -28,3 +30,6 @@ and just magically display the images as a simple image gallery.
 
 The `public/` directory contains all the single pages, while `docs/` will
 contain light documentation for each of them.
+
+You can view [this README](https://r8y.page/markedup.html?from=https://raw.githubusercontent.com/ripta/klyn/refs/heads/main/README.md)
+through markedup.
