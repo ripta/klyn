@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="highlight-light">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="highlight-dark" disabled>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.12.0/mermaid.min.js"></script>
     <style>
         :root {
             /* Light theme colors */
@@ -289,6 +290,20 @@
             margin: 1rem 0;
         }
 
+        /* Mermaid diagram styles */
+        .markdown-content .mermaid {
+            display: flex;
+            justify-content: center;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background-color: var(--bg-color);
+        }
+
+        .markdown-content .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+
         /* Responsive design */
         @media (max-width: 768px) {
             .container {
@@ -345,12 +360,11 @@
         const savedTheme = localStorage.getItem('theme');
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
-
         if (initialTheme === 'dark') {
             body.setAttribute('data-theme', 'dark');
         }
-        updateHighlightTheme(initialTheme);
 
+        updateHighlightTheme(initialTheme);
         themeToggle.addEventListener('click', () => {
             const currentTheme = body.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -406,7 +420,7 @@
                     breaks: true,
                     gfm: true,
                     headerIds: true,
-                    mangle: false
+                    mangle: false,
                 });
 
                 const htmlContent = marked.parse(markdownText);
@@ -421,7 +435,33 @@
                     firstH1.remove();
                 }
 
-                document.querySelectorAll('pre code').forEach(hljs.highlightElement);
+                const currentTheme = body.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
+                await window.mermaid.initialize({
+                    startOnLoad: false,
+                    theme: currentTheme
+                });
+
+                const mermaidBlocks = contentDiv.querySelectorAll('pre code.language-mermaid');
+                for (let i = 0; i < mermaidBlocks.length; i++) {
+                    const block = mermaidBlocks[i];
+                    const code = block.textContent;
+                    const pre = block.parentElement;
+
+                    const mermaidDiv = document.createElement('div');
+                    mermaidDiv.className = 'mermaid';
+                    mermaidDiv.textContent = code;
+
+                    pre.replaceWith(mermaidDiv);
+                }
+
+                if (mermaidBlocks.length > 0) {
+                    await window.mermaid.run({
+                        querySelector: '.mermaid',
+                    });
+                }
+
+                // 😬
+                document.querySelectorAll('pre code:not(.language-mermaid)').forEach(hljs.highlightElement);
 
             } catch (error) {
                 contentDiv.innerHTML = `
