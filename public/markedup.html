@@ -67,7 +67,7 @@
             align-items: center;
         }
 
-        .logo {
+        .page-title {
             font-family: Georgia, 'Times New Roman', serif;
             font-size: 1.5rem;
             font-weight: bold;
@@ -289,7 +289,7 @@
 <body>
     <header class="header">
         <div class="header-content">
-            <div class="logo">Markdown Viewer</div>
+            <div class="page-title" id="pageTitle">Markdown Viewer</div>
             <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode"></button>
         </div>
     </header>
@@ -360,7 +360,6 @@
 
                 const markdownText = await response.text();
                 
-                // Configure marked options
                 marked.setOptions({
                     breaks: true,
                     gfm: true,
@@ -371,10 +370,13 @@
                 const htmlContent = marked.parse(markdownText);
                 contentDiv.innerHTML = `<div class="markdown-content">${htmlContent}</div>`;
 
-                // Update page title if there's an h1
                 const firstH1 = contentDiv.querySelector('h1');
                 if (firstH1) {
-                    document.title = `${firstH1.textContent} - Markdown Viewer`;
+                    const h1Text = firstH1.textContent;
+                    document.title = `${h1Text} - Markdown Viewer`;
+                    document.getElementById('pageTitle').textContent = h1Text;
+
+                    firstH1.remove();
                 }
 
             } catch (error) {
@@ -390,7 +392,6 @@
             }
         }
 
-        // Load markdown when page loads
         document.addEventListener('DOMContentLoaded', fetchAndRenderMarkdown);
     </script>
 </body>
