@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{json-viewer}</title>
+    <link href="https://cdn.jsdelivr.net/npm/jquery.json-viewer@1.5/json-viewer/jquery.json-viewer.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Lexend Deca" rel="stylesheet" type="text/css">
+    <style>
+        body {
+            font-family: "Lexend Deca";
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery.json-viewer@1.5/json-viewer/jquery.json-viewer.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            var p = new URLSearchParams(window.location.search);
+            var f = p.get('from');
+
+            if (f === null || f === undefined) {
+                return;
+            }
+
+            $("#preamble").html("Loading...");
+            $.getJSON(f, function(payload) {
+                $("#preamble").html("You can also <a href='"+f+"'>view</a> the file directly");
+                $("#renderer").jsonViewer(payload);
+            }).fail(function(xhr, status, error) {
+                $("#renderer").html("Error: " + error + "<br>URL: " + m + "<br>" + JSON.stringify(xhr));
+            });
+        });
+    </script>
+</head>
+<body>
+    <pre id="renderer"></pre>
+</body>
+</html>
