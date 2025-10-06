@@ -68,6 +68,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 1rem;
         }
 
         .page-title {
@@ -75,6 +76,11 @@
             font-size: 1.5rem;
             font-weight: bold;
             color: var(--heading-color);
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .theme-toggle {
@@ -92,6 +98,7 @@
             justify-content: space-between;
             padding: 0 6px;
             font-size: 14px;
+            flex-shrink: 0;
         }
 
         .theme-toggle::before {
