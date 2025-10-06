@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>{gallery}</title>
+  <link href="https://cdn.jsdelivr.net/npm/nanogallery2@3/dist/css/nanogallery2.min.css" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Lexend Deca" rel="stylesheet" type="text/css">
+  <style>
+    body {
+      font-family: "Lexend Deca";
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/nanogallery2@3/dist/jquery.nanogallery2.min.js"></script>
+  <script>
+    var globalDefaults = {
+      galleryFilterTags: true,
+      galleryFilterTagsMode: "multiple",
+
+      locationHash: true,
+
+      thumbnailDisplayTransition: "slideDown",
+      thumbnailLabel: {
+        display: true,
+        position: "onBottomOverImage",
+        titleFontSize: "0.8em",
+      },
+      thumbnailHeight: "auto",
+      thumbnailWidth: "auto",
+
+      viewerToolbar: {
+        display: true,
+        minimized: "label",
+        standard: "label",
+      },
+      viewerTools: {
+        //topLeft: "label,description",
+        topRight: "rotateLeft,rotateRight,fullscreenButton,closeButton",
+      },
+    };
+
+    console.log('%cHey there! You come here often? 😉', 'font-size: 24px; font-weight: bold;');
+    $(document).ready(function () {
+      var p = new URLSearchParams(window.location.search);
+      var f = p.get('from');
+
+      if (f === null || f === undefined) {
+        f = "";
+      }
+
+      var m = f + "/manifest.json";
+      var galleryDefaults = {
+        itemsBaseURL: f + "/",
+      };
+
+      $("#gallery").html("Loading...");
+      $.getJSON(m, function(payload) {
+        $("#gallery").nanogallery2($.extend({}, globalDefaults, galleryDefaults, payload));
+      }).fail(function(xhr, status, error) {
+        $("#gallery").html("Error: " + error + "<br>URL: " + m + "<br>" + JSON.stringify(xhr));
+      });
+
+      return true;
+    });
+  </script>
+</head>
+<body translate="no">
+  <div id="gallery">Javascript required</div>
+</body>
+</html>
