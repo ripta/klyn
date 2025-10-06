@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Markdown Viewer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/16.3.0/lib/marked.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="highlight-light">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="highlight-dark" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
         :root {
             /* Light theme colors */
@@ -319,6 +322,18 @@
     <script>
         const themeToggle = document.getElementById('themeToggle');
         const body = document.body;
+        const highlightLight = document.getElementById('highlight-light');
+        const highlightDark = document.getElementById('highlight-dark');
+
+        function updateHighlightTheme(theme) {
+            if (theme === 'dark') {
+                highlightLight.disabled = true;
+                highlightDark.disabled = false;
+            } else {
+                highlightLight.disabled = false;
+                highlightDark.disabled = true;
+            }
+        }
 
         const savedTheme = localStorage.getItem('theme');
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -327,6 +342,7 @@
         if (initialTheme === 'dark') {
             body.setAttribute('data-theme', 'dark');
         }
+        updateHighlightTheme(initialTheme);
 
         themeToggle.addEventListener('click', () => {
             const currentTheme = body.getAttribute('data-theme');
@@ -338,16 +354,19 @@
                 body.removeAttribute('data-theme');
             }
             
+            updateHighlightTheme(newTheme);
             localStorage.setItem('theme', newTheme);
         });
 
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
             if (!localStorage.getItem('theme')) {
+                const newTheme = e.matches ? 'dark' : 'light';
                 if (e.matches) {
                     body.setAttribute('data-theme', 'dark');
                 } else {
                     body.removeAttribute('data-theme');
                 }
+                updateHighlightTheme(newTheme);
             }
         });
 
@@ -394,6 +413,8 @@
 
                     firstH1.remove();
                 }
+
+                document.querySelectorAll('pre code').forEach(hljs.highlightElement);
 
             } catch (error) {
                 contentDiv.innerHTML = `
