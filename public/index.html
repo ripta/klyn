@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>klyn - Client-Side Single Page Apps</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 0.5rem;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 2rem;
+        }
+        .app-list {
+            display: grid;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .app-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: box-shadow 0.3s ease;
+        }
+        .app-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .app-card h3 {
+            margin-top: 0;
+            color: #2980b9;
+        }
+        .app-card a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .app-card a:hover {
+            text-decoration: underline;
+        }
+        .app-card p {
+            margin: 0.5rem 0;
+            color: #555;
+        }
+        .usage {
+            background-color: #f8f9fa;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        footer {
+            margin-top: 3rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ddd;
+            color: #777;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>klyn</h1>
+    <p>
+        A collection of purely client-side single page apps.
+        See also <a href="https://github.com/ripta/klyn">the GitHub repo</a>.
+    </p>
+
+    <div class="app-list">
+        <div class="app-card">
+            <h3><a href="gallery.html">Gallery</a></h3>
+            <p>A dynamic image viewer that loads and displays images based on a JSON manifest file. Provides a thumbnail grid view and full-resolution image viewing.</p>
+            <div class="usage">
+                Usage: <code>gallery.html?from=&lt;url&gt;</code>
+            </div>
+        </div>
+
+        <div class="app-card">
+            <h3><a href="json-viewer.html">JSON Viewer</a></h3>
+            <p>A client-side JSON viewer that fetches and displays formatted JSON data from URLs.</p>
+            <div class="usage">
+                Usage: <code>json-viewer.html?from=&lt;url&gt;</code>
+            </div>
+        </div>
+
+        <div class="app-card">
+            <h3><a href="markedup.html">Markedup</a></h3>
+            <p>A client-side markdown viewer that fetches and renders GitHub-flavored markdown files from URLs using marked.js.</p>
+            <div class="usage">
+                Usage: <code>markedup.html?from=&lt;url&gt;</code>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>These are single-page apps that can be served as static files, with no server-side processing required.</p>
+    </footer>
+</body>
+</html>
