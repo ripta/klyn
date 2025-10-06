@@ -32,6 +32,13 @@
     </script>
 </head>
 <body>
+    <span id="preamble">
+        <form action="/json-viewer.html" method="GET">
+            <label for="from">Filename:</label>
+            <input type="text" id="from" name="from" value="" size="100">
+            <input type="submit" value="Load">
+        </form>
+    </span>
     <pre id="renderer"></pre>
 </body>
 </html>
