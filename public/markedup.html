@@ -336,6 +336,13 @@
     </header>
 
     <main class="container">
+        <div id="preamble">
+            <form action="/markedup.html" method="GET" style="background-color: var(--code-bg); padding: 2rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                <label for="from" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Markdown URL:</label>
+                <input type="text" id="from" name="from" value="" size="100" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 1rem; margin-bottom: 1rem;">
+                <input type="submit" value="Load" style="background-color: var(--link-color); color: white; border: none; padding: 0.5rem 2rem; border-radius: 4px; cursor: pointer; font-size: 1rem; font-weight: bold;">
+            </form>
+        </div>
         <div id="content">
             <div class="loading">Loading markdown content... (requires JavaScript)</div>
         </div>
@@ -393,19 +400,16 @@
 
         async function fetchAndRenderMarkdown() {
             const contentDiv = document.getElementById('content');
+            const preambleDiv = document.getElementById('preamble');
             const urlParams = new URLSearchParams(window.location.search);
             const markdownUrl = urlParams.get('from');
 
             if (!markdownUrl) {
-                contentDiv.innerHTML = `
-                    <div class="error">
-                        <strong>Error:</strong> No markdown URL provided. Please add a <code>?from=URL</code> parameter to the URL.
-                        <br><br>
-                        <strong>Example:</strong> <code>?from=https://raw.githubusercontent.com/user/repo/main/README.md</code>
-                    </div>
-                `;
+                contentDiv.innerHTML = '';
                 return;
             }
+
+            preambleDiv.innerHTML = 'Loading...';
 
             try {
                 const response = await fetch(markdownUrl);
@@ -424,6 +428,7 @@
                 });
 
                 const htmlContent = marked.parse(markdownText);
+                preambleDiv.innerHTML = '';
                 contentDiv.innerHTML = `<div class="markdown-content">${htmlContent}</div>`;
 
                 const firstH1 = contentDiv.querySelector('h1');
@@ -464,6 +469,7 @@
                 document.querySelectorAll('pre code:not(.language-mermaid)').forEach(hljs.highlightElement);
 
             } catch (error) {
+                preambleDiv.innerHTML = '';
                 contentDiv.innerHTML = `
                     <div class="error">
                         <strong>Error loading markdown:</strong> ${error.message}
