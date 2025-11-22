@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WASI Module Runner</title>
+    <script type="module" src="https://unpkg.com/@bjorn3/browser_wasi_shim@0.4.2/dist/index.js"></script>
+    <style>
+        :root {
+            /* Light theme colors */
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --heading-color: #1a1a1a;
+            --border-color: #e1e5e9;
+            --input-bg: #ffffff;
+            --input-border: #ced4da;
+            --input-focus: #0066cc;
+            --button-bg: #0066cc;
+            --button-hover: #0052a3;
+            --button-text: #ffffff;
+            --code-bg: #f8f9fa;
+            --error-bg: #f8d7da;
+            --error-text: #721c24;
+            --error-border: #dc3545;
+            --toggle-bg: #e9ecef;
+            --toggle-handle: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            /* Dark theme colors */
+            --bg-color: #1a1a1a;
+            --text-color: #e9ecef;
+            --heading-color: #ffffff;
+            --border-color: #495057;
+            --input-bg: #2d3748;
+            --input-border: #495057;
+            --input-focus: #66b3ff;
+            --button-bg: #0066cc;
+            --button-hover: #0052a3;
+            --button-text: #ffffff;
+            --code-bg: #2d3748;
+            --error-bg: #2c1618;
+            --error-text: #f5c6cb;
+            --error-border: #dc3545;
+            --toggle-bg: #495057;
+            --toggle-handle: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            padding: 0;
+            margin: 0;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background-color: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .page-title {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--heading-color);
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .theme-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background-color: var(--toggle-bg);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border: none;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6px;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background-color: var(--toggle-handle);
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        [data-theme="dark"] .theme-toggle::before {
+            transform: translateX(30px);
+        }
+
+        .theme-toggle .sun-icon,
+        .theme-toggle .moon-icon {
+            position: relative;
+            z-index: 0;
+            line-height: 1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: calc(100vh - 120px);
+        }
+
+        .control-panel {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--heading-color);
+            font-size: 0.9rem;
+        }
+
+        select,
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        select:focus,
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+
+        textarea {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .button-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .run-button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 6px;
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .run-button:hover {
+            background-color: var(--button-hover);
+        }
+
+        .run-button:active {
+            transform: scale(0.98);
+        }
+
+        .run-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error-display {
+            flex: 1;
+            color: var(--error-text);
+            background-color: var(--error-bg);
+            border: 1px solid var(--error-border);
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-size: 0.9rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+            display: none;
+        }
+
+        .error-display.visible {
+            display: block;
+        }
+
+        .output-section {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .output-section label {
+            margin-bottom: 0.5rem;
+        }
+
+        .output-section textarea {
+            min-height: 300px;
+            background-color: var(--input-bg);
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: var(--text-color);
+            opacity: 0.7;
+            margin-top: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 0 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .control-panel,
+            .output-section {
+                padding: 1rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .run-button {
+                width: 100%;
+            }
+
+            .error-display {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1 class="page-title">WASI Module Runner</h1>
+            <button class="theme-toggle"
+                    aria-label="Toggle dark mode"
+                    role="switch"
+                    aria-checked="false"
+                    id="themeToggle">
+                <span class="sun-icon" aria-hidden="true">☀️</span>
+                <span class="moon-icon" aria-hidden="true">🌙</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="control-panel">
+            <div class="form-group">
+                <label for="wasmModule">WASM Module</label>
+                <select id="wasmModule" aria-label="Select WASM module to run">
+                    <option value="enc.wasm">enc</option>
+                    <option value="fail.wasm">fail</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="arguments">Arguments</label>
+                <input type="text"
+                       id="arguments"
+                       placeholder="arg1 arg2 arg3"
+                       aria-label="Command-line arguments (space-separated)"
+                       aria-describedby="argsHelp">
+                <div class="help-text" id="argsHelp">Space-separated arguments, like shell command-line args</div>
+            </div>
+
+            <div class="form-group">
+                <label for="stdin">STDIN</label>
+                <textarea id="stdin"
+                          placeholder="Enter input data here..."
+                          aria-label="Standard input for the WASM module"></textarea>
+            </div>
+
+            <div class="button-group">
+                <button class="run-button"
+                        id="runButton"
+                        aria-label="Run the WASM module">
+                    Run
+                </button>
+                <div class="error-display"
+                     id="errorDisplay"
+                     role="alert"
+                     aria-live="polite"></div>
+            </div>
+        </div>
+
+        <div class="output-section">
+            <label for="stdout">STDOUT</label>
+            <textarea id="stdout"
+                      readonly
+                      placeholder="Output will appear here..."
+                      aria-label="Standard output from the WASM module"></textarea>
+        </div>
+    </main>
+
+    <script type="module">
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+
+        if (initialTheme === 'dark') {
+            html.setAttribute('data-theme', 'dark');
+            themeToggle.setAttribute('aria-checked', 'true');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            themeToggle.setAttribute('aria-checked', newTheme === 'dark');
+            localStorage.setItem('theme', newTheme);
+        });
+    </script>
+
+    <script type="module">
+        import { WASI, File, OpenFile } from 'https://unpkg.com/@bjorn3/browser_wasi_shim@0.4.2/dist/index.js';
+
+        const wasmModuleSelect = document.getElementById('wasmModule');
+        const argumentsInput = document.getElementById('arguments');
+        const stdinTextarea = document.getElementById('stdin');
+        const runButton = document.getElementById('runButton');
+        const errorDisplay = document.getElementById('errorDisplay');
+        const stdoutTextarea = document.getElementById('stdout');
+
+        function showError(message) {
+            errorDisplay.textContent = message;
+            errorDisplay.classList.add('visible');
+        }
+
+        function hideError() {
+            errorDisplay.textContent = '';
+            errorDisplay.classList.remove('visible');
+        }
+
+        // TODO: improve argument parsing to handle shellquotes and escapes
+        function parseArguments(argsString) {
+            return argsString.trim().split(/\s+/).filter(arg => arg.length > 0);
+        }
+
+        async function runWasmModule() {
+            hideError();
+            stdoutTextarea.value = '';
+            runButton.disabled = true;
+
+            try {
+                const wasmFile = wasmModuleSelect.value;
+                const args = parseArguments(argumentsInput.value);
+                const stdinContent = stdinTextarea.value;
+
+                const response = await fetch(wasmFile);
+                if (!response.ok) {
+                    throw new Error(`Failed to load ${wasmFile}: ${response.statusText}`);
+                }
+                const wasmBytes = await response.arrayBuffer();
+
+                const stdinBytes = new TextEncoder().encode(stdinContent);
+                const stdinFile = new File(stdinBytes);
+
+                const stdoutFile = new File([]);
+                const stderrFile = new File([]);
+
+                const wasi = new WASI([wasmFile, ...args], [], [
+                    new OpenFile(stdinFile),
+                    new OpenFile(stdoutFile),
+                    new OpenFile(stderrFile)
+                ]);
+
+                const module = await WebAssembly.instantiate(wasmBytes, {
+                    wasi_snapshot_preview1: wasi.wasiImport,
+                });
+
+                const exitCode = wasi.start(module.instance);
+
+                const stdoutContent = new TextDecoder().decode(stdoutFile.data);
+                const stderrContent = new TextDecoder().decode(stderrFile.data);
+
+                stdoutTextarea.value = stdoutContent;
+                if (stderrContent || exitCode !== 0) {
+                    let errorMsg = '';
+                    if (stderrContent) {
+                        errorMsg += stderrContent;
+                    }
+                    if (exitCode !== 0) {
+                        if (errorMsg) errorMsg += '\n\n';
+                        errorMsg += `Exit code: ${exitCode}`;
+                    }
+                    showError(errorMsg);
+                }
+
+            } catch (error) {
+                showError(`Error: ${error.message}\n\n${error.stack || ''}`);
+                console.error('WASM execution error:', error);
+            } finally {
+                runButton.disabled = false;
+            }
+        }
+
+        runButton.addEventListener('click', runWasmModule);
+        argumentsInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                runWasmModule();
+            }
+        });
+    </script>
+</body>
+</html>
+
