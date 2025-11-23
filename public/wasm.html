@@ -246,6 +246,22 @@
             display: block;
         }
 
+        .stats-display {
+            flex: 1;
+            color: var(--text-color);
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-size: 0.9rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            display: none;
+        }
+
+        .stats-display.visible {
+            display: block;
+        }
+
         .output-section {
             background-color: var(--code-bg);
             border: 1px solid var(--border-color);
@@ -352,6 +368,9 @@
                      id="errorDisplay"
                      role="alert"
                      aria-live="polite"></div>
+                <div class="stats-display"
+                     id="statsDisplay"
+                     aria-live="polite"></div>
             </div>
         </div>
 
@@ -395,6 +414,7 @@
         const stdinTextarea = document.getElementById('stdin');
         const runButton = document.getElementById('runButton');
         const errorDisplay = document.getElementById('errorDisplay');
+        const statsDisplay = document.getElementById('statsDisplay');
         const stdoutTextarea = document.getElementById('stdout');
 
         const runner = new WasmRunner();
@@ -409,9 +429,34 @@
             errorDisplay.classList.remove('visible');
         }
 
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+
+            const k = 1024;
+            if (bytes < 1024) return bytes + ' bytes';
+
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function showStats(stats) {
+            const execTime = stats.executionTimeMs.toFixed(2);
+            const compileTime = stats.compilationTimeMs.toFixed(2);
+            const memoryFormatted = formatBytes(stats.memoryBytes);
+            statsDisplay.textContent = `Execution: ${execTime} ms | Compilation: ${compileTime} ms | Memory: ${memoryFormatted}`;
+            statsDisplay.classList.add('visible');
+        }
+
+        function hideStats() {
+            statsDisplay.textContent = '';
+            statsDisplay.classList.remove('visible');
+        }
+
 
         async function runWasmModule() {
             hideError();
+            hideStats();
             stdoutTextarea.value = '';
             runButton.disabled = true;
 
@@ -423,6 +468,7 @@
                 const result = await runner.execute(wasmFile, { args, stdin });
                 if (result.success) {
                     stdoutTextarea.value = result.stdout;
+                    showStats(result.stats);
 
                     if (result.stderr || result.exitCode !== 0) {
                         let errorMsg = '';
