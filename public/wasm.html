@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WASI Module Runner</title>
-    <script type="module" src="https://unpkg.com/@bjorn3/browser_wasi_shim@0.4.2/dist/index.js"></script>
     <style>
         :root {
             /* Light theme colors */
@@ -389,7 +388,7 @@
     </script>
 
     <script type="module">
-        import { WASI, File, OpenFile } from 'https://unpkg.com/@bjorn3/browser_wasi_shim@0.4.2/dist/index.js';
+        import WasmRunner from './wasm-runner.js';
 
         const wasmModuleSelect = document.getElementById('wasmModule');
         const argumentsInput = document.getElementById('arguments');
@@ -398,7 +397,7 @@
         const errorDisplay = document.getElementById('errorDisplay');
         const stdoutTextarea = document.getElementById('stdout');
 
-        const wasmModuleCache = new Map();
+        const runner = new WasmRunner();
 
         function showError(message) {
             errorDisplay.textContent = message;
@@ -410,66 +409,6 @@
             errorDisplay.classList.remove('visible');
         }
 
-        function parseArguments(argsString) {
-            return argsString.trim().split(/\s+/).filter(arg => arg.length > 0);
-        }
-
-        /**
-         * Execute a WASM module with the given parameters.
-         * @param {string} wasmFile - The WASM file path/URL to load
-         * @param {string[]} args - Array of command-line arguments
-         * @param {string} stdinContent - Content to provide as stdin
-         * @returns {Promise<{success: boolean, stdout?: string, stderr?: string, exitCode?: number, error?: Error}>}
-         */
-        async function executeWasm(wasmFile, args, stdinContent) {
-            try {
-                let wasmBytes;
-                if (wasmModuleCache.has(wasmFile)) {
-                    wasmBytes = wasmModuleCache.get(wasmFile);
-                } else {
-                    const response = await fetch(wasmFile);
-                    if (!response.ok) {
-                        throw new Error(`Failed to load ${wasmFile}: ${response.statusText}`);
-                    }
-                    wasmBytes = await response.arrayBuffer();
-                    wasmModuleCache.set(wasmFile, wasmBytes);
-                }
-
-                const stdinBytes = new TextEncoder().encode(stdinContent);
-                const stdinFile = new File(stdinBytes);
-
-                const stdoutFile = new File([]);
-                const stderrFile = new File([]);
-
-                const wasi = new WASI([wasmFile, ...args], [], [
-                    new OpenFile(stdinFile),
-                    new OpenFile(stdoutFile),
-                    new OpenFile(stderrFile)
-                ]);
-
-                const module = await WebAssembly.instantiate(wasmBytes, {
-                    wasi_snapshot_preview1: wasi.wasiImport,
-                });
-
-                const exitCode = wasi.start(module.instance);
-
-                const stdout = new TextDecoder().decode(stdoutFile.data);
-                const stderr = new TextDecoder().decode(stderrFile.data);
-
-                return {
-                    success: true,
-                    stdout,
-                    stderr,
-                    exitCode
-                };
-
-            } catch (error) {
-                return {
-                    success: false,
-                    error
-                };
-            }
-        }
 
         async function runWasmModule() {
             hideError();
@@ -478,11 +417,10 @@
 
             try {
                 const wasmFile = wasmModuleSelect.value;
-                const args = parseArguments(argumentsInput.value);
-                const stdinContent = stdinTextarea.value;
+                const args = WasmRunner.parseArguments(argumentsInput.value);
+                const stdin = stdinTextarea.value;
 
-                const result = await executeWasm(wasmFile, args, stdinContent);
-
+                const result = await runner.execute(wasmFile, { args, stdin });
                 if (result.success) {
                     stdoutTextarea.value = result.stdout;
 
