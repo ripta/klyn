@@ -332,11 +332,11 @@
     <main class="container">
         <div class="control-panel">
             <div class="form-group">
-                <label for="wasmModule">WASM Module</label>
+                <label for="moduleName">WASM Module URL</label>
                 <input type="text"
-                       id="wasmModule"
+                       id="moduleName"
                        placeholder="enc.wasm"
-                       aria-label="Select WASM module to run"
+                       aria-label="Path or URL of WASM module to run"
                        aria-describedby="moduleHelp">
                 <div class="help-text" id="moduleHelp">Enter the path or URL of the WASM module to execute</div>
             </div>
@@ -409,7 +409,7 @@
     <script type="module">
         import WasmRunner from './wasm-runner.js';
 
-        const wasmModuleSelect = document.getElementById('wasmModule');
+        const moduleName = document.getElementById('moduleName');
         const argumentsInput = document.getElementById('arguments');
         const stdinTextarea = document.getElementById('stdin');
         const runButton = document.getElementById('runButton');
@@ -461,7 +461,7 @@
             runButton.disabled = true;
 
             try {
-                const wasmFile = wasmModuleSelect.value;
+                const wasmFile = moduleName.value;
                 const args = WasmRunner.parseArguments(argumentsInput.value);
                 const stdin = stdinTextarea.value;
 
