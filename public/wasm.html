@@ -318,10 +318,12 @@
         <div class="control-panel">
             <div class="form-group">
                 <label for="wasmModule">WASM Module</label>
-                <select id="wasmModule" aria-label="Select WASM module to run">
-                    <option value="enc.wasm">enc</option>
-                    <option value="fail.wasm">fail</option>
-                </select>
+                <input type="text"
+                       id="wasmModule"
+                       placeholder="enc.wasm"
+                       aria-label="Select WASM module to run"
+                       aria-describedby="moduleHelp">
+                <div class="help-text" id="moduleHelp">Enter the path or URL of the WASM module to execute</div>
             </div>
 
             <div class="form-group">
@@ -396,6 +398,8 @@
         const errorDisplay = document.getElementById('errorDisplay');
         const stdoutTextarea = document.getElementById('stdout');
 
+        const wasmModuleCache = new Map();
+
         function showError(message) {
             errorDisplay.textContent = message;
             errorDisplay.classList.add('visible');
@@ -406,26 +410,30 @@
             errorDisplay.classList.remove('visible');
         }
 
-        // TODO: improve argument parsing to handle shellquotes and escapes
         function parseArguments(argsString) {
             return argsString.trim().split(/\s+/).filter(arg => arg.length > 0);
         }
 
-        async function runWasmModule() {
-            hideError();
-            stdoutTextarea.value = '';
-            runButton.disabled = true;
-
+        /**
+         * Execute a WASM module with the given parameters.
+         * @param {string} wasmFile - The WASM file path/URL to load
+         * @param {string[]} args - Array of command-line arguments
+         * @param {string} stdinContent - Content to provide as stdin
+         * @returns {Promise<{success: boolean, stdout?: string, stderr?: string, exitCode?: number, error?: Error}>}
+         */
+        async function executeWasm(wasmFile, args, stdinContent) {
             try {
-                const wasmFile = wasmModuleSelect.value;
-                const args = parseArguments(argumentsInput.value);
-                const stdinContent = stdinTextarea.value;
-
-                const response = await fetch(wasmFile);
-                if (!response.ok) {
-                    throw new Error(`Failed to load ${wasmFile}: ${response.statusText}`);
+                let wasmBytes;
+                if (wasmModuleCache.has(wasmFile)) {
+                    wasmBytes = wasmModuleCache.get(wasmFile);
+                } else {
+                    const response = await fetch(wasmFile);
+                    if (!response.ok) {
+                        throw new Error(`Failed to load ${wasmFile}: ${response.statusText}`);
+                    }
+                    wasmBytes = await response.arrayBuffer();
+                    wasmModuleCache.set(wasmFile, wasmBytes);
                 }
-                const wasmBytes = await response.arrayBuffer();
 
                 const stdinBytes = new TextEncoder().encode(stdinContent);
                 const stdinFile = new File(stdinBytes);
@@ -445,25 +453,55 @@
 
                 const exitCode = wasi.start(module.instance);
 
-                const stdoutContent = new TextDecoder().decode(stdoutFile.data);
-                const stderrContent = new TextDecoder().decode(stderrFile.data);
+                const stdout = new TextDecoder().decode(stdoutFile.data);
+                const stderr = new TextDecoder().decode(stderrFile.data);
 
-                stdoutTextarea.value = stdoutContent;
-                if (stderrContent || exitCode !== 0) {
-                    let errorMsg = '';
-                    if (stderrContent) {
-                        errorMsg += stderrContent;
-                    }
-                    if (exitCode !== 0) {
-                        if (errorMsg) errorMsg += '\n\n';
-                        errorMsg += `Exit code: ${exitCode}`;
-                    }
-                    showError(errorMsg);
-                }
+                return {
+                    success: true,
+                    stdout,
+                    stderr,
+                    exitCode
+                };
 
             } catch (error) {
-                showError(`Error: ${error.message}\n\n${error.stack || ''}`);
-                console.error('WASM execution error:', error);
+                return {
+                    success: false,
+                    error
+                };
+            }
+        }
+
+        async function runWasmModule() {
+            hideError();
+            stdoutTextarea.value = '';
+            runButton.disabled = true;
+
+            try {
+                const wasmFile = wasmModuleSelect.value;
+                const args = parseArguments(argumentsInput.value);
+                const stdinContent = stdinTextarea.value;
+
+                const result = await executeWasm(wasmFile, args, stdinContent);
+
+                if (result.success) {
+                    stdoutTextarea.value = result.stdout;
+
+                    if (result.stderr || result.exitCode !== 0) {
+                        let errorMsg = '';
+                        if (result.stderr) {
+                            errorMsg += result.stderr;
+                        }
+                        if (result.exitCode !== 0) {
+                            if (errorMsg) errorMsg += '\n\n';
+                            errorMsg += `Exit code: ${result.exitCode}`;
+                        }
+                        showError(errorMsg);
+                    }
+                } else {
+                    showError(`Error: ${result.error.message}\n\n${result.error.stack || ''}`);
+                    console.error('WASM execution error:', result.error);
+                }
+
             } finally {
                 runButton.disabled = false;
             }
