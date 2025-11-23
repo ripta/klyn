@@ -159,6 +159,32 @@
             margin-bottom: 0;
         }
 
+        .form-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+        .form-row .form-group {
+            flex: 1;
+            min-width: 240px;
+        }
+
+        .stdin-collapsible {
+            margin-bottom: 1rem;
+        }
+
+        .stdin-collapsible summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--heading-color);
+            font-size: 0.9rem;
+        }
+
+        .stdin-collapsible[open] summary {
+            margin-bottom: 0.5rem;
+        }
+
+        .stdin-collapsible .form-group {
+            margin-bottom: 0;
+        }
+
         label {
             display: block;
             font-weight: 600;
@@ -311,6 +337,10 @@
             .error-display {
                 width: 100%;
             }
+
+            .form-row {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -331,32 +361,38 @@
 
     <main class="container">
         <div class="control-panel">
-            <div class="form-group">
-                <label for="moduleName">WASM Module URL</label>
-                <input type="text"
-                       id="moduleName"
-                       placeholder="enc.wasm"
-                       aria-label="Path or URL of WASM module to run"
-                       aria-describedby="moduleHelp">
-                <div class="help-text" id="moduleHelp">Enter the path or URL of the WASM module to execute</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="moduleName">WASM Module URL</label>
+                    <input type="text"
+                           id="moduleName"
+                           placeholder="enc.wasm"
+                           aria-label="Path or URL of WASM module to run"
+                           aria-describedby="moduleHelp">
+                    <div class="help-text" id="moduleHelp">Enter the path or URL of the WASM module to execute</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="arguments">Arguments</label>
+                    <input type="text"
+                           id="arguments"
+                           placeholder="arg1 arg2 arg3"
+                           aria-label="Command-line arguments (space-separated)"
+                           aria-describedby="argsHelp">
+                    <div class="help-text" id="argsHelp">Space-separated arguments, like shell command-line args</div>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="arguments">Arguments</label>
-                <input type="text"
-                       id="arguments"
-                       placeholder="arg1 arg2 arg3"
-                       aria-label="Command-line arguments (space-separated)"
-                       aria-describedby="argsHelp">
-                <div class="help-text" id="argsHelp">Space-separated arguments, like shell command-line args</div>
-            </div>
-
-            <div class="form-group">
+            <details id="stdinSection" class="stdin-collapsible">
+              <summary id="stdinSummary">Advanced options, e.g., STDIN</summary>
+              <div class="form-group">
                 <label for="stdin">STDIN</label>
                 <textarea id="stdin"
                           placeholder="Enter input data here..."
                           aria-label="Standard input for the WASM module"></textarea>
-            </div>
+                <div class="help-text">Provide standard input to the WASM module (optional)</div>
+              </div>
+            </details>
 
             <div class="button-group">
                 <button class="run-button"
