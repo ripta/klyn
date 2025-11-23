@@ -2,7 +2,21 @@ import { WASI, File, OpenFile } from 'https://unpkg.com/@bjorn3/browser_wasi_shi
 
 const wasmModuleCache = new Map();
 
+const dataBlobPattern = /^(data:|blob:)/i;
+const httpFilePattern = /^(https?:\/\/|file:\/\/)/i;
+const pathPattern = /^(\.\.\/|\.\/|\/)/; // relative or absolute path starts
+
 export default class WasmRunner {
+    static isValidWasmSource(wasmFile) {
+        if (typeof wasmFile !== 'string') return false;
+        const trimmed = wasmFile.trim();
+        if (!trimmed) return false;
+
+        if (dataBlobPattern.test(trimmed)) return true;
+
+        return httpFilePattern.test(trimmed) || pathPattern.test(trimmed)
+    }
+
     /**
      * Execute a WASM module with the given parameters. The module is expected to run
      * a `main` function, receiving optional command-line arguments and STDIN.
@@ -11,9 +25,19 @@ export default class WasmRunner {
      * @param {Object} options - Execution options
      * @param {string[]} options.args - Array of command-line arguments
      * @param {string} options.stdin - Content to provide as stdin
-     * @returns {Promise<{success: boolean, stdout: string, stderr: string, exitCode: number, stats: {executionTimeMs: number, compilationTimeMs: number, moduleSizeBytes: number, memoryPages: number|null, memoryBytes: number|null}, error?: Error}>}
+     * @returns {Promise<{success: boolean, stdout: string, stderr: string, exitCode: number, stats?: {executionTimeMs: number, compilationTimeMs: number, moduleSizeBytes: number, memoryPages: number|null, memoryBytes: number|null}, error?: Error}>}
      */
     async execute(wasmFile, options = {}) {
+        if (!WasmRunner.isValidWasmSource(wasmFile)) {
+            return {
+                success: false,
+                stdout: '',
+                stderr: '',
+                exitCode: -1,
+                error: new Error(`Invalid wasmFile '${wasmFile}'. Must be a non-empty URL/path/filename referencing a .wasm module.`)
+            };
+        }
+
         const { args = [], stdin = '' } = options;
 
         try {
@@ -89,4 +113,3 @@ export default class WasmRunner {
         return argsString.trim().split(/\s+/).filter(arg => arg.length > 0);
     }
 }
-
