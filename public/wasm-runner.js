@@ -3,8 +3,6 @@ import { WASI, File, OpenFile } from 'https://unpkg.com/@bjorn3/browser_wasi_shi
 const wasmModuleCache = new Map();
 
 const dataBlobPattern = /^(data:|blob:)/i;
-const httpFilePattern = /^(https?:\/\/|file:\/\/)/i;
-const pathPattern = /^(\.\.\/|\.\/|\/)/; // relative or absolute path starts
 
 export default class WasmRunner {
     static isValidWasmSource(wasmFile) {
@@ -14,7 +12,7 @@ export default class WasmRunner {
 
         if (dataBlobPattern.test(trimmed)) return true;
 
-        return httpFilePattern.test(trimmed) || pathPattern.test(trimmed)
+        return trimmed.length > 0;
     }
 
     /**
@@ -34,7 +32,7 @@ export default class WasmRunner {
                 stdout: '',
                 stderr: '',
                 exitCode: -1,
-                error: new Error(`Invalid wasmFile '${wasmFile}'. Must be a non-empty URL/path/filename referencing a .wasm module.`)
+                error: new Error(`Invalid WASM module URL '${wasmFile}'. Must be a non-empty URL/path/filename referencing a .wasm module.`)
             };
         }
 
