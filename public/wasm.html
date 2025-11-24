@@ -341,6 +341,7 @@
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 1.5rem;
+            margin-bottom: 1.5rem;
         }
 
         .output-section label {
@@ -350,6 +351,68 @@
         .output-section textarea {
             min-height: 300px;
             background-color: var(--input-bg);
+        }
+
+        .output-section.stdout textarea {
+            border-left: 4px solid #28a745;
+        }
+
+        .output-section.stderr {
+            display: none;
+        }
+
+        .output-section.stderr.visible {
+            display: block;
+        }
+
+        .output-section.stderr textarea {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ff6b6b;
+        }
+
+        [data-theme="dark"] .output-section.stderr textarea {
+            background-color: rgba(255, 193, 7, 0.05);
+        }
+
+        .cancel-button {
+            background-color: #dc3545;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            display: none;
+        }
+
+        .cancel-button.visible {
+            display: inline-block;
+        }
+
+        .cancel-button:hover {
+            background-color: #c82333;
+        }
+
+        .cancel-button:active {
+            transform: scale(0.98);
+        }
+
+        .running-indicator {
+            flex: 1;
+            color: var(--text-color);
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-size: 0.9rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            display: none;
+        }
+
+        .running-indicator.visible {
+            display: block;
         }
 
         .help-text {
@@ -448,11 +511,19 @@
                         aria-label="Run the WASM module">
                     Run
                 </button>
+                <button class="cancel-button"
+                        id="cancelButton"
+                        aria-label="Cancel the running WASM module">
+                    Cancel
+                </button>
                 <button class="share-button"
                         id="shareButton"
                         aria-label="Copy shareable link to clipboard">
                     Share
                 </button>
+                <div class="running-indicator"
+                     id="runningIndicator"
+                     aria-live="polite"></div>
                 <div class="error-display"
                      id="errorDisplay"
                      role="alert"
@@ -463,12 +534,20 @@
             </div>
         </div>
 
-        <div class="output-section">
+        <div class="output-section stdout">
             <label for="stdout">STDOUT</label>
             <textarea id="stdout"
                       readonly
                       placeholder="Output will appear here..."
                       aria-label="Standard output from the WASM module"></textarea>
+        </div>
+
+        <div class="output-section stderr" id="stderrSection">
+            <label for="stderr">STDERR</label>
+            <textarea id="stderr"
+                      readonly
+                      placeholder="Error output will appear here..."
+                      aria-label="Standard error from the WASM module"></textarea>
         </div>
     </main>
 
@@ -502,10 +581,14 @@
         const argumentsInput = document.getElementById('arguments');
         const stdinTextarea = document.getElementById('stdin');
         const runButton = document.getElementById('runButton');
+        const cancelButton = document.getElementById('cancelButton');
         const shareButton = document.getElementById('shareButton');
+        const runningIndicator = document.getElementById('runningIndicator');
         const errorDisplay = document.getElementById('errorDisplay');
         const statsDisplay = document.getElementById('statsDisplay');
         const stdoutTextarea = document.getElementById('stdout');
+        const stderrSection = document.getElementById('stderrSection');
+        const stderrTextarea = document.getElementById('stderr');
 
         const runner = new WasmRunner();
 
@@ -682,32 +765,73 @@
             statsDisplay.classList.remove('visible');
         }
 
+        function showRunningIndicator(elapsedMs) {
+            const elapsedStr = (Math.round(elapsedMs / 100) * 100).toFixed(0);
+            runningIndicator.textContent = `Running... ${elapsedStr}ms`;
+            runningIndicator.classList.add('visible');
+        }
+
+        function hideRunningIndicator() {
+            runningIndicator.textContent = '';
+            runningIndicator.classList.remove('visible');
+        }
+
+        function showCancelButton() {
+            runButton.style.display = 'none';
+            cancelButton.classList.add('visible');
+        }
+
+        function hideCancelButton() {
+            cancelButton.classList.remove('visible');
+            runButton.style.display = 'inline-block';
+        }
+
+        function showStderrSection() {
+            stderrSection.classList.add('visible');
+        }
+
+        function hideStderrSection() {
+            stderrSection.classList.remove('visible');
+        }
+
         async function runWasmModule() {
             hideError();
             hideStats();
+            hideRunningIndicator();
             stdoutTextarea.value = '';
-            runButton.disabled = true;
+            stderrTextarea.value = '';
+            hideStderrSection();
+            showCancelButton();
 
             try {
                 const wasmFile = moduleName.value;
                 const args = WasmRunner.parseArguments(argumentsInput.value);
                 const stdin = stdinTextarea.value;
 
-                const result = await runner.execute(wasmFile, { args, stdin });
+                const result = await runner.execute(wasmFile, {
+                    args,
+                    stdin,
+                    onStdout: (chunk) => {
+                        stdoutTextarea.value += chunk;
+                        stdoutTextarea.scrollTop = stdoutTextarea.scrollHeight;
+                    },
+                    onStderr: (chunk) => {
+                        showStderrSection();
+                        stderrTextarea.value += chunk;
+                        stderrTextarea.scrollTop = stderrTextarea.scrollHeight;
+                    },
+                    onProgress: (elapsedMs) => {
+                        showRunningIndicator(elapsedMs);
+                    }
+                });
+
+                hideRunningIndicator();
+
                 if (result.success) {
-                    stdoutTextarea.value = result.stdout;
                     showStats(result.stats);
 
-                    if (result.stderr || result.exitCode !== 0) {
-                        let errorMsg = '';
-                        if (result.stderr) {
-                            errorMsg += result.stderr;
-                        }
-                        if (result.exitCode !== 0) {
-                            if (errorMsg) errorMsg += '\n\n';
-                            errorMsg += `Exit code: ${result.exitCode}`;
-                        }
-                        showErrorMessage(errorMsg);
+                    if (result.exitCode !== 0) {
+                        showErrorMessage(`Exit code: ${result.exitCode}`);
                     }
                 } else {
                     showError(result.error);
@@ -715,11 +839,19 @@
                 }
 
             } finally {
-                runButton.disabled = false;
+                hideCancelButton();
             }
         }
 
+        function cancelExecution() {
+            runner.cancel();
+            hideRunningIndicator();
+            hideCancelButton();
+            showErrorMessage('Execution cancelled');
+        }
+
         runButton.addEventListener('click', runWasmModule);
+        cancelButton.addEventListener('click', cancelExecution);
         argumentsInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 runWasmModule();
