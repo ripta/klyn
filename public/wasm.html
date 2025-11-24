@@ -254,6 +254,32 @@
             cursor: not-allowed;
         }
 
+        .share-button {
+            background-color: transparent;
+            color: var(--button-bg);
+            border: 2px solid var(--button-bg);
+            border-radius: 6px;
+            padding: 0.6rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+        }
+
+        .share-button:hover {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+        }
+
+        .share-button:active {
+            transform: scale(0.98);
+        }
+
+        .share-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .error-display {
             flex: 1;
             color: var(--error-text);
@@ -422,6 +448,11 @@
                         aria-label="Run the WASM module">
                     Run
                 </button>
+                <button class="share-button"
+                        id="shareButton"
+                        aria-label="Copy shareable link to clipboard">
+                    Share
+                </button>
                 <div class="error-display"
                      id="errorDisplay"
                      role="alert"
@@ -471,18 +502,131 @@
         const argumentsInput = document.getElementById('arguments');
         const stdinTextarea = document.getElementById('stdin');
         const runButton = document.getElementById('runButton');
+        const shareButton = document.getElementById('shareButton');
         const errorDisplay = document.getElementById('errorDisplay');
         const statsDisplay = document.getElementById('statsDisplay');
         const stdoutTextarea = document.getElementById('stdout');
 
         const runner = new WasmRunner();
 
+        const STORAGE_KEYS = {
+            module: 'wasm.module',
+            args: 'wasm.args',
+            stdin: 'wasm.stdin'
+        };
+
+        function loadFromStorage(key) {
+            try {
+                return localStorage.getItem(key) || '';
+            } catch (e) {
+                console.warn('Failed to load from localStorage:', e);
+                return '';
+            }
+        }
+
+        function saveToStorage(key, value) {
+            try {
+                localStorage.setItem(key, value);
+            } catch (e) {
+                console.warn('Failed to save to localStorage:', e);
+            }
+        }
+
+        function getQueryParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                module: params.get('module') ? decodeURIComponent(params.get('module')) : null,
+                args: params.get('args') ? decodeURIComponent(params.get('args')) : null
+            };
+        }
+
+        function clearQueryString() {
+            const url = new URL(window.location.href);
+            if (url.search) {
+                window.history.replaceState({}, '', url.pathname);
+            }
+        }
+
+        function initializeFormFields() {
+            const queryParams = getQueryParams();
+            const hasQueryParams = queryParams.module !== null || queryParams.args !== null;
+
+            if (queryParams.module !== null) {
+                moduleName.value = queryParams.module;
+            } else {
+                moduleName.value = loadFromStorage(STORAGE_KEYS.module);
+            }
+
+            if (queryParams.args !== null) {
+                argumentsInput.value = queryParams.args;
+            } else {
+                argumentsInput.value = loadFromStorage(STORAGE_KEYS.args);
+            }
+
+            stdinTextarea.value = loadFromStorage(STORAGE_KEYS.stdin);
+
+            if (hasQueryParams) {
+                clearQueryString();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeFormFields);
+
+        moduleName.addEventListener('input', () => {
+            saveToStorage(STORAGE_KEYS.module, moduleName.value);
+            clearQueryString();
+        });
+
+        argumentsInput.addEventListener('input', () => {
+            saveToStorage(STORAGE_KEYS.args, argumentsInput.value);
+            clearQueryString();
+        });
+
+        stdinTextarea.addEventListener('input', () => {
+            saveToStorage(STORAGE_KEYS.stdin, stdinTextarea.value);
+        });
+
+        async function shareLink() {
+            const url = new URL(window.location.href);
+            url.search = '';
+
+            const module = moduleName.value.trim();
+            const args = argumentsInput.value.trim();
+
+            if (module) {
+                url.searchParams.set('module', encodeURIComponent(module));
+            }
+            if (args) {
+                url.searchParams.set('args', encodeURIComponent(args));
+            }
+
+            try {
+                await navigator.clipboard.writeText(url.toString());
+
+                const originalText = shareButton.textContent;
+                shareButton.textContent = '✓ Copied!';
+                shareButton.disabled = true;
+
+                setTimeout(() => {
+                    shareButton.textContent = originalText;
+                    shareButton.disabled = false;
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy to clipboard:', err);
+                showErrorMessage('Failed to copy link to clipboard');
+            }
+        }
+
+        shareButton.addEventListener('click', shareLink);
+
         function showErrorMessage(message) {
+            hideStats();
             errorDisplay.textContent = message;
             errorDisplay.classList.add('visible');
         }
 
         function showError(err) {
+            hideStats();
             if (!err) {
                 showErrorMessage('Unknown error');
                 return;
@@ -537,7 +681,6 @@
             statsDisplay.textContent = '';
             statsDisplay.classList.remove('visible');
         }
-
 
         async function runWasmModule() {
             hideError();
