@@ -1,10 +1,11 @@
-import { WASI, File, OpenFile } from 'https://unpkg.com/@bjorn3/browser_wasi_shim@0.4.2/dist/index.js';
-
-const wasmModuleCache = new Map();
-
 const dataBlobPattern = /^(data:|blob:)/i;
 
 export default class WasmRunner {
+    constructor() {
+        this.worker = null;
+        this.progressInterval = null;
+    }
+
     static isValidWasmSource(wasmFile) {
         if (typeof wasmFile !== 'string') return false;
         const trimmed = wasmFile.trim();
@@ -23,6 +24,9 @@ export default class WasmRunner {
      * @param {Object} options - Execution options
      * @param {string[]} options.args - Array of command-line arguments
      * @param {string} options.stdin - Content to provide as stdin
+     * @param {Function} options.onStdout - Callback for incremental stdout chunks
+     * @param {Function} options.onStderr - Callback for incremental stderr chunks
+     * @param {Function} options.onProgress - Callback for elapsed time updates
      * @returns {Promise<{success: boolean, stdout: string, stderr: string, exitCode: number, stats?: {executionTimeMs: number, compilationTimeMs: number, moduleSizeBytes: number, memoryPages: number|null, memoryBytes: number|null}, error?: Error}>}
      */
     async execute(wasmFile, options = {}) {
@@ -36,74 +40,112 @@ export default class WasmRunner {
             };
         }
 
-        const { args = [], stdin = '' } = options;
+        const { args = [], stdin = '', onStdout, onStderr, onProgress } = options;
 
-        try {
-            let wasmBytes;
-            if (wasmModuleCache.has(wasmFile)) {
-                wasmBytes = wasmModuleCache.get(wasmFile);
-            } else {
-                const response = await fetch(wasmFile);
-                if (!response.ok) {
-                    throw new Error(`Failed to load ${wasmFile}: ${response.statusText}`);
+        this.cancel();
+
+        this.worker = new Worker('./wasm-worker.js', { type: 'module' });
+
+        let executionStartTime = null;
+
+        return new Promise((resolve) => {
+            this.worker.onmessage = (e) => {
+                const { type } = e.data;
+
+                if (type === 'started') {
+                    executionStartTime = performance.now();
+
+                    if (onProgress) {
+                        this.progressInterval = setInterval(() => {
+                            const elapsedMs = performance.now() - executionStartTime;
+                            onProgress(elapsedMs);
+                        }, 100);
+                    }
+
+                } else if (type === 'progress') {
+                    const { stdout, stderr, elapsedMs } = e.data;
+                    if (stdout && onStdout) {
+                        onStdout(stdout);
+                    }
+                    if (stderr && onStderr) {
+                        onStderr(stderr);
+                    }
+                    if (onProgress) {
+                        onProgress(elapsedMs);
+                    }
+
+                } else if (type === 'complete') {
+                    const { success, stdout, stderr, exitCode, stats, error } = e.data;
+
+                    if (this.progressInterval) {
+                        clearInterval(this.progressInterval);
+                        this.progressInterval = null;
+                    }
+
+                    this.worker.terminate();
+                    this.worker = null;
+
+                    if (success) {
+                        resolve({
+                            success: true,
+                            stdout,
+                            stderr,
+                            exitCode,
+                            stats
+                        });
+                    } else {
+                        const err = new Error(error.message);
+                        err.stack = error.stack;
+
+                        resolve({
+                            success: false,
+                            stdout: '',
+                            stderr: '',
+                            exitCode: -1,
+                            error: err
+                        });
+                    }
                 }
-                wasmBytes = await response.arrayBuffer();
-                wasmModuleCache.set(wasmFile, wasmBytes);
-            }
+            };
 
-            const stdinBytes = new TextEncoder().encode(stdin);
-            const stdinFile = new File(stdinBytes);
-            const stdoutFile = new File([]);
-            const stderrFile = new File([]);
+            this.worker.onerror = (error) => {
+                if (this.progressInterval) {
+                    clearInterval(this.progressInterval);
+                    this.progressInterval = null;
+                }
 
-            const wasi = new WASI([wasmFile, ...args], [], [
-                new OpenFile(stdinFile),
-                new OpenFile(stdoutFile),
-                new OpenFile(stderrFile)
-            ]);
+                this.worker.terminate();
+                this.worker = null;
 
-            const compileStart = performance.now();
-            const module = await WebAssembly.instantiate(wasmBytes, {
-                wasi_snapshot_preview1: wasi.wasiImport,
+                resolve({
+                    success: false,
+                    stdout: '',
+                    stderr: '',
+                    exitCode: -1,
+                    error: new Error(`Worker error: ${error.message}`)
+                });
+            };
+
+            this.worker.postMessage({
+                wasmFile,
+                args,
+                stdin
             });
-            const compileEnd = performance.now();
+        });
+    }
 
-            const execStart = performance.now();
-            const exitCode = wasi.start(module.instance);
-            const execEnd = performance.now();
+    /**
+     * Cancel the currently running execution
+     */
+    cancel() {
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+            this.progressInterval = null;
+        }
 
-            const stdout = new TextDecoder().decode(stdoutFile.data);
-            const stderr = new TextDecoder().decode(stderrFile.data);
-
-            let memoryPages = null;
-            let memoryBytes = null;
-            if (module.instance.exports.memory) {
-                const memory = module.instance.exports.memory;
-                memoryBytes = memory.buffer.byteLength;
-                memoryPages = memoryBytes / 65536;
-            }
-
-            return {
-                success: true,
-                stdout,
-                stderr,
-                exitCode,
-                stats: {
-                    executionTimeMs: execEnd - execStart,
-                    compilationTimeMs: compileEnd - compileStart,
-                    moduleSizeBytes: wasmBytes.byteLength,
-                    memoryPages,
-                    memoryBytes
-                }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                stdout: '',
-                stderr: '',
-                exitCode: -1,
-                error
-            };
+        if (this.worker) {
+            this.worker.terminate();
+            this.worker = null;
         }
     }
 
