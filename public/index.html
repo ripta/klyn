@@ -60,6 +60,10 @@
             font-size: 0.9rem;
             margin-top: 0.5rem;
         }
+        .example {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
         footer {
             margin-top: 3rem;
             padding-top: 1rem;
@@ -79,25 +83,49 @@
     <div class="app-list">
         <div class="app-card">
             <h3><a href="gallery.html">Gallery</a></h3>
-            <p>A dynamic image viewer that loads and displays images based on a JSON manifest file. Provides a thumbnail grid view and full-resolution image viewing.</p>
+            <p>
+                A dynamic image viewer that loads and displays images based on a JSON
+                manifest file. Provides a thumbnail grid view and full-resolution image
+                viewing.
+
+                <a href="/markedup.html?from=https://raw.githubusercontent.com/ripta/klyn/refs/heads/main/docs/gallery.md">Read more…</a>
+            </p>
             <div class="usage">
                 Usage: <code>gallery.html?from=&lt;url&gt;</code>
+            </div>
+            <div class="example">
+                <strong>Example:</strong>
+                <a href="/gallery.html?from=20251013-half-moon-bay-california">view some pretty pics from Half Moon Bay, California in October 2025</a>
             </div>
         </div>
 
         <div class="app-card">
             <h3><a href="json-viewer.html">JSON Viewer</a></h3>
-            <p>A client-side JSON viewer that fetches and displays formatted JSON data from URLs.</p>
+            <p>
+                A client-side JSON viewer that fetches and displays formatted JSON data from URLs.
+                <a href="/markedup.html?from=https://raw.githubusercontent.com/ripta/klyn/refs/heads/main/docs/json-viewer.md">Read more…</a>
+            </p>
             <div class="usage">
                 Usage: <code>json-viewer.html?from=&lt;url&gt;</code>
+            </div>
+            <div class="example">
+                <strong>Example:</strong>
+                <a href="/json-viewer.html?from=https%3A%2F%2Fraw.githubusercontent.com%2Fripta%2Frt%2F60114c9d9d1ca266841a0547e0d6ff303402c962%2Fsamples%2Fconfigs%2Fjson_each%2Fone.json">view a sample JSON file</a>
             </div>
         </div>
 
         <div class="app-card">
             <h3><a href="markedup.html">Markedup</a></h3>
-            <p>A client-side markdown viewer that fetches and renders GitHub-flavored markdown files from URLs using marked.js.</p>
+            <p>
+                A client-side markdown viewer that fetches and renders GitHub-flavored markdown files from URLs using marked.js.
+                <a href="/markedup.html?from=https://raw.githubusercontent.com/ripta/klyn/refs/heads/main/docs/markedup.md">Read more…</a>
+            </p>
             <div class="usage">
                 Usage: <code>markedup.html?from=&lt;url&gt;</code>
+            </div>
+            <div class="example">
+                <strong>Example:</strong>
+                <a href="https://r8y.page/markedup.html?from=https://raw.githubusercontent.com/ripta/klyn/refs/heads/main/docs/markedup.md">view <kbd>markedup.html</kbd>'s own README</a>
             </div>
         </div>
 
@@ -109,6 +137,10 @@
             </p>
             <div class="usage">
                 Usage: <code>wasm.html?module=&lt;url&gt;&amp;args=&lt;arguments&gt;</code>
+            </div>
+            <div class="example">
+                <strong>Example:</strong>
+                <a href="/wasm.html?module=rt_lite.wasm&args=version">run <kbd>rt_lite version</kbd></a>
             </div>
         </div>
     </div>
