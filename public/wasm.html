@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WASI Module Runner</title>
+    <title>WASM Module Runner</title>
     <style>
         :root {
             /* Light theme colors */
@@ -261,7 +261,7 @@
             border: 1px solid var(--error-border);
             border-radius: 6px;
             padding: 0.75rem;
-            font-size: 0.9rem;
+            font-size: 0.7rem;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             white-space: pre-wrap;
             word-break: break-word;
@@ -270,6 +270,28 @@
 
         .error-display.visible {
             display: block;
+        }
+
+        .error-display details {
+            margin-top: 0.5rem;
+        }
+        .error-display summary {
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.7rem;
+            outline: none;
+        }
+        .error-display summary:focus {
+            outline: 2px solid var(--error-border);
+            outline-offset: 2px;
+        }
+        .error-display pre {
+            margin: 0.5rem 0 0;
+            font-family: inherit;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            overflow-x: auto;
         }
 
         .stats-display {
@@ -347,7 +369,7 @@
 <body>
     <header class="header">
         <div class="header-content">
-            <h1 class="page-title">WASI Module Runner</h1>
+            <h1 class="page-title">WASM Module Runner</h1>
             <button class="theme-toggle"
                     aria-label="Toggle dark mode"
                     role="switch"
@@ -455,8 +477,35 @@
 
         const runner = new WasmRunner();
 
-        function showError(message) {
+        function showErrorMessage(message) {
             errorDisplay.textContent = message;
+            errorDisplay.classList.add('visible');
+        }
+
+        function showError(err) {
+            if (!err) {
+                showErrorMessage('Unknown error');
+                return;
+            }
+
+            const rawMessage = (err && err.message) ? err.message : String(err);
+            const displayMessage = `Error: ${rawMessage}`;
+
+            let stack = (err && err.stack) ? String(err.stack) : '';
+            if (stack) {
+                const lines = stack.split(/\r?\n/);
+                if (lines.length && (lines[0] === displayMessage || lines[0] === rawMessage)) {
+                    lines.shift();
+                }
+                stack = lines.join('\n');
+            }
+
+            let html = displayMessage;
+            if (stack.trim()) {
+                html = `<details><summary>${displayMessage}</summary><pre>${stack}</pre></details>`;
+            }
+
+            errorDisplay.innerHTML = html;
             errorDisplay.classList.add('visible');
         }
 
@@ -515,10 +564,10 @@
                             if (errorMsg) errorMsg += '\n\n';
                             errorMsg += `Exit code: ${result.exitCode}`;
                         }
-                        showError(errorMsg);
+                        showErrorMessage(errorMsg);
                     }
                 } else {
-                    showError(`Error: ${result.error.message}\n\n${result.error.stack || ''}`);
+                    showError(result.error);
                     console.error('WASM execution error:', result.error);
                 }
 
