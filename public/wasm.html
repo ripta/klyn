@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WASM Module Runner</title>
+    <style>
+        :root {
+            /* Light theme colors */
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --heading-color: #1a1a1a;
+            --border-color: #e1e5e9;
+            --input-bg: #ffffff;
+            --input-border: #ced4da;
+            --input-focus: #0066cc;
+            --button-bg: #0066cc;
+            --button-hover: #0052a3;
+            --button-text: #ffffff;
+            --code-bg: #f8f9fa;
+            --error-bg: #f8d7da;
+            --error-text: #721c24;
+            --error-border: #dc3545;
+            --toggle-bg: #e9ecef;
+            --toggle-handle: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            /* Dark theme colors */
+            --bg-color: #1a1a1a;
+            --text-color: #e9ecef;
+            --heading-color: #ffffff;
+            --border-color: #495057;
+            --input-bg: #2d3748;
+            --input-border: #495057;
+            --input-focus: #66b3ff;
+            --button-bg: #0066cc;
+            --button-hover: #0052a3;
+            --button-text: #ffffff;
+            --code-bg: #2d3748;
+            --error-bg: #2c1618;
+            --error-text: #f5c6cb;
+            --error-border: #dc3545;
+            --toggle-bg: #495057;
+            --toggle-handle: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            padding: 0;
+            margin: 0;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background-color: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .page-title {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--heading-color);
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .theme-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background-color: var(--toggle-bg);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border: none;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6px;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background-color: var(--toggle-handle);
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        [data-theme="dark"] .theme-toggle::before {
+            transform: translateX(30px);
+        }
+
+        .theme-toggle .sun-icon,
+        .theme-toggle .moon-icon {
+            position: relative;
+            z-index: 0;
+            line-height: 1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: calc(100vh - 120px);
+        }
+
+        .control-panel {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+        .form-row .form-group {
+            flex: 1;
+            min-width: 240px;
+        }
+
+        .stdin-collapsible {
+            margin-bottom: 1rem;
+        }
+
+        .stdin-collapsible summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--heading-color);
+            font-size: 0.9rem;
+        }
+
+        .stdin-collapsible[open] summary {
+            margin-bottom: 0.5rem;
+        }
+
+        .stdin-collapsible .form-group {
+            margin-bottom: 0;
+        }
+
+        .stdin-section.stdin textarea {
+            border-left: 4px solid #28a745;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--heading-color);
+            font-size: 0.9rem;
+        }
+
+        select,
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        select:focus,
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+
+        textarea {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .button-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .run-button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 6px;
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .run-button:hover {
+            background-color: var(--button-hover);
+        }
+
+        .run-button:active {
+            transform: scale(0.98);
+        }
+
+        .run-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .share-button {
+            background-color: transparent;
+            color: var(--button-bg);
+            border: 2px solid var(--button-bg);
+            border-radius: 6px;
+            padding: 0.6rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+        }
+
+        .share-button:hover {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+        }
+
+        .share-button:active {
+            transform: scale(0.98);
+        }
+
+        .share-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error-display {
+            flex: 1;
+            color: var(--error-text);
+            background-color: var(--error-bg);
+            border: 1px solid var(--error-border);
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-size: 0.7rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+            display: none;
+        }
+
+        .error-display.visible {
+            display: block;
+        }
+
+        .error-display details {
+            margin-top: 0.5rem;
+        }
+        .error-display summary {
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.7rem;
+            outline: none;
+        }
+        .error-display summary:focus {
+            outline: 2px solid var(--error-border);
+            outline-offset: 2px;
+        }
+        .error-display pre {
+            margin: 0.5rem 0 0;
+            font-family: inherit;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .stats-display {
+            flex: 1;
+            color: var(--text-color);
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-size: 0.9rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            display: none;
+        }
+
+        .stats-display.visible {
+            display: block;
+        }
+
+        .output-section {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .output-section label {
+            margin-bottom: 0.5rem;
+        }
+
+        .output-section textarea {
+            min-height: 300px;
+            background-color: var(--input-bg);
+        }
+
+        .output-section.stdout textarea {
+            border-left: 4px solid #28a745;
+        }
+
+        .output-section.stderr {
+            display: none;
+        }
+
+        .output-section.stderr.visible {
+            display: block;
+        }
+
+        .output-section.stderr textarea {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ff6b6b;
+        }
+
+        [data-theme="dark"] .output-section.stderr textarea {
+            background-color: rgba(255, 193, 7, 0.05);
+        }
+
+        .cancel-button {
+            background-color: #dc3545;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            display: none;
+        }
+
+        .cancel-button.visible {
+            display: inline-block;
+        }
+
+        .cancel-button:hover {
+            background-color: #c82333;
+        }
+
+        .cancel-button:active {
+            transform: scale(0.98);
+        }
+
+        .running-indicator {
+            flex: 1;
+            color: var(--text-color);
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-size: 0.9rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            display: none;
+        }
+
+        .running-indicator.visible {
+            display: block;
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: var(--text-color);
+            opacity: 0.7;
+            margin-top: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 0 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .control-panel,
+            .output-section {
+                padding: 1rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .run-button {
+                width: 100%;
+            }
+
+            .error-display {
+                width: 100%;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1 class="page-title">WASM Module Runner</h1>
+            <button class="theme-toggle"
+                    aria-label="Toggle dark mode"
+                    role="switch"
+                    aria-checked="false"
+                    id="themeToggle">
+                <span class="sun-icon" aria-hidden="true">☀️</span>
+                <span class="moon-icon" aria-hidden="true">🌙</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="control-panel">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="moduleName">WASM Module URL</label>
+                    <input type="text"
+                           id="moduleName"
+                           placeholder="enc.wasm"
+                           aria-label="Path or URL of WASM module to run"
+                           aria-describedby="moduleHelp">
+                    <div class="help-text" id="moduleHelp">Enter the path or URL of the WASM module to execute</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="arguments">Arguments</label>
+                    <input type="text"
+                           id="arguments"
+                           placeholder="arg1 arg2 arg3"
+                           aria-label="Command-line arguments (space-separated)"
+                           aria-describedby="argsHelp">
+                    <div class="help-text" id="argsHelp">Space-separated arguments, like shell command-line args</div>
+                </div>
+            </div>
+
+            <details id="stdinSection" class="stdin-collapsible">
+              <summary id="stdinSummary">Advanced options, e.g., STDIN</summary>
+              <div class="form-group stdin-section stdin">
+                <label for="stdin">STDIN</label>
+                <textarea id="stdin"
+                          placeholder="Enter input data here..."
+                          aria-label="Standard input for the WASM module"></textarea>
+                <div class="help-text">Provide standard input to the WASM module (optional)</div>
+              </div>
+            </details>
+
+            <div class="button-group">
+                <button class="run-button"
+                        id="runButton"
+                        aria-label="Run the WASM module">
+                    Run
+                </button>
+                <button class="cancel-button"
+                        id="cancelButton"
+                        aria-label="Cancel the running WASM module">
+                    Cancel
+                </button>
+                <button class="share-button"
+                        id="shareButton"
+                        aria-label="Copy shareable link to clipboard">
+                    Share
+                </button>
+                <div class="running-indicator"
+                     id="runningIndicator"
+                     aria-live="polite"></div>
+                <div class="error-display"
+                     id="errorDisplay"
+                     role="alert"
+                     aria-live="polite"></div>
+                <div class="stats-display"
+                     id="statsDisplay"
+                     aria-live="polite"></div>
+            </div>
+        </div>
+
+        <div class="output-section stdout">
+            <label for="stdout">STDOUT</label>
+            <textarea id="stdout"
+                      readonly
+                      placeholder="Output will appear here..."
+                      aria-label="Standard output from the WASM module"></textarea>
+        </div>
+
+        <div class="output-section stderr" id="stderrSection">
+            <label for="stderr">STDERR</label>
+            <textarea id="stderr"
+                      readonly
+                      placeholder="Error output will appear here..."
+                      aria-label="Standard error from the WASM module"></textarea>
+        </div>
+    </main>
+
+    <script type="module">
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+
+        if (initialTheme === 'dark') {
+            html.setAttribute('data-theme', 'dark');
+            themeToggle.setAttribute('aria-checked', 'true');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            themeToggle.setAttribute('aria-checked', newTheme === 'dark');
+            localStorage.setItem('theme', newTheme);
+        });
+    </script>
+
+    <script type="module">
+        import WasmRunner from './wasm-runner.js';
+
+        const moduleName = document.getElementById('moduleName');
+        const argumentsInput = document.getElementById('arguments');
+        const stdinTextarea = document.getElementById('stdin');
+        const runButton = document.getElementById('runButton');
+        const cancelButton = document.getElementById('cancelButton');
+        const shareButton = document.getElementById('shareButton');
+        const runningIndicator = document.getElementById('runningIndicator');
+        const errorDisplay = document.getElementById('errorDisplay');
+        const statsDisplay = document.getElementById('statsDisplay');
+        const stdoutTextarea = document.getElementById('stdout');
+        const stderrSection = document.getElementById('stderrSection');
+        const stderrTextarea = document.getElementById('stderr');
+
+        const runner = new WasmRunner();
+
+        const STORAGE_KEYS = {
+            module: 'wasm.module',
+            args: 'wasm.args',
+            stdin: 'wasm.stdin'
+        };
+
+        function loadFromStorage(key) {
+            try {
+                return localStorage.getItem(key) || '';
+            } catch (e) {
+                console.warn('Failed to load from localStorage:', e);
+                return '';
+            }
+        }
+
+        function saveToStorage(key, value) {
+            try {
+                localStorage.setItem(key, value);
+            } catch (e) {
+                console.warn('Failed to save to localStorage:', e);
+            }
+        }
+
+        function getQueryParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                module: params.get('module') ? decodeURIComponent(params.get('module')) : null,
+                args: params.get('args') ? decodeURIComponent(params.get('args')) : null
+            };
+        }
+
+        function clearQueryString() {
+            const url = new URL(window.location.href);
+            if (url.search) {
+                window.history.replaceState({}, '', url.pathname);
+            }
+        }
+
+        function initializeFormFields() {
+            const queryParams = getQueryParams();
+            const hasQueryParams = queryParams.module !== null || queryParams.args !== null;
+
+            if (queryParams.module !== null) {
+                moduleName.value = queryParams.module;
+            } else {
+                moduleName.value = loadFromStorage(STORAGE_KEYS.module);
+            }
+
+            if (queryParams.args !== null) {
+                argumentsInput.value = queryParams.args;
+            } else {
+                argumentsInput.value = loadFromStorage(STORAGE_KEYS.args);
+            }
+
+            const stdinValue = loadFromStorage(STORAGE_KEYS.stdin);
+            if (stdinValue) {
+                stdinTextarea.value = stdinValue;
+                document.getElementById('stdinSection').setAttribute('open', '');
+            }
+
+            if (hasQueryParams) {
+                clearQueryString();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeFormFields);
+
+        moduleName.addEventListener('input', () => {
+            saveToStorage(STORAGE_KEYS.module, moduleName.value);
+            clearQueryString();
+        });
+
+        argumentsInput.addEventListener('input', () => {
+            saveToStorage(STORAGE_KEYS.args, argumentsInput.value);
+            clearQueryString();
+        });
+
+        stdinTextarea.addEventListener('input', () => {
+            saveToStorage(STORAGE_KEYS.stdin, stdinTextarea.value);
+        });
+
+        async function shareLink() {
+            const url = new URL(window.location.href);
+            url.search = '';
+
+            const module = moduleName.value.trim();
+            const args = argumentsInput.value.trim();
+
+            if (module) {
+                url.searchParams.set('module', encodeURIComponent(module));
+            }
+            if (args) {
+                url.searchParams.set('args', encodeURIComponent(args));
+            }
+
+            try {
+                await navigator.clipboard.writeText(url.toString());
+
+                const originalText = shareButton.textContent;
+                shareButton.textContent = '✓ Copied!';
+                shareButton.disabled = true;
+
+                setTimeout(() => {
+                    shareButton.textContent = originalText;
+                    shareButton.disabled = false;
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy to clipboard:', err);
+                showErrorMessage('Failed to copy link to clipboard');
+            }
+        }
+
+        shareButton.addEventListener('click', shareLink);
+
+        function showErrorMessage(message) {
+            hideStats();
+            errorDisplay.textContent = message;
+            errorDisplay.classList.add('visible');
+        }
+
+        function showError(err) {
+            hideStats();
+            if (!err) {
+                showErrorMessage('Unknown error');
+                return;
+            }
+
+            const rawMessage = (err && err.message) ? err.message : String(err);
+            const displayMessage = `Error: ${rawMessage}`;
+
+            let stack = (err && err.stack) ? String(err.stack) : '';
+            if (stack) {
+                const lines = stack.split(/\r?\n/);
+                if (lines.length && (lines[0] === displayMessage || lines[0] === rawMessage)) {
+                    lines.shift();
+                }
+                stack = lines.join('\n');
+            }
+
+            let html = displayMessage;
+            if (stack.trim()) {
+                html = `<details><summary>${displayMessage}</summary><pre>${stack}</pre></details>`;
+            }
+
+            errorDisplay.innerHTML = html;
+            errorDisplay.classList.add('visible');
+        }
+
+        function hideError() {
+            errorDisplay.textContent = '';
+            errorDisplay.classList.remove('visible');
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+
+            const k = 1024;
+            if (bytes < 1024) return bytes + ' bytes';
+
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function showStats(stats) {
+            const execTime = stats.executionTimeMs.toFixed(2);
+            const compileTime = stats.compilationTimeMs.toFixed(2);
+            const memoryFormatted = formatBytes(stats.memoryBytes);
+            statsDisplay.textContent = `Execution: ${execTime} ms | Compilation: ${compileTime} ms | Memory: ${memoryFormatted}`;
+            statsDisplay.classList.add('visible');
+        }
+
+        function hideStats() {
+            statsDisplay.textContent = '';
+            statsDisplay.classList.remove('visible');
+        }
+
+        function showRunningIndicator(elapsedMs) {
+            const elapsedStr = (Math.round(elapsedMs / 100) * 100).toFixed(0);
+            runningIndicator.textContent = `Running... ${elapsedStr}ms`;
+            runningIndicator.classList.add('visible');
+        }
+
+        function hideRunningIndicator() {
+            runningIndicator.textContent = '';
+            runningIndicator.classList.remove('visible');
+        }
+
+        function showCancelButton() {
+            runButton.style.display = 'none';
+            cancelButton.classList.add('visible');
+        }
+
+        function hideCancelButton() {
+            cancelButton.classList.remove('visible');
+            runButton.style.display = 'inline-block';
+        }
+
+        function showStderrSection() {
+            stderrSection.classList.add('visible');
+        }
+
+        function hideStderrSection() {
+            stderrSection.classList.remove('visible');
+        }
+
+        async function runWasmModule() {
+            hideError();
+            hideStats();
+            hideRunningIndicator();
+            stdoutTextarea.value = '';
+            stderrTextarea.value = '';
+            hideStderrSection();
+            showCancelButton();
+
+            try {
+                const wasmFile = moduleName.value;
+                const args = WasmRunner.parseArguments(argumentsInput.value);
+                const stdin = stdinTextarea.value;
+
+                const result = await runner.execute(wasmFile, {
+                    args,
+                    stdin,
+                    onStdout: (chunk) => {
+                        stdoutTextarea.value += chunk;
+                        stdoutTextarea.scrollTop = stdoutTextarea.scrollHeight;
+                    },
+                    onStderr: (chunk) => {
+                        showStderrSection();
+                        stderrTextarea.value += chunk;
+                        stderrTextarea.scrollTop = stderrTextarea.scrollHeight;
+                    },
+                    onProgress: (elapsedMs) => {
+                        showRunningIndicator(elapsedMs);
+                    }
+                });
+
+                hideRunningIndicator();
+
+                if (result.success) {
+                    showStats(result.stats);
+
+                    if (result.exitCode !== 0) {
+                        showErrorMessage(`Exit code: ${result.exitCode}`);
+                    }
+                } else {
+                    showError(result.error);
+                    console.error('WASM execution error:', result.error);
+                }
+
+            } finally {
+                hideCancelButton();
+            }
+        }
+
+        function cancelExecution() {
+            runner.cancel();
+            hideRunningIndicator();
+            hideCancelButton();
+            showErrorMessage('Execution cancelled');
+        }
+
+        runButton.addEventListener('click', runWasmModule);
+        cancelButton.addEventListener('click', cancelExecution);
+        argumentsInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                runWasmModule();
+            }
+        });
+    </script>
+</body>
+</html>
+
