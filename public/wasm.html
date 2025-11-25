@@ -185,6 +185,10 @@
             margin-bottom: 0;
         }
 
+        .stdin-section.stdin textarea {
+            border-left: 4px solid #28a745;
+        }
+
         label {
             display: block;
             font-weight: 600;
@@ -496,7 +500,7 @@
 
             <details id="stdinSection" class="stdin-collapsible">
               <summary id="stdinSummary">Advanced options, e.g., STDIN</summary>
-              <div class="form-group">
+              <div class="form-group stdin-section stdin">
                 <label for="stdin">STDIN</label>
                 <textarea id="stdin"
                           placeholder="Enter input data here..."
@@ -646,7 +650,11 @@
                 argumentsInput.value = loadFromStorage(STORAGE_KEYS.args);
             }
 
-            stdinTextarea.value = loadFromStorage(STORAGE_KEYS.stdin);
+            const stdinValue = loadFromStorage(STORAGE_KEYS.stdin);
+            if (stdinValue) {
+                stdinTextarea.value = stdinValue;
+                document.getElementById('stdinSection').setAttribute('open', '');
+            }
 
             if (hasQueryParams) {
                 clearQueryString();
