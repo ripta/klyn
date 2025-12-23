@@ -71,6 +71,34 @@
             color: #777;
             font-size: 0.9rem;
         }
+        .festive-snake-card {
+            position: relative;
+            text-align: center;
+            color: #fff;
+            background-color: #2c3e50;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .festive-snake-card .tree-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        .festive-snake-card h3 {
+            position: relative;
+            z-index: 2;
+        }
+        .festive-snake-card p {
+            position: relative;
+            z-index: 2;
+        }
+        .festive-snake-card a {
+            position: relative;
+            z-index: 2;
+        }
     </style>
 </head>
 <body>
@@ -81,6 +109,29 @@
     </p>
 
     <div class="app-list">
+        <div class="app-card festive-snake-card">
+            <div class="tree-bg" aria-hidden="true">
+                <!-- Giant Christmas tree SVG -->
+                <svg width="100%" height="140" viewBox="0 0 320 140" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity:0.18; display:block; margin:0 auto;">
+                    <polygon points="160,10 60,110 260,110" fill="#2ecc40"/>
+                    <polygon points="160,35 90,110 230,110" fill="#27ae60"/>
+                    <rect x="145" y="110" width="30" height="25" fill="#b5651d"/>
+                    <circle cx="160" cy="25" r="7" fill="#ffe066"/>
+                    <circle cx="120" cy="70" r="6" fill="#ff7675"/>
+                    <circle cx="200" cy="70" r="6" fill="#74b9ff"/>
+                    <circle cx="160" cy="90" r="5" fill="#fdcb6e"/>
+                </svg>
+            </div>
+            <h3 style="margin-top:0.5rem; color:#c0392b; font-size:2rem;">🎄 Ssssnake: Holiday Edition 🎆</h3>
+            <p style="font-size:1.1rem; color:#8F8F8F;">
+                Play a festive version of Snake!<br>
+                <a href="/sssnake/?config=builtin:xmas" style="color:#16a085; font-weight:bold;">Christmas 2025</a>
+                &nbsp;|&nbsp;
+                <a href="/sssnake/?config=builtin:nye" style="color:#2980b9; font-weight:bold;">New Year's 2026</a><br>
+                or find other variations under the <strong>Modes</strong> menu.
+            </p>
+        </div>
+
         <div class="app-card">
             <h3><a href="gallery.html">Gallery</a></h3>
             <p>
