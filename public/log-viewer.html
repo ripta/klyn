@@ -40,22 +40,17 @@ div.toolbar {
   display: block;
 }
 
-div.persistent,
-div.persistents,
+.persistents,
 div.hint {
   display: inline;
   cursor: pointer;
 }
 
-div.hint,
-div.persistent {
+div.hint {
   font-family: Arial;
   font-size: 12px;
   padding: 2px;
   margin: 1px;
-}
-
-div.hint {
   color: gray;
   font-style: italic;
 }
@@ -79,6 +74,43 @@ div.button2 {
   color: black;
   text-decoration: none;
 }
+
+div.button2.active {
+  background-color: #3ad;
+  border-color: #3ad;
+  color: white;
+}
+
+.chip {
+  display: inline-block;
+  font-family: Arial;
+  font-size: 12px;
+  padding: 1px 2px;
+  margin: 0 2px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  vertical-align: middle;
+  user-select: none;
+}
+.chip.filtering {
+  border-color: #000;
+  font-weight: bold;
+}
+.chip-label {
+  cursor: pointer;
+  padding: 0 3px;
+}
+.chip-merge,
+.chip-remove {
+  cursor: pointer;
+  padding: 0 3px;
+  color: rgba(0, 0, 0, 0.5);
+  font-weight: bold;
+}
+.chip-merge { display: none; }
+body.has-search .chip-merge { display: inline; }
+.chip-merge:hover { color: #060; }
+.chip-remove:hover { color: #c00; }
 
 div.button_right {
   margin-right: 1em;
@@ -126,10 +158,9 @@ var file = null;
 var sourceURL = null;
 var text;
 
-var current, nextFilterId = 1;
+var nextFilterId = 1;
 var shl = null;
 var hl = [];
-var groupwith = false;
 var filterswitch = true;
 
 var selectedlineid = -1;
@@ -210,7 +241,7 @@ function load()
 
   var s = document.getElementById("search");
   s.value = "";
-  selectfilter(0);
+  s.addEventListener("input", onSearchInput, false);
 
   var params = new URLSearchParams(window.location.search);
   var from = params.get("from");
@@ -505,19 +536,6 @@ function _gfilteron()
   return false;
 }
 
-function _getfilterelement(filter)
-{
-  if (filter == 0)
-    return document.getElementById("search");
-
-  return document.getElementById("filter" + filter);
-}
-
-function _setfilterelementstate(p0, _hl)
-{
-  p0.style.textDecoration = _hl.filter ? "underline" : "";
-}
-
 function _triminput(t)
 {
   t = t
@@ -548,8 +566,168 @@ function _regexpescape(t)
 
 function resetuistate()
 {
-  groupwith = false;
   _hint("");
+}
+
+var _searchDebounce = null;
+function onSearchInput()
+{
+  clearTimeout(_searchDebounce);
+  _searchDebounce = setTimeout(function() {
+    applySearch();
+    repaint();
+  }, 120);
+}
+
+function applySearch()
+{
+  var s = document.getElementById("search");
+  var t = _triminput(s.value);
+  if (!t) {
+    shl = null;
+    s.style.backgroundColor = "";
+  } else {
+    t = _prepare(t)[0];
+    shl = newhl(t, shl);
+    s.style.backgroundColor = shl.color;
+  }
+  _updateSearchFilterButton();
+  document.body.classList.toggle("has-search", !!shl);
+}
+
+function _updateSearchFilterButton()
+{
+  var btn = document.getElementById("search-filter-toggle");
+  if (!btn) return;
+  if (shl && shl.filter) btn.classList.add("active");
+  else btn.classList.remove("active");
+}
+
+function toggleSearchFilter()
+{
+  resetuistate();
+  if (!shl) applySearch();
+  if (!shl) {
+    _hint("type something to search first");
+    return;
+  }
+  shl.filter = !shl.filter;
+  _updateSearchFilterButton();
+  render();
+}
+
+function pin()
+{
+  resetuistate();
+  if (!shl) applySearch();
+  if (!shl) {
+    _hint("type something to search first");
+    return;
+  }
+
+  var _hl = newhl(shl.text, shl, true);
+  _hl.cache = shl.cache;
+  hl.push(_hl);
+
+  _renderChip(_hl);
+
+  document.getElementById("search").value = "";
+  colors.push(colors.shift());
+  shl = null;
+  document.getElementById("search").style.backgroundColor = "";
+  _updateSearchFilterButton();
+  document.body.classList.remove("has-search");
+  render();
+}
+
+function _renderChip(_hl)
+{
+  var p = document.getElementById("persistents");
+  var chip = document.createElement("span");
+  chip.id = "chip" + _hl.id;
+  chip.className = "chip" + (_hl.filter ? " filtering" : "");
+  chip.style.backgroundColor = _hl.color;
+
+  var label = document.createElement("span");
+  label.className = "chip-label";
+  label.textContent = _hl.text;
+  label.title = "click to toggle filter mode (show only matching lines)";
+  label.onclick = function() { toggleChipFilter(_hl.id); };
+  chip.appendChild(label);
+
+  var merge = document.createElement("span");
+  merge.className = "chip-merge";
+  merge.textContent = "+";
+  merge.title = "merge current search into this filter";
+  merge.onclick = function() { mergeIntoChip(_hl.id); };
+  chip.appendChild(merge);
+
+  var rm = document.createElement("span");
+  rm.className = "chip-remove";
+  rm.textContent = "×";
+  rm.title = "remove this filter";
+  rm.onclick = function() { removeChip(_hl.id); };
+  chip.appendChild(rm);
+
+  p.appendChild(chip);
+}
+
+function _findChip(id)
+{
+  for (var i = 0; i < hl.length; i++)
+    if (hl[i].id == id) return hl[i];
+  return null;
+}
+
+function toggleChipFilter(id)
+{
+  resetuistate();
+  var _hl = _findChip(id);
+  if (!_hl) return;
+  _hl.filter = !_hl.filter;
+  var chip = document.getElementById("chip" + id);
+  if (chip) chip.classList.toggle("filtering", _hl.filter);
+  render();
+}
+
+function mergeIntoChip(id)
+{
+  resetuistate();
+  if (!shl) applySearch();
+  if (!shl) {
+    _hint("type something to search first");
+    return;
+  }
+  var _hl = _findChip(id);
+  if (!_hl) return;
+
+  _hl.text_r += "|" + shl.text_r;
+  _hl.text = _hl.text + "+" + shl.text;
+  _hl.cache = {};
+
+  var chip = document.getElementById("chip" + id);
+  if (chip) {
+    var label = chip.querySelector(".chip-label");
+    if (label) label.textContent = _hl.text;
+  }
+
+  document.getElementById("search").value = "";
+  shl = null;
+  document.getElementById("search").style.backgroundColor = "";
+  _updateSearchFilterButton();
+  document.body.classList.remove("has-search");
+  render();
+}
+
+function removeChip(id)
+{
+  resetuistate();
+  for (var i = 0; i < hl.length; i++) {
+    if (hl[i].id == id) { hl.splice(i, 1); break; }
+  }
+  var chip = document.getElementById("chip" + id);
+  if (chip) chip.parentNode.removeChild(chip);
+  render();
 }
 
 function newhl(t, p, persistent)
@@ -611,207 +789,10 @@ function mouseup(event)
   if (!t)
     return;
 
-  s = document.getElementById("search");
-  s.value = t;
-
-  t = _prepare(t)[0];
-
-  shl = newhl(t, shl);
-  selectfilter(0);
+  var sb = document.getElementById("search");
+  sb.value = t;
+  applySearch();
   repaint();
-}
-
-function persist()
-{
-  resetuistate();
-
-  var dorender = false;
-  if (!shl)
-  {
-    _apply();
-    dorender = true;
-  }
-
-  if (!shl)
-    return;
-
-  selectfilter(0);
-
-  var _hl = newhl(shl.text, shl, true);
-  _hl.cache = shl.cache; // hope this is right, shl is updated in _apply, that always creates an empty cache
-  hl.push(_hl);
-
-  var p = document.getElementById("persistents");
-  var p0 = document.createElement("div");
-  p0.id = "filter" + _hl.id;
-  p0.className = "persistent";
-  p0.style.backgroundColor = _hl.color;
-  p0.innerHTML = _hl.text;
-  p0.onclick = function() {selectfilter(_hl.id)};
-  _setfilterelementstate(p0, _hl);
-  p.appendChild(p0);
-
-  _restartshl();
-  selectfilter(_hl.id);
-  if (dorender)
-    render();
-
-  colors.push(colors.shift());
-}
-
-function _apply()
-{
-  s = document.getElementById("search");
-  var t = _triminput(s.value);
-
-  if (!t)
-  {
-    shl = null;
-  }
-  else
-  {
-    t = _prepare(t)[0];
-    shl = newhl(t, shl);
-  }
-}
-
-function highlight()
-{
-  resetuistate();
-
-  _apply();
-
-  repaint();
-  selectfilter(0);
-}
-
-function filter()
-{
-  resetuistate();
-
-  if ((!shl && !hl.length) || (current == shl))
-  {
-    _apply();
-    selectfilter(0);
-  }
-
-  if (current) {
-    current.filter = !current.filter;
-    _setfilterelementstate(_getfilterelement(current.id), current);
-    if (filterswitch) 
-      render();
-    else
-      repaint();
-  }
-}
-
-function group()
-{
-  resetuistate();
-
-  // the code it self happens in selectfilter() function
-
-  if (!shl)
-  {
-    _hint("press higlight or filter first");
-    return;
-  }
-
-  if (hl.length)
-  {
-    groupwith = true;
-    _hint("-&gt; now select a pinned filter to group the current highlight with");
-  }
-  else
-  {
-    _hint("you have to pin a filter with the 'pin' button first");
-  }
-}
-
-function _restartshl()
-{
-  var s = document.getElementById("search");
-  s.value = "";
-  s.style.backgroundColor = "";
-  s.style.textDecoration = "";
-  current = shl = null;
-}
-
-function restart()
-{
-  resetuistate();
-
-  var filtered = _gfilteron(); // was: = current && current.filter
-
-  if (current == shl)
-  {
-    _restartshl();
-  }
-  else
-  {
-    var p0 = _getfilterelement(current.id);
-
-    for (var h in hl)
-      if (hl[h].id == current.id) {
-        hl.splice(h, 1);
-        break;
-      }
-
-    if (current.text) {
-      shl = newhl(current.text, current);
-      var s = document.getElementById("search");
-      s.value = current.text;
-      _setfilterelementstate(s, shl);
-    }
-    selectfilter(0);
-
-    var p = document.getElementById("persistents");
-    p.removeChild(p0);
-  }
-
-  if (!shl) // means: filter could not be switched back to shl or directly shl was reset
-    render();
-}
-
-function selectfilter(filter)
-{
-  var el0 = _getfilterelement(current ? current.id : 0);
-  var el1 = _getfilterelement(filter);
-
-  el0.style.border = "";
-  el0.style.margin = "";
-  el1.style.border = "solid 2px #3ad";
-  el1.style.margin = "0px";
-
-  function filterbyid(id)
-  {
-    for (var h in hl)
-      if (hl[h].id == id)
-        return hl[h];
-  }
-
-  if (groupwith && filter)
-  {
-    el1.innerHTML += "+" + shl.text;
-    var _hl = filterbyid(filter);
-    _hl.text = ""; // not backward compatible
-    _hl.text_r += "|" + shl.text_r;
-    _hl.cache = {};
-    resetuistate();
-    _restartshl();
-    render();
-  }
-  else
-    resetuistate();
-
-  current = (filter == 0) ? shl : filterbyid(filter);
-
-  // A bit hacky redraw of the search box color :)
-  if (filter === 0 && shl)
-  {
-    var s = document.getElementById("search");
-    s.style.backgroundColor = shl.color;
-  }
 }
 
 function flipfilter(event)
@@ -827,19 +808,15 @@ function flipfilter(event)
 </head>
 <body onload="load()">
 <div id="toolbar" class="toolbar">
-  <input class="search" id="search" type="text" onmousedown="selectfilter(0)"></input>
-  <div class="button2" onclick="highlight()" title="apply changes in the search box">apply</div>
-  <div class="button2" onclick="persist()" title="pin this higlight filter">pin</div>
-  <div class="button2" onclick="group()" title="group this filter with other pinned one">pin to...</div>
-  <div class="persistents" id="persistents"></div>
-  <div class="button_right" onclick="reload()" title="reload this file">reload</div>
-  <div class="button_right" onclick="flipfilter(event)" title="disable/enable selected filters">filters on</div>
-  <br/>
-  <div class="button" onclick="filter()" title="show only lines containing the phrase">filter</div>
-  <div class="button" onclick="restart()" title="clear the search box">clear</div>
-  <div class="hint"   onclick="repaint()" id="hint"></div>
-  <div class="hint"   onclick="repaint()" id="position"></div>
+  <input class="search" id="search" type="search" placeholder="search the log..." />
+  <div class="button2" id="search-filter-toggle" onclick="toggleSearchFilter()" title="toggle filter mode for current search (show only matching lines)">filter</div>
+  <div class="button2" onclick="pin()" title="pin current search as a persistent filter chip">pin</div>
+  <span class="persistents" id="persistents"></span>
+  <div class="hint" onclick="repaint()" id="hint"></div>
+  <div class="hint" onclick="repaint()" id="position"></div>
   <input type="file" class="filebtn" id="file" onchange="openfileif(this);"/>
+  <div class="button_right" onclick="reload()" title="reload this file">reload</div>
+  <div class="button_right" onclick="flipfilter(event)" title="enable/disable all filters (master switch)">filters on</div>
   <div class="source" id="source"></div>
 </div>
 <div id="renderer" class="log" onmouseup="mouseup(event)"><div>nothing loaded</div></div>
