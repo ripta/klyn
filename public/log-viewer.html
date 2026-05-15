@@ -94,6 +94,26 @@ input.filebtn {
   position: relative;
 }
 
+div.source {
+  display: inline-block;
+  font-family: Arial;
+  font-size: 12px;
+  padding: 2px;
+  margin-right: 1em;
+  float: right;
+  color: #777;
+  max-width: 40em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+div.source a {
+  color: #3ad;
+  text-decoration: none;
+}
+
 </style>
 <script>
 
@@ -103,6 +123,7 @@ var colors = ["#ffa", "#aaf", "#afa", "#aff", "#faf", "#aaa", "#fd8", "#f80", "#
 var screenlines = 1;
 
 var file = null;
+var sourceURL = null;
 var text;
 
 var current, nextFilterId = 1;
@@ -122,8 +143,25 @@ function openfileif(filebtn)
     return;
   if (filebtn.files.length == 0)
     return;
-  file = filebtn.files[0];  
-  
+  file = filebtn.files[0];
+  sourceURL = null;
+
+  var u = new URL(window.location.href);
+  if (u.searchParams.has("from")) {
+    u.searchParams.delete("from");
+    history.replaceState(null, "", u.toString());
+  }
+
+  reload();
+}
+
+function openurl(url)
+{
+  sourceURL = url;
+  file = null;
+  var filebtn = document.getElementById("file");
+  if (filebtn) filebtn.value = "";
+
   reload();
 }
 
@@ -173,8 +211,14 @@ function load()
   var s = document.getElementById("search");
   s.value = "";
   selectfilter(0);
-  openfileif(document.getElementById("file"));
-  reload();
+
+  var params = new URLSearchParams(window.location.search);
+  var from = params.get("from");
+  if (from) {
+    openurl(from);
+  } else {
+    openfileif(document.getElementById("file"));
+  }
 }
 
 function _resize()
@@ -194,28 +238,91 @@ function reload()
 {
   if (shl) shl.cache = {};
   for (_hl of hl) _hl.cache = {};
-  
-  var q = file.name;
-  document.title = "Log: " + (q || "none loaded");
-  if (!q)
-    return;
+
+  if (sourceURL) {
+    _loadviaurl(sourceURL);
+  } else if (file) {
+    _loadviafile(file);
+  } else {
+    document.title = "Log: none loaded";
+    _setsourcedisplay(null);
+    var d = document.getElementById("renderer");
+    d.innerHTML = "<div>nothing loaded</div>";
+  }
+}
+
+function _loadviafile(f)
+{
+  document.title = "Log: " + f.name;
+  _setsourcedisplay({ type: 'file', value: f.name });
 
   var d = document.getElementById("renderer");
-  d.innerHTML = "loading " + q + "...";
+  d.innerHTML = "loading " + f.name + "...";
 
-  var r = new XMLHttpRequest();
-  r.open("GET", q, true);
-  r.responseType = 'text';
+  var r = new FileReader();
   r.onload = function() {
     console.log("prepare");
-    prepare(r.responseText);
+    prepare(r.result);
     if (selectedlineid > text.length) {
       selectedlineid = -1;
     }
     console.log("render");
     render();
   };
-  r.send();
+  r.onerror = function() {
+    d.innerHTML = "error reading file: " + (r.error && r.error.message ? r.error.message : "unknown");
+  };
+  r.readAsText(f);
+}
+
+function _loadviaurl(url)
+{
+  document.title = "Log: " + url;
+  _setsourcedisplay({ type: 'url', value: url });
+
+  var d = document.getElementById("renderer");
+  d.innerHTML = "loading " + url + "...";
+
+  fetch(url)
+    .then(function(r) {
+      if (!r.ok) throw new Error("HTTP " + r.status + " " + r.statusText);
+      return r.text();
+    })
+    .then(function(t) {
+      console.log("prepare");
+      prepare(t);
+      if (selectedlineid > text.length) {
+        selectedlineid = -1;
+      }
+      console.log("render");
+      render();
+    })
+    .catch(function(err) {
+      d.innerHTML = "error loading " + url + ": " + err.message;
+    });
+}
+
+function _setsourcedisplay(src)
+{
+  var el = document.getElementById("source");
+  if (!el) return;
+
+  el.innerHTML = "";
+  el.title = "";
+  if (!src) return;
+
+  if (src.type === 'url') {
+    el.appendChild(document.createTextNode("from URL: "));
+    var a = document.createElement("a");
+    a.href = src.value;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = src.value;
+    el.appendChild(a);
+  } else {
+    el.textContent = "from file: " + src.value;
+  }
+  el.title = src.value;
 }
 
 function _sanitize(t)
@@ -736,6 +843,7 @@ function flipfilter(event)
   <div class="hint"   onclick="repaint()" id="hint"></div>
   <div class="hint"   onclick="repaint()" id="position"></div>
   <input type="file" class="filebtn" id="file" onchange="openfileif(this);"/>
+  <div class="source" id="source"></div>
 </div>
 <div id="renderer" class="log" onmouseup="mouseup(event)"><div>nothing loaded</div></div>
 </body>
