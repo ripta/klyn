@@ -371,8 +371,6 @@ function renderincremental(difference)
 
 function _render(increment, repaintonly)
 {
-  var epoch  = new Date();
-  
   var d = document.getElementById("renderer");
   var filter = _gfilteron();
   
@@ -480,9 +478,6 @@ function _render(increment, repaintonly)
   }
 
   selectline(selectedlineid);
-  
-  var now = new Date();
-  console.log("rendered in " + (now.getTime() - epoch.getTime()) + "ms");
   
   var pos = document.getElementById("position");
   pos.textContent = Math.round((parseInt(d.firstChild.id) / text.length) * 1000) / 10 + "%";
@@ -592,8 +587,10 @@ function selectline(id)
   }
 
   var thread = null;
-  var m = text[selectedlineid].match(threadregexp);
-  if (m) thread = _regexpescape(_sanitize(m[1]));
+  if (selectedlineid >= 0 && selectedlineid < text.length) {
+    var m = text[selectedlineid].match(threadregexp);
+    if (m) thread = _regexpescape(_sanitize(m[1]));
+  }
   if (thread != selectedthread) {
     selectedthread = thread;
     repaint();
