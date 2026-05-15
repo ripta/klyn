@@ -1,0 +1,234 @@
+{
+  "$schema": "./flows.schema.json",
+  "categories": [
+    { "id": "actor",    "label": "Actor / Client",   "color": "#dc2626" },
+    { "id": "frontend", "label": "Frontend",         "color": "#0891b2" },
+    { "id": "server",   "label": "Server / RPC",     "color": "#7c3aed" },
+    { "id": "service",  "label": "Domain service",   "color": "#16a34a" },
+    { "id": "package",  "label": "Support package",  "color": "#ca8a04" },
+    { "id": "worker",   "label": "Background job",   "color": "#ea580c" },
+    { "id": "data",     "label": "Data store",       "color": "#475569" },
+    { "id": "external", "label": "External service", "color": "#94a3b8" }
+  ],
+  "components": [
+    { "id": "browser",     "label": "Browser",                "category": "actor",    "col": 0, "row": 0 },
+    { "id": "cli",         "label": "ems client (CLI)",       "category": "actor",    "col": 0, "row": 2 },
+    { "id": "ui",          "label": "ui/ (SvelteKit)",        "category": "frontend", "col": 1, "row": 0 },
+    { "id": "rpc-clients", "label": "ui/src/gen RPC clients", "category": "frontend", "col": 1, "row": 1 },
+    { "id": "server",      "label": "pkg/server",             "category": "server",   "col": 2, "row": 0 },
+    { "id": "auth",        "label": "pkg/server/auth",        "category": "server",   "col": 2, "row": 1 },
+    { "id": "oauth",       "label": "OAuth provider",         "category": "external", "col": 2, "row": 7 },
+    { "id": "feed-svc",    "label": "FeedService",            "category": "service",  "col": 3, "row": 0 },
+    { "id": "item-svc",    "label": "ItemService",            "category": "service",  "col": 3, "row": 1 },
+    { "id": "fav-svc",     "label": "FavoriteService",        "category": "service",  "col": 3, "row": 2 },
+    { "id": "group-svc",   "label": "FeedGroupService",       "category": "service",  "col": 3, "row": 3 },
+    { "id": "fp-svc",      "label": "FocalPointService",      "category": "service",  "col": 3, "row": 4 },
+    { "id": "user-svc",    "label": "UserService",            "category": "service",  "col": 3, "row": 5 },
+    { "id": "invite-svc",  "label": "InvitationService",      "category": "service",  "col": 3, "row": 6 },
+    { "id": "pat-svc",     "label": "PATService",             "category": "service",  "col": 3, "row": 7 },
+    { "id": "opml",        "label": "pkg/opml",               "category": "package",  "col": 4, "row": 0 },
+    { "id": "urlnorm",     "label": "pkg/urlnorm",            "category": "package",  "col": 4, "row": 1 },
+    { "id": "syncer",      "label": "pkg/syncer (worker)",    "category": "worker",   "col": 4, "row": 2 },
+    { "id": "linkextract", "label": "pkg/linkextract",        "category": "package",  "col": 4, "row": 3 },
+    { "id": "search",      "label": "pkg/search",             "category": "package",  "col": 4, "row": 4 },
+    { "id": "models",      "label": "pkg/models (sqlc)",      "category": "package",  "col": 5, "row": 0 },
+    { "id": "db",          "label": "PostgreSQL",             "category": "data",     "col": 6, "row": 0 },
+    { "id": "feed-host",   "label": "Remote feed host",       "category": "external", "col": 6, "row": 2 }
+  ],
+  "flows": [
+    {
+      "id": "oauth-signin",
+      "title": "First-time sign in (OAuth)",
+      "summary": "User clicks 'Sign in with Google'; the server exchanges the code, upserts the user, and sets a JWT session cookie.",
+      "steps": [
+        { "from": "browser",   "to": "ui",        "note": "GET /login renders provider buttons" },
+        { "from": "ui",        "to": "server",    "note": "Browser is redirected to /auth/google" },
+        { "from": "server",    "to": "oauth",     "note": "Server redirects to the provider's authorize URL" },
+        { "from": "oauth",     "to": "server",    "note": "Provider redirects back to /auth/google/callback with an authorization code" },
+        { "from": "server",    "to": "auth",      "note": "Auth handler exchanges the code and fetches user info" },
+        { "from": "auth",      "to": "user-svc",  "note": "FindOrCreateUser by provider + subject" },
+        { "from": "user-svc",  "to": "models",    "note": "sqlc UpsertUser query" },
+        { "from": "models",    "to": "db",        "note": "INSERT/UPDATE on users table" },
+        { "from": "auth",      "to": "browser",   "note": "Set-Cookie session=<JWT>; redirect to /app" }
+      ]
+    },
+    {
+      "id": "accept-invitation",
+      "title": "Accept an invitation and create an account",
+      "summary": "An invited user follows the email link, completes OAuth, and the invitation is consumed when their user is created.",
+      "steps": [
+        { "from": "browser",     "to": "server",     "note": "GET /invite/accept?token=… from the email link" },
+        { "from": "server",      "to": "invite-svc", "note": "ValidateInvitation by token" },
+        { "from": "invite-svc",  "to": "models",     "note": "sqlc GetInvitationByTokenHash" },
+        { "from": "models",      "to": "db",         "note": "SELECT from invitations" },
+        { "from": "server",      "to": "oauth",      "note": "Redirect through the OAuth provider for identity" },
+        { "from": "oauth",       "to": "auth",       "note": "Provider returns the verified email and subject" },
+        { "from": "auth",        "to": "user-svc",   "note": "Create the user with the role granted by the invitation" },
+        { "from": "user-svc",    "to": "invite-svc", "note": "MarkInvitationAccepted to consume the token" },
+        { "from": "invite-svc",  "to": "db",         "note": "UPDATE invitations SET accepted_at, accepted_by" },
+        { "from": "auth",        "to": "browser",    "note": "Set-Cookie session=<JWT>; redirect to /app" }
+      ]
+    },
+    {
+      "id": "subscribe-feed",
+      "title": "Subscribe to a feed by URL",
+      "summary": "The user pastes a feed URL; the server normalizes it, finds-or-creates the feed row, and inserts a subscription.",
+      "steps": [
+        { "from": "browser",     "to": "ui",          "note": "User submits the Subscribe form" },
+        { "from": "ui",          "to": "rpc-clients", "note": "Calls FeedService.SubscribeToFeed via the generated client" },
+        { "from": "rpc-clients", "to": "server",      "note": "POST /api.feeds.v1.FeedService/SubscribeToFeed" },
+        { "from": "server",      "to": "auth",        "note": "Cookie middleware validates the JWT and resolves the user" },
+        { "from": "auth",        "to": "feed-svc",    "note": "Authenticated request reaches the service handler" },
+        { "from": "feed-svc",    "to": "urlnorm",     "note": "Normalize the URL (scheme, trailing slash, default ports)" },
+        { "from": "feed-svc",    "to": "models",      "note": "sqlc UpsertFeed by canonical URL" },
+        { "from": "feed-svc",    "to": "models",      "note": "sqlc CreateSubscription for (user_id, feed_id)" },
+        { "from": "models",      "to": "db",          "note": "INSERT into feeds (if new) and into subscriptions" },
+        { "from": "feed-svc",    "to": "ui",          "note": "Returns the new Subscription proto for optimistic UI update" }
+      ]
+    },
+    {
+      "id": "import-opml",
+      "title": "Import OPML",
+      "summary": "The user uploads an OPML file; the parser extracts feed URLs and subscribes to each one in a single batch.",
+      "steps": [
+        { "from": "browser",     "to": "ui",          "note": "User picks an OPML file in Settings -> Import" },
+        { "from": "ui",          "to": "rpc-clients", "note": "FeedService.ImportOPML with the file bytes" },
+        { "from": "rpc-clients", "to": "server",      "note": "POST /api.feeds.v1.FeedService/ImportOPML" },
+        { "from": "server",      "to": "auth",        "note": "Validate the JWT cookie" },
+        { "from": "auth",        "to": "feed-svc",    "note": "Handler receives the OPML payload" },
+        { "from": "feed-svc",    "to": "opml",        "note": "opml.Parse extracts <outline> entries and groups" },
+        { "from": "feed-svc",    "to": "urlnorm",     "note": "Normalize each xmlUrl before insert" },
+        { "from": "feed-svc",    "to": "models",      "note": "Loop: UpsertFeed + CreateSubscription per entry" },
+        { "from": "models",      "to": "db",          "note": "Batch INSERTs into feeds and subscriptions" },
+        { "from": "feed-svc",    "to": "ui",          "note": "Returns counts (added, skipped, failed)" }
+      ]
+    },
+    {
+      "id": "worker-fetch",
+      "title": "Worker fetches a feed and inserts items",
+      "summary": "The feed worker tick selects due feeds, fetches them, parses items, extracts links, and writes results to the database.",
+      "steps": [
+        { "from": "syncer",      "to": "models",     "note": "ListFeedsDueForUpdate using the per-feed schedule" },
+        { "from": "models",      "to": "db",         "note": "SELECT from feeds WHERE next_fetch_at <= now()" },
+        { "from": "syncer",      "to": "feed-host",  "note": "HTTP GET the feed URL with conditional headers" },
+        { "from": "feed-host",   "to": "syncer",     "note": "RSS/Atom XML response (200 or 304)" },
+        { "from": "syncer",      "to": "linkextract","note": "Parse item bodies and extract outbound links" },
+        { "from": "syncer",      "to": "models",     "note": "InsertFeedItems and InsertLinks" },
+        { "from": "models",      "to": "db",         "note": "INSERT into feed_items and links" },
+        { "from": "syncer",      "to": "models",     "note": "UpdateFeedSchedule (last_fetched_at, next_fetch_at)" },
+        { "from": "models",      "to": "db",         "note": "UPDATE feeds row with new schedule and ETag" }
+      ]
+    },
+    {
+      "id": "view-items",
+      "title": "View items in a feed",
+      "summary": "Browser opens a feed view; the server returns paginated items without ever reading the search_vector column.",
+      "steps": [
+        { "from": "browser",     "to": "ui",          "note": "Navigate to /app/feeds/<id>" },
+        { "from": "ui",          "to": "rpc-clients", "note": "ItemService.ListItemsByFeed with cursor + page size" },
+        { "from": "rpc-clients", "to": "server",      "note": "POST /api.items.v1.ItemService/ListItemsByFeed" },
+        { "from": "server",      "to": "auth",        "note": "JWT cookie resolves the current user" },
+        { "from": "auth",        "to": "item-svc",    "note": "Handler verifies the user is subscribed" },
+        { "from": "item-svc",    "to": "models",      "note": "sqlc ListFeedItemsByFeed (explicit columns; no search_vector)" },
+        { "from": "models",      "to": "db",          "note": "SELECT id, title, url, … FROM feed_items" },
+        { "from": "item-svc",    "to": "ui",          "note": "Returns FeedItem messages with read/unread state" }
+      ]
+    },
+    {
+      "id": "mark-read",
+      "title": "Mark an item read or unread",
+      "summary": "Toggling the read state writes a per-user row that the items query later left-joins for display.",
+      "steps": [
+        { "from": "browser",     "to": "ui",          "note": "User clicks the read toggle on an item card" },
+        { "from": "ui",          "to": "rpc-clients", "note": "ItemService.MarkItemRead (or MarkItemUnread)" },
+        { "from": "rpc-clients", "to": "server",      "note": "POST /api.items.v1.ItemService/MarkItemRead" },
+        { "from": "server",      "to": "auth",        "note": "JWT cookie resolves the user" },
+        { "from": "auth",        "to": "item-svc",    "note": "Handler invokes the per-user state mutation" },
+        { "from": "item-svc",    "to": "models",      "note": "sqlc UpsertUserItemState (read_at, user_id, item_id)" },
+        { "from": "models",      "to": "db",          "note": "INSERT … ON CONFLICT UPDATE on user_item_state" },
+        { "from": "item-svc",    "to": "ui",          "note": "Returns the updated state for optimistic UI" }
+      ]
+    },
+    {
+      "id": "favorite-item",
+      "title": "Favorite an item",
+      "summary": "A favorite is a user-scoped row keyed on (user_id, feed_item_id); removing it deletes the row.",
+      "steps": [
+        { "from": "browser",     "to": "ui",          "note": "User clicks the star on an item" },
+        { "from": "ui",          "to": "rpc-clients", "note": "FavoriteService.AddFavorite with the item id" },
+        { "from": "rpc-clients", "to": "server",      "note": "POST /api.favorites.v1.FavoriteService/AddFavorite" },
+        { "from": "server",      "to": "auth",        "note": "Validate the session cookie" },
+        { "from": "auth",        "to": "fav-svc",     "note": "Handler attaches the user id from the request context" },
+        { "from": "fav-svc",     "to": "models",      "note": "sqlc CreateFavorite (idempotent ON CONFLICT DO NOTHING)" },
+        { "from": "models",      "to": "db",          "note": "INSERT into favorites" },
+        { "from": "fav-svc",     "to": "ui",          "note": "Returns the Favorite proto so the star stays lit" }
+      ]
+    },
+    {
+      "id": "search-items",
+      "title": "Search items (full-text)",
+      "summary": "Search runs against the auto-maintained tsvector column, but the result rows still exclude search_vector itself.",
+      "steps": [
+        { "from": "browser",     "to": "ui",          "note": "User types in the search box and hits enter" },
+        { "from": "ui",          "to": "rpc-clients", "note": "ItemService.SearchItems with the query and filters" },
+        { "from": "rpc-clients", "to": "server",      "note": "POST /api.items.v1.ItemService/SearchItems" },
+        { "from": "server",      "to": "auth",        "note": "JWT cookie resolves the current user" },
+        { "from": "auth",        "to": "item-svc",    "note": "Handler validates query length and pagination" },
+        { "from": "item-svc",    "to": "search",      "note": "Build the websearch_to_tsquery expression" },
+        { "from": "search",      "to": "models",      "note": "sqlc SearchFeedItems with ts_rank ordering" },
+        { "from": "models",      "to": "db",          "note": "SELECT … WHERE search_vector @@ query (returns explicit columns)" },
+        { "from": "item-svc",    "to": "ui",          "note": "Returns ranked FeedItem results with snippets" }
+      ]
+    },
+    {
+      "id": "group-and-move",
+      "title": "Create a feed group and move a feed into it",
+      "summary": "Two RPCs in sequence: the group is created first, then the feed's subscription is updated to point at it.",
+      "steps": [
+        { "from": "browser",     "to": "ui",          "note": "User opens 'New group' and submits a name" },
+        { "from": "ui",          "to": "rpc-clients", "note": "FeedGroupService.CreateGroup" },
+        { "from": "rpc-clients", "to": "server",      "note": "POST /api.groups.v1.FeedGroupService/CreateGroup" },
+        { "from": "server",      "to": "auth",        "note": "Validate the session cookie" },
+        { "from": "auth",        "to": "group-svc",   "note": "Handler scopes the group to the current user" },
+        { "from": "group-svc",   "to": "models",      "note": "sqlc CreateFeedGroup" },
+        { "from": "models",      "to": "db",          "note": "INSERT into feed_groups" },
+        { "from": "ui",          "to": "rpc-clients", "note": "Drag-and-drop triggers FeedService.MoveFeed(group_id)" },
+        { "from": "rpc-clients", "to": "server",      "note": "POST /api.feeds.v1.FeedService/MoveFeed" },
+        { "from": "feed-svc",    "to": "models",      "note": "sqlc UpdateSubscriptionGroup" },
+        { "from": "models",      "to": "db",          "note": "UPDATE subscriptions SET feed_group_id" }
+      ]
+    },
+    {
+      "id": "focal-point",
+      "title": "View Focal Point (cross-feed consensus links)",
+      "summary": "Focal Point ranks links that multiple subscribed feeds reference within a time window.",
+      "steps": [
+        { "from": "browser",     "to": "ui",          "note": "User opens the Focal Point view" },
+        { "from": "ui",          "to": "rpc-clients", "note": "FocalPointService.GetFocalPoint with the time window" },
+        { "from": "rpc-clients", "to": "server",      "note": "POST /api.discovery.v1.FocalPointService/GetFocalPoint" },
+        { "from": "server",      "to": "auth",        "note": "JWT cookie resolves the user" },
+        { "from": "auth",        "to": "fp-svc",      "note": "Handler scopes the query to the user's subscriptions" },
+        { "from": "fp-svc",      "to": "models",      "note": "sqlc QueryFocalPointLinks (joins links + feed_items)" },
+        { "from": "models",      "to": "db",          "note": "SELECT consensus links grouped by canonical URL" },
+        { "from": "fp-svc",      "to": "ui",          "note": "Returns ranked clusters with referencing items" }
+      ]
+    },
+    {
+      "id": "create-pat",
+      "title": "Generate a Personal Access Token",
+      "summary": "A token is shown to the user exactly once; only its SHA-256 hash is stored, and later CLI calls authenticate with the bearer token.",
+      "steps": [
+        { "from": "browser",     "to": "ui",          "note": "User opens Settings -> Access Tokens and clicks 'Create'" },
+        { "from": "ui",          "to": "rpc-clients", "note": "PATService.CreateToken with a name and optional scopes" },
+        { "from": "rpc-clients", "to": "server",      "note": "POST /api.users.v1.PATService/CreateToken" },
+        { "from": "server",      "to": "auth",        "note": "Cookie middleware validates the session" },
+        { "from": "auth",        "to": "pat-svc",     "note": "Handler generates ems1_<id>_<secret> and SHA-256-hashes it" },
+        { "from": "pat-svc",     "to": "models",      "note": "sqlc CreatePersonalAccessToken (stores hash only)" },
+        { "from": "models",      "to": "db",          "note": "INSERT into personal_access_tokens" },
+        { "from": "pat-svc",     "to": "ui",          "note": "Returns the plaintext token once for the user to copy" },
+        { "from": "cli",         "to": "server",      "note": "Later CLI requests send Authorization: Bearer ems1_…" },
+        { "from": "server",      "to": "auth",        "note": "Bearer middleware looks up the hash and resolves the user" }
+      ]
+    }
+  ]
+}

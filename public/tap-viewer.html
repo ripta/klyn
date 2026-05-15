@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAP Viewer</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --heading-color: #1a1a1a;
+            --border-color: #e1e5e9;
+            --code-bg: #f8f9fa;
+            --link-color: #0066cc;
+            --toggle-bg: #e9ecef;
+            --toggle-handle: #ffffff;
+            --card-bg: #ffffff;
+            --pass-color: #28a745;
+            --pass-bg: #d4edda;
+            --pass-border: #28a745;
+            --fail-color: #dc3545;
+            --fail-bg: #f8d7da;
+            --fail-border: #dc3545;
+            --skip-color: #007bff;
+            --skip-bg: #cce5ff;
+            --skip-border: #007bff;
+            --todo-color: #856404;
+            --todo-bg: #fff3cd;
+            --todo-border: #ffc107;
+            --summary-bg: #f8f9fa;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #e9ecef;
+            --heading-color: #ffffff;
+            --border-color: #495057;
+            --code-bg: #2d3748;
+            --link-color: #66b3ff;
+            --toggle-bg: #495057;
+            --toggle-handle: #ffffff;
+            --card-bg: #2d3748;
+            --pass-color: #48bb78;
+            --pass-bg: #1a332a;
+            --pass-border: #48bb78;
+            --fail-color: #fc8181;
+            --fail-bg: #352020;
+            --fail-border: #fc8181;
+            --skip-color: #63b3ed;
+            --skip-bg: #1a2332;
+            --skip-border: #63b3ed;
+            --todo-color: #f6e05e;
+            --todo-bg: #33301a;
+            --todo-border: #f6e05e;
+            --summary-bg: #2d3748;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background-color: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .page-title {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--heading-color);
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .file-input-label {
+            background-color: var(--link-color);
+            color: white;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .file-input-label:hover { opacity: 0.9; }
+        .file-input-label input { display: none; }
+
+        .theme-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background-color: var(--toggle-bg);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border: none;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6px;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background-color: var(--toggle-handle);
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        [data-theme="dark"] .theme-toggle::before {
+            transform: translateX(30px);
+        }
+
+        .theme-toggle .sun-icon,
+        .theme-toggle .moon-icon {
+            position: relative;
+            z-index: 0;
+            line-height: 1;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* Preamble */
+        #preamble {
+            background-color: var(--code-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        #preamble h2 {
+            font-family: Georgia, 'Times New Roman', serif;
+            color: var(--heading-color);
+            margin-bottom: 1rem;
+        }
+
+        #preamble .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        #preamble label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        #preamble input[type="text"] {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        #preamble textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85rem;
+            resize: vertical;
+            margin-bottom: 0.5rem;
+        }
+
+        #preamble .btn {
+            background-color: var(--link-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 2rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        #preamble .btn:hover { opacity: 0.9; }
+
+        #preamble .separator {
+            text-align: center;
+            margin: 1.5rem 0;
+            color: var(--text-color);
+            opacity: 0.5;
+            font-size: 0.9rem;
+        }
+
+        /* Summary */
+        #summary {
+            display: none;
+            background-color: var(--summary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .summary-badges {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .badge-total { background-color: var(--border-color); color: var(--text-color); }
+        .badge-pass { background-color: var(--pass-bg); color: var(--pass-color); }
+        .badge-fail { background-color: var(--fail-bg); color: var(--fail-color); }
+        .badge-skip { background-color: var(--skip-bg); color: var(--skip-color); }
+        .badge-todo { background-color: var(--todo-bg); color: var(--todo-color); }
+
+        .summary-actions button {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .summary-actions button:hover { background-color: var(--border-color); }
+
+        .progress-bar {
+            height: 6px;
+            border-radius: 3px;
+            margin-top: 0.75rem;
+            display: flex;
+            overflow: hidden;
+            background-color: var(--border-color);
+        }
+
+        .progress-segment {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-pass { background-color: var(--pass-color); }
+        .progress-fail { background-color: var(--fail-color); }
+        .progress-skip { background-color: var(--skip-color); }
+        .progress-todo { background-color: var(--todo-color); }
+
+        /* Bail out */
+        .bailout-banner {
+            background-color: var(--fail-bg);
+            border: 2px solid var(--fail-border);
+            color: var(--fail-color);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        /* Test items */
+        .test-item {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+            background-color: var(--card-bg);
+        }
+
+        .test-item.test-pass { border-left: 4px solid var(--pass-border); }
+        .test-item.test-fail { border-left: 4px solid var(--fail-border); }
+        .test-item.test-skip { border-left: 4px solid var(--skip-border); }
+        .test-item.test-todo { border-left: 4px solid var(--todo-border); }
+
+        .test-header {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            user-select: none;
+            gap: 0.5rem;
+        }
+
+        .test-header:hover { opacity: 0.85; }
+
+        .test-status-icon {
+            font-size: 1rem;
+            flex-shrink: 0;
+            width: 1.25rem;
+            text-align: center;
+        }
+
+        .test-pass .test-status-icon { color: var(--pass-color); }
+        .test-fail .test-status-icon { color: var(--fail-color); }
+        .test-skip .test-status-icon { color: var(--skip-color); }
+        .test-todo .test-status-icon { color: var(--todo-color); }
+
+        .test-number {
+            color: var(--text-color);
+            opacity: 0.5;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .test-description {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .test-directive {
+            font-size: 0.8rem;
+            padding: 0.1rem 0.5rem;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .test-pass .test-directive { background-color: var(--pass-bg); color: var(--pass-color); }
+        .test-fail .test-directive { background-color: var(--fail-bg); color: var(--fail-color); }
+        .test-skip .test-directive { background-color: var(--skip-bg); color: var(--skip-color); }
+        .test-todo .test-directive { background-color: var(--todo-bg); color: var(--todo-color); }
+
+        .test-expand {
+            flex-shrink: 0;
+            font-size: 0.75rem;
+            opacity: 0.5;
+            transition: transform 0.2s ease;
+        }
+
+        .test-item.expanded .test-expand { transform: rotate(90deg); }
+
+        .test-details {
+            display: none;
+            padding: 0.5rem 1rem 0.75rem 2.75rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .test-item.expanded .test-details { display: block; }
+
+        .test-details .diagnostic {
+            color: var(--text-color);
+            opacity: 0.75;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .test-details pre {
+            background-color: var(--code-bg);
+            padding: 0.75rem;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin: 0.5rem 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .subtests {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .trailing-diagnostics {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: var(--code-bg);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            opacity: 0.75;
+        }
+
+        .trailing-diagnostics p { margin-bottom: 0.25rem; }
+
+        .error {
+            background-color: var(--fail-bg);
+            color: var(--fail-color);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--fail-border);
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .header-content { padding: 0 1rem; }
+            .summary-row { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="page-title" id="pageTitle">TAP Viewer</div>
+            <div class="header-controls">
+                <label class="file-input-label">
+                    Open File
+                    <input type="file" id="fileInput" accept=".tap,.txt,.log">
+                </label>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <span class="sun-icon" role="img" aria-label="Light mode">&#9728;&#65039;</span>
+                    <span class="moon-icon" role="img" aria-label="Dark mode">&#127769;</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="preamble">
+            <h2>TAP Viewer</h2>
+            <p style="margin-bottom:1.5rem;">View and explore <a href="https://testanything.org/" style="color:var(--link-color)">Test Anything Protocol</a> output with color-coded results and collapsible subtests.</p>
+            <form id="urlForm" class="input-group">
+                <label for="urlInput">Load from URL:</label>
+                <input type="text" id="urlInput" placeholder="https://example.com/results.tap">
+                <button type="submit" class="btn">Load</button>
+            </form>
+            <div class="separator">&mdash; or &mdash;</div>
+            <div class="input-group">
+                <label for="pasteInput">Paste TAP output:</label>
+                <textarea id="pasteInput" placeholder="TAP version 14
+1..4
+ok 1 - first test
+not ok 2 - second test
+ok 3 - third test # SKIP no db
+ok 4 - fourth test # TODO not yet"></textarea>
+                <button class="btn" id="parseBtn">Parse</button>
+            </div>
+        </div>
+        <div id="summary"></div>
+        <div id="content"></div>
+    </main>
+
+    <script>
+        // Theme
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+        if (initialTheme === 'dark') body.setAttribute('data-theme', 'dark');
+
+        themeToggle.addEventListener('click', () => {
+            const newTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            if (newTheme === 'dark') body.setAttribute('data-theme', 'dark');
+            else body.removeAttribute('data-theme');
+            localStorage.setItem('theme', newTheme);
+        });
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                if (e.matches) body.setAttribute('data-theme', 'dark');
+                else body.removeAttribute('data-theme');
+            }
+        });
+
+        // TAP Parser
+        function parseTAP(text) {
+            const lines = text.split(/\r?\n/);
+            const result = {
+                version: null,
+                plan: null,
+                tests: [],
+                bailout: null,
+                trailingDiagnostics: []
+            };
+
+            // Stack for subtest nesting: each entry is { tests: [], depth: number }
+            const stack = [{ tests: result.tests, depth: 0 }];
+            let currentTest = null;
+            let inYaml = false;
+            let yamlLines = [];
+            let yamlIndent = 0;
+            let lastTestDepth = 0;
+
+            function indentDepth(line) {
+                const match = line.match(/^(\s*)/);
+                return match ? match[1].length : 0;
+            }
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const trimmed = line.trim();
+
+                if (trimmed === '') continue;
+
+                // YAML block handling
+                if (inYaml) {
+                    if (trimmed === '...') {
+                        inYaml = false;
+                        if (currentTest) {
+                            currentTest.yaml = yamlLines.join('\n');
+                        }
+                        yamlLines = [];
+                        continue;
+                    }
+                    yamlLines.push(line.substring(yamlIndent));
+                    continue;
+                }
+
+                // Version
+                const versionMatch = trimmed.match(/^TAP version (\d+)$/i);
+                if (versionMatch) {
+                    result.version = parseInt(versionMatch[1]);
+                    continue;
+                }
+
+                // Bail out
+                const bailMatch = trimmed.match(/^Bail out!\s*(.*)/i);
+                if (bailMatch) {
+                    result.bailout = bailMatch[1] || 'Unknown reason';
+                    break;
+                }
+
+                // Plan
+                const planMatch = line.match(/^(\s*)1\.\.(\d+)/);
+                if (planMatch) {
+                    const depth = planMatch[1].length;
+                    if (depth === 0 && result.plan === null) {
+                        result.plan = parseInt(planMatch[2]);
+                    }
+                    continue;
+                }
+
+                // YAML start
+                if (trimmed === '---' && currentTest) {
+                    inYaml = true;
+                    yamlIndent = indentDepth(line);
+                    yamlLines = [];
+                    continue;
+                }
+
+                // Test line
+                const testMatch = line.match(/^(\s*)(ok|not ok)\s*(\d*)\s*-?\s*(.*?)(?:\s+#\s+(TODO|SKIP)\b\s*(.*))?$/i);
+                if (testMatch) {
+                    const depth = testMatch[1].length;
+                    const ok = testMatch[2].toLowerCase() === 'ok';
+                    const number = testMatch[3] ? parseInt(testMatch[3]) : null;
+                    const description = testMatch[4] ? testMatch[4].trim() : '';
+                    const directive = testMatch[5] ? testMatch[5].toUpperCase() : null;
+                    const explanation = testMatch[6] ? testMatch[6].trim() : '';
+
+                    const test = {
+                        ok,
+                        number,
+                        description,
+                        directive,
+                        explanation,
+                        diagnostics: [],
+                        yaml: null,
+                        subtests: [],
+                        depth
+                    };
+
+                    // Find the right parent for this test based on depth
+                    while (stack.length > 1 && stack[stack.length - 1].depth >= depth) {
+                        stack.pop();
+                    }
+
+                    stack[stack.length - 1].tests.push(test);
+                    currentTest = test;
+                    lastTestDepth = depth;
+
+                    // Push a new subtest context in case next lines are deeper
+                    stack.push({ tests: test.subtests, depth: depth + 4 });
+                    continue;
+                }
+
+                // Diagnostic line
+                const diagMatch = line.match(/^(\s*)#\s?(.*)$/);
+                if (diagMatch) {
+                    const diagText = diagMatch[2];
+                    if (currentTest) {
+                        currentTest.diagnostics.push(diagText);
+                    } else {
+                        result.trailingDiagnostics.push(diagText);
+                    }
+                    continue;
+                }
+            }
+
+            return result;
+        }
+
+        // Renderer
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function testClass(test) {
+            if (test.directive === 'SKIP') return 'test-skip';
+            if (test.directive === 'TODO') return 'test-todo';
+            return test.ok ? 'test-pass' : 'test-fail';
+        }
+
+        function testIcon(test) {
+            if (test.directive === 'SKIP') return '&#8680;';
+            if (test.directive === 'TODO') return '&#9998;';
+            return test.ok ? '&#10003;' : '&#10007;';
+        }
+
+        function hasDetails(test) {
+            return test.diagnostics.length > 0 || test.yaml || test.subtests.length > 0;
+        }
+
+        function renderTest(test) {
+            const cls = testClass(test);
+            const icon = testIcon(test);
+            const expanded = cls === 'test-fail' && hasDetails(test);
+            const details = hasDetails(test);
+
+            let html = `<div class="test-item ${cls}${expanded ? ' expanded' : ''}"${details ? ' data-expandable' : ''}>`;
+            html += `<div class="test-header"${details ? ' onclick="toggleTest(this)"' : ''}>`;
+            html += `<span class="test-status-icon">${icon}</span>`;
+            if (test.number !== null) {
+                html += `<span class="test-number">${test.number}</span>`;
+            }
+            html += `<span class="test-description">${escapeHTML(test.description || '(unnamed)')}</span>`;
+            if (test.directive) {
+                let label = test.directive;
+                if (test.explanation) label += ': ' + test.explanation;
+                html += `<span class="test-directive">${escapeHTML(label)}</span>`;
+            }
+            if (details) {
+                html += `<span class="test-expand">&#9654;</span>`;
+            }
+            html += '</div>';
+
+            if (details) {
+                html += '<div class="test-details">';
+                for (const diag of test.diagnostics) {
+                    html += `<p class="diagnostic">${escapeHTML(diag)}</p>`;
+                }
+                if (test.yaml) {
+                    html += `<pre>${escapeHTML(test.yaml)}</pre>`;
+                }
+                if (test.subtests.length > 0) {
+                    html += '<div class="subtests">';
+                    for (const sub of test.subtests) {
+                        html += renderTest(sub);
+                    }
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        function renderTAP(parsed) {
+            const summaryDiv = document.getElementById('summary');
+            const contentDiv = document.getElementById('content');
+            const preambleDiv = document.getElementById('preamble');
+
+            preambleDiv.style.display = 'none';
+
+            // Compute stats (flat, counting all nested)
+            let total = 0, passed = 0, failed = 0, skipped = 0, todo = 0;
+            function countTests(tests) {
+                for (const t of tests) {
+                    total++;
+                    if (t.directive === 'SKIP') skipped++;
+                    else if (t.directive === 'TODO') todo++;
+                    else if (t.ok) passed++;
+                    else failed++;
+                    if (t.subtests.length > 0) countTests(t.subtests);
+                }
+            }
+            countTests(parsed.tests);
+
+            // Summary
+            summaryDiv.style.display = 'block';
+            let summaryHTML = '<div class="summary-row"><div class="summary-badges">';
+            summaryHTML += `<span class="badge badge-total">Total: ${total}</span>`;
+            if (passed > 0) summaryHTML += `<span class="badge badge-pass">Passed: ${passed}</span>`;
+            if (failed > 0) summaryHTML += `<span class="badge badge-fail">Failed: ${failed}</span>`;
+            if (skipped > 0) summaryHTML += `<span class="badge badge-skip">Skipped: ${skipped}</span>`;
+            if (todo > 0) summaryHTML += `<span class="badge badge-todo">Todo: ${todo}</span>`;
+            summaryHTML += '</div>';
+            summaryHTML += '<div class="summary-actions">';
+            summaryHTML += '<button onclick="expandAll()">Expand all</button> ';
+            summaryHTML += '<button onclick="collapseAll()">Collapse all</button>';
+            summaryHTML += '</div></div>';
+
+            if (total > 0) {
+                summaryHTML += '<div class="progress-bar">';
+                summaryHTML += `<div class="progress-segment progress-pass" style="width:${(passed/total*100).toFixed(1)}%"></div>`;
+                summaryHTML += `<div class="progress-segment progress-fail" style="width:${(failed/total*100).toFixed(1)}%"></div>`;
+                summaryHTML += `<div class="progress-segment progress-skip" style="width:${(skipped/total*100).toFixed(1)}%"></div>`;
+                summaryHTML += `<div class="progress-segment progress-todo" style="width:${(todo/total*100).toFixed(1)}%"></div>`;
+                summaryHTML += '</div>';
+            }
+
+            summaryDiv.innerHTML = summaryHTML;
+
+            // Content
+            let contentHTML = '';
+
+            if (parsed.bailout) {
+                contentHTML += `<div class="bailout-banner">Bail out! ${escapeHTML(parsed.bailout)}</div>`;
+            }
+
+            for (const test of parsed.tests) {
+                contentHTML += renderTest(test);
+            }
+
+            if (parsed.trailingDiagnostics.length > 0) {
+                contentHTML += '<div class="trailing-diagnostics">';
+                for (const d of parsed.trailingDiagnostics) {
+                    contentHTML += `<p>${escapeHTML(d)}</p>`;
+                }
+                contentHTML += '</div>';
+            }
+
+            contentDiv.innerHTML = contentHTML;
+
+            // Update title
+            const status = failed > 0 ? 'FAIL' : 'PASS';
+            document.title = `${status} (${passed}/${total}) - TAP Viewer`;
+        }
+
+        // Expand / collapse
+        function toggleTest(headerEl) {
+            headerEl.parentElement.classList.toggle('expanded');
+        }
+
+        function expandAll() {
+            document.querySelectorAll('.test-item[data-expandable]').forEach(el => el.classList.add('expanded'));
+        }
+
+        function collapseAll() {
+            document.querySelectorAll('.test-item[data-expandable]').forEach(el => el.classList.remove('expanded'));
+        }
+
+        // Input: URL form
+        document.getElementById('urlForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const url = document.getElementById('urlInput').value.trim();
+            if (url) {
+                window.location.search = '?from=' + encodeURIComponent(url);
+            }
+        });
+
+        // Input: Paste
+        document.getElementById('parseBtn').addEventListener('click', () => {
+            const text = document.getElementById('pasteInput').value;
+            if (text.trim()) {
+                const parsed = parseTAP(text);
+                renderTAP(parsed);
+            }
+        });
+
+        // Input: File
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                const parsed = parseTAP(reader.result);
+                renderTAP(parsed);
+            };
+            reader.readAsText(file);
+        });
+
+        // Input: URL param
+        async function loadFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const url = params.get('from');
+            if (!url) return;
+
+            const preambleDiv = document.getElementById('preamble');
+            const contentDiv = document.getElementById('content');
+            preambleDiv.innerHTML = '<p>Loading...</p>';
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const text = await response.text();
+                const parsed = parseTAP(text);
+                renderTAP(parsed);
+            } catch (error) {
+                preambleDiv.style.display = 'none';
+                contentDiv.innerHTML = `<div class="error"><strong>Error loading TAP output:</strong> ${escapeHTML(error.message)}<br><br><strong>URL:</strong> ${escapeHTML(url)}</div>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadFromURL);
+    </script>
+</body>
+</html>

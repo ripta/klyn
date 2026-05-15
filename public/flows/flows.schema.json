@@ -1,0 +1,131 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://electron-microscope.local/docs/flows/flows.schema.json",
+    "title": "Electron Microscope architecture flows",
+    "type": "object",
+    "description": "Schema for the data file that drives the architecture-and-flows viewer. The page renders every component as a card on a grid canvas and renders every flow as a numbered, annotated path through those cards.\n\nThe schema is generic and applies to any codebase, regardless of language, framework, or directory layout. Adapt the guidance below to the project at hand.\n\n## How a coding agent should author or extend this file\n\n1. Orient yourself in the project. Look for an architecture or design document (commonly under `docs/`, `spec/`, `architecture/`, or `ARCHITECTURE.md`/`README.md`). Identify the major runtime processes, the API surface, the data store(s), and any external services the project integrates with. If no such document exists, skim the entry points (binary `main` files, server bootstrap, frontend root) to build that picture from code.\n\n2. Pick one user-visible action per flow (for example: 'Sign in', 'Upload a file', 'Create a record'). One flow == one user-visible action. Keep flows scoped: if an action has clearly separable phases (authenticate, then act), prefer two smaller flows that share components.\n\n3. Trace the call path through real code, end to end. A typical chain to follow, in order:\n   - The user-facing trigger (UI route, CLI subcommand, webhook handler, scheduled job).\n   - The transport boundary (HTTP route, RPC method, message-queue topic, function invocation).\n   - Authentication, authorization, and other middleware that runs before the handler.\n   - The handler / controller / service that owns the domain logic.\n   - Any helper modules the handler delegates to (parsing, normalization, validation, third-party clients).\n   - The data-access layer (ORM calls, hand-written queries, cache reads/writes).\n   - The data store(s) and any external services the call ultimately touches.\n   - The response path back to the user, including side effects worth highlighting.\n\n4. Translate the call path into ordered `steps`. Each step is one observable hop between two components on the canvas. Prefer the smallest hop that has a real function, network, or process boundary; do not invent intermediate hops to pad the count.\n\n5. If a hop crosses a component that is not yet on the canvas, add the component to `components` first. Pick a free `(col, row)` cell. A common convention is to group columns by tier so flows generally move left-to-right: actors and clients on the far left, then UI/frontend, then transport/auth, then domain services, then support libraries and background workers, then data-access modules, then data stores and remote endpoints on the far right. Adjust the convention to whatever makes the actual project's flows read naturally.\n\n6. Use real names in component `label`s. Use the module path, package name, class name, service name, or file path that a reader could grep for in the repository. Match the casing used in the source.\n\n7. Step `note`s should describe what is happening and why this hop exists. At data hops, name the operation (read/write/upsert/delete and which table or collection). At transport hops, name the route or method. At middleware hops, name the effect (validate session, check authorization, rate-limit). Avoid restating what is already implied by the `from -> to` header.\n\n8. Validate by serving the viewer directory over HTTP and clicking the new flow. Every component id referenced in `steps` must already exist in `components`; the renderer silently skips unknown ids.\n\n## Style for `note` strings\n\n- Imperative, present tense ('Normalize the URL', not 'Normalizes the URL').\n- One sentence per note; aim for under ~120 characters when practical.\n- Match the wording style already used in the data file so the document reads consistently.\n- Say *why* this hop exists or what it produces; do not just rename the function call.\n",
+    "required": ["categories", "components", "flows"],
+    "additionalProperties": false,
+    "properties": {
+        "$schema": {
+            "type": "string",
+            "description": "Path to this schema file. Editors use it for completion and validation. Should be `./flows.schema.json` when the data file lives next to the schema."
+        },
+        "categories": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "description": "Visual categories rendered in the legend. Each component must point at one of these by `id`. Categories control the color of the left-bar accent on a component card.",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "label", "color"],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9-]*$",
+                        "description": "Stable identifier used by `components[*].category`. Lowercase kebab-case. Examples: `actor`, `service`, `data`, `external`."
+                    },
+                    "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Human-readable label rendered in the legend and in the small caption under each component card. Title Case. Examples: `Domain service`, `Background job`."
+                    },
+                    "color": {
+                        "type": "string",
+                        "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$",
+                        "description": "CSS hex color used for the colored accent on component cards. Pick a saturated, accessible color that contrasts with the white card background."
+                    }
+                }
+            }
+        },
+        "components": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Every node that can appear on the canvas. The page draws an arrow between two components only if at least one flow step references them as `from`/`to`, so adding a component here without referencing it elsewhere just shows an unconnected card.",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "label", "category", "col", "row"],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]*$",
+                        "description": "Stable identifier used in `flows[*].steps[*].from` and `to`. Lowercase kebab-case. Mirror the real artifact name where it helps recognition: a slug derived from the module/package/class name for code components, the process name for runtime processes, and a short tag for external systems."
+                    },
+                    "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Display name shown on the card. Use the real module path, package name, class name, service name, or file path as it appears in the source so readers can grep for it. Match the casing used in the source."
+                    },
+                    "category": {
+                        "type": "string",
+                        "description": "Must match a `categories[*].id`. Drives the card's accent color and the legend grouping."
+                    },
+                    "col": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "Zero-based column on the CSS grid that lays out the canvas. Columns are typically assigned to architectural tiers so flows read left-to-right: actors and clients on the far left, then UI/frontend, transport/auth, domain services, support libraries and background workers, data-access modules, and data stores or remote endpoints on the far right. Reuse whatever column assignments the existing components in this file already use; deviate only when a new tier appears."
+                    },
+                    "row": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "Zero-based row on the CSS grid. Rows have no semantic meaning; they exist to keep the canvas readable. When adding a component, pick the lowest free row in the chosen column."
+                    }
+                }
+            }
+        },
+        "flows": {
+            "type": "array",
+            "minItems": 1,
+            "description": "User-visible actions. Each entry shows up in the picker dropdown. The picker filter searches both `title` and `summary`, so phrase both with the keywords a reader would actually type.",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "title", "summary", "steps"],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]*$",
+                        "description": "Stable identifier for the flow. Lowercase kebab-case. Used for keyed DOM attributes and as a permalink hint for future deep-linking. Pick a slug that names the user-visible action."
+                    },
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Short label shown in the picker and as the heading above the steps. Sentence case. Match how a user or operator would describe the action, not the function name in code."
+                    },
+                    "summary": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "One- or two-sentence overview shown under the picker entry and at the top of the steps panel. Explains what the flow accomplishes and what makes it interesting (an auth boundary, a parsing step, a fan-out, a non-obvious data path). Plain prose; no markdown."
+                    },
+                    "steps": {
+                        "type": "array",
+                        "minItems": 1,
+                        "description": "Ordered hops through the system. The renderer numbers them 1..N and draws a numbered badge on the matching arrow. Each element is one boundary crossing between two components.",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": ["from", "to", "note"],
+                            "properties": {
+                                "from": {
+                                    "type": "string",
+                                    "description": "`components[*].id` of the originator. Where the call is leaving."
+                                },
+                                "to": {
+                                    "type": "string",
+                                    "description": "`components[*].id` of the recipient. Where the call is arriving."
+                                },
+                                "note": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "description": "What this hop does, in one short sentence. Imperative, present tense. At data hops, name the operation and the table or collection (read, write, upsert, delete). At transport hops, name the route or method. At middleware hops, name the effect (validate session, check authorization, rate-limit). Avoid restating what is already implied by the `from -> to` header."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

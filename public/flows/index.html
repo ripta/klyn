@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Electron Microscope — Architecture &amp; Flows</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <header class="page-header">
+        <div class="header-row">
+            <div class="header-text">
+                <h1>Electron Microscope <span class="sep">—</span> Architecture &amp; Flows</h1>
+                <p class="subtitle">
+                    Every package and external service that participates in a flow is on the canvas. Pick a flow from
+                    the menu and follow the numbered steps to see what each hop is for. Hover a step to highlight its
+                    arrow on the canvas, or hover an arrow or number to highlight its step.
+                </p>
+                <p id="source" class="source" hidden></p>
+            </div>
+            <div id="flow-picker" class="flow-picker">
+                <button id="flow-picker-trigger" type="button" class="flow-picker-trigger" aria-haspopup="listbox"
+                    aria-expanded="false" aria-controls="flow-picker-panel">
+                    <span class="flow-picker-label">Flow</span>
+                    <span id="flow-picker-current" class="flow-picker-current">Choose a flow…</span>
+                    <span class="flow-picker-caret" aria-hidden="true">&#9662;</span>
+                </button>
+                <div id="flow-picker-panel" class="flow-picker-panel" role="listbox" aria-label="Flows">
+                    <div class="flow-picker-search">
+                        <input id="flow-filter" type="search" placeholder="Filter flows…" autocomplete="off"
+                            spellcheck="false" aria-label="Filter flows" />
+                    </div>
+                    <ol id="flow-list" class="flow-list"></ol>
+                    <p id="flow-empty" class="flow-empty" hidden>No flows match.</p>
+                </div>
+            </div>
+        </div>
+        <ol id="legend" class="legend" aria-label="Component categories"></ol>
+    </header>
+
+    <main class="layout">
+        <section class="canvas-pane" aria-label="Component canvas">
+            <div id="canvas" class="canvas">
+                <svg id="edges" class="edges" aria-hidden="true"></svg>
+                <div id="nodes" class="nodes"></div>
+            </div>
+        </section>
+
+        <aside class="rail" aria-label="Flow steps">
+            <header class="rail-header">
+                <h2>Steps</h2>
+                <div id="flow-summary" class="flow-summary" hidden></div>
+            </header>
+            <div class="rail-body">
+                <ol id="step-list" class="step-list" aria-live="polite"></ol>
+                <p id="step-empty" class="step-empty">Select a flow to see its annotated steps.</p>
+            </div>
+        </aside>
+    </main>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
