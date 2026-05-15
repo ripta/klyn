@@ -90,6 +90,21 @@ h3 {
     max-width: 880px;
 }
 
+.page-header .source {
+    margin: 0 0 10px;
+    font-size: 12px;
+    color: var(--muted);
+    max-width: 880px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.page-header .source a {
+    color: inherit;
+    text-decoration: underline;
+}
+
 .flow-picker {
     position: relative;
     flex: 0 0 auto;

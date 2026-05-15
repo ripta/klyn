@@ -16,7 +16,10 @@ const els = {
     flowEmpty: document.getElementById("flow-empty"),
     canvasPane: document.querySelector(".canvas-pane"),
     railBody: document.querySelector(".rail-body"),
+    source: document.getElementById("source"),
 };
+
+const DEFAULT_SOURCE = "flows.json";
 
 const state = {
     data: null,
@@ -27,13 +30,41 @@ const state = {
     edgeEls: new Map(),
 };
 
+const sourceURL = resolveSourceURL();
+
 init().catch((err) => {
     console.error("Failed to load flows:", err);
-    els.flowList.innerHTML = `<li class="error">Could not load flows.json (${err.message}). Serve this directory over HTTP.</li>`;
+    els.flowList.innerHTML = `<li class="error">Could not load ${escapeHtml(sourceURL)} (${escapeHtml(err.message)}). Serve this directory over HTTP.</li>`;
 });
 
+function resolveSourceURL() {
+    const params = new URLSearchParams(window.location.search);
+    const from = params.get("from");
+    return from && from.trim() ? from.trim() : DEFAULT_SOURCE;
+}
+
+function renderSourceDisplay() {
+    if (!els.source) return;
+    if (sourceURL === DEFAULT_SOURCE) {
+        els.source.hidden = true;
+        els.source.replaceChildren();
+        return;
+    }
+    els.source.hidden = false;
+    els.source.replaceChildren();
+    els.source.appendChild(document.createTextNode("from "));
+    const a = document.createElement("a");
+    a.href = sourceURL;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = sourceURL;
+    els.source.appendChild(a);
+    els.source.title = sourceURL;
+}
+
 async function init() {
-    const res = await fetch("flows.json", { cache: "no-store" });
+    renderSourceDisplay();
+    const res = await fetch(sourceURL, { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     state.data = await res.json();
     for (const c of state.data.categories) state.categoriesById.set(c.id, c);
