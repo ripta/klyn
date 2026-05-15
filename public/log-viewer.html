@@ -112,6 +112,82 @@ body.has-search .chip-merge { display: inline; }
 .chip-merge:hover { color: #060; }
 .chip-remove:hover { color: #c00; }
 
+body.filters-bypassed .chip.filtering {
+  border-style: dashed;
+  font-weight: normal;
+  opacity: 0.6;
+}
+
+.help-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 100;
+}
+.help-overlay.shown { display: block; }
+.help-sheet {
+  background: white;
+  width: 640px;
+  max-width: 92%;
+  max-height: 84vh;
+  overflow-y: auto;
+  margin: 5vh auto;
+  padding: 20px 28px 24px;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  font-family: Arial;
+  font-size: 13px;
+  line-height: 1.5;
+  position: relative;
+  color: #222;
+}
+.help-sheet h2 {
+  margin: 0 0 0.4em;
+  font-size: 18px;
+}
+.help-sheet h3 {
+  margin: 1.1em 0 0.3em;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #555;
+}
+.help-sheet p,
+.help-sheet ul {
+  margin: 0.3em 0;
+}
+.help-sheet ul {
+  padding-left: 1.4em;
+}
+.help-sheet li {
+  margin: 0.15em 0;
+}
+.help-sheet code,
+.help-sheet kbd {
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 0 4px;
+  font-family: Courier New, monospace;
+  font-size: 11px;
+}
+.help-sheet b {
+  color: #036;
+}
+.help-close {
+  position: absolute;
+  top: 8px;
+  right: 14px;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+  color: #888;
+  font-weight: bold;
+  user-select: none;
+}
+.help-close:hover { color: #c00; }
+
 div.button_right {
   margin-right: 1em;
   float: right;
@@ -242,6 +318,10 @@ function load()
   var s = document.getElementById("search");
   s.value = "";
   s.addEventListener("input", onSearchInput, false);
+
+  document.addEventListener("keydown", function(e) {
+    if (e.key == "Escape") hideHelp();
+  }, false);
 
   var params = new URLSearchParams(window.location.search);
   var from = params.get("from");
@@ -613,7 +693,14 @@ function toggleSearchFilter()
   }
   shl.filter = !shl.filter;
   _updateSearchFilterButton();
-  render();
+  repaint();
+}
+
+function _hasAnyFilterMode()
+{
+  if (shl && shl.filter) return true;
+  for (var h in hl) if (hl[h].filter) return true;
+  return false;
 }
 
 function pin()
@@ -637,7 +724,7 @@ function pin()
   document.getElementById("search").style.backgroundColor = "";
   _updateSearchFilterButton();
   document.body.classList.remove("has-search");
-  render();
+  repaint();
 }
 
 function _renderChip(_hl)
@@ -687,7 +774,7 @@ function toggleChipFilter(id)
   _hl.filter = !_hl.filter;
   var chip = document.getElementById("chip" + id);
   if (chip) chip.classList.toggle("filtering", _hl.filter);
-  render();
+  repaint();
 }
 
 function mergeIntoChip(id)
@@ -716,7 +803,7 @@ function mergeIntoChip(id)
   document.getElementById("search").style.backgroundColor = "";
   _updateSearchFilterButton();
   document.body.classList.remove("has-search");
-  render();
+  repaint();
 }
 
 function removeChip(id)
@@ -727,7 +814,7 @@ function removeChip(id)
   }
   var chip = document.getElementById("chip" + id);
   if (chip) chip.parentNode.removeChild(chip);
-  render();
+  repaint();
 }
 
 function newhl(t, p, persistent)
@@ -795,12 +882,31 @@ function mouseup(event)
   repaint();
 }
 
+function showHelp()
+{
+  document.getElementById("help").classList.add("shown");
+}
+
+function hideHelp()
+{
+  document.getElementById("help").classList.remove("shown");
+}
+
 function flipfilter(event)
 {
   filterswitch = !filterswitch;
-  event.target.innerHTML = (filterswitch ? "filters on" : "filters off");
-  render();
+  var btn = event.target;
+  btn.innerHTML = (filterswitch ? "filters on" : "filters off");
+  btn.classList.toggle("active", filterswitch);
+  document.body.classList.toggle("filters-bypassed", !filterswitch);
 
+  if (!_hasAnyFilterMode()) {
+    _hint("no chips or search are in filter mode — nothing to toggle yet");
+  } else {
+    _hint("");
+  }
+
+  repaint();
   event.stopPropagation();
 }
 
@@ -811,14 +917,49 @@ function flipfilter(event)
   <input class="search" id="search" type="search" placeholder="search the log..." />
   <div class="button2" id="search-filter-toggle" onclick="toggleSearchFilter()" title="toggle filter mode for current search (show only matching lines)">filter</div>
   <div class="button2" onclick="pin()" title="pin current search as a persistent filter chip">pin</div>
+  <div class="button2" onclick="showHelp()" title="show help">?</div>
   <span class="persistents" id="persistents"></span>
   <div class="hint" onclick="repaint()" id="hint"></div>
   <div class="hint" onclick="repaint()" id="position"></div>
   <input type="file" class="filebtn" id="file" onchange="openfileif(this);"/>
   <div class="button_right" onclick="reload()" title="reload this file">reload</div>
-  <div class="button_right" onclick="flipfilter(event)" title="enable/disable all filters (master switch)">filters on</div>
+  <div class="button_right button2 active" onclick="flipfilter(event)" title="enable/disable all filters (master switch)">filters on</div>
   <div class="source" id="source"></div>
 </div>
 <div id="renderer" class="log" onmouseup="mouseup(event)"><div>nothing loaded</div></div>
+<div class="help-overlay" id="help" onclick="if(event.target===this)hideHelp()">
+  <div class="help-sheet">
+    <span class="help-close" onclick="hideHelp()" title="close (Esc)">×</span>
+    <h2>Log Viewer</h2>
+
+    <h3>Loading a log</h3>
+    <p>Click the file picker (top right) to open a local file, or append <code>?from=&lt;url&gt;</code> to the page URL to fetch one over HTTP. The <b>reload</b> button re-reads the current source.</p>
+
+    <h3>Searching</h3>
+    <p>Type in the search box — matching text highlights live in the visible window. Selecting any text in the log auto-fills the search box. Click <b>filter</b> next to the search box to also hide non-matching lines while you type; click again to go back to highlight-only.</p>
+
+    <h3>Pinned filters (chips)</h3>
+    <p>Click <b>pin</b> to turn the current search into a persistent <em>chip</em> that stays around as you keep typing. Each chip has three controls:</p>
+    <ul>
+      <li><b>label</b> — click to toggle whether this chip just highlights or also filters (hides non-matching lines). Bold with a solid border when filtering.</li>
+      <li><b>+</b> — merge the current search text into this chip (the chip's regex becomes <code>old|new</code>). Only shown while the search box has text.</li>
+      <li><b>×</b> — remove the chip.</li>
+    </ul>
+
+    <h3>Master switch</h3>
+    <p><b>filters on</b> / <b>filters off</b> (top right) globally enables or bypasses all filter modes. Useful for peeking at the full log without losing your chip setup. Chips in filter mode go dashed and dim when bypassed, so you can still see which ones are set up.</p>
+
+    <h3>Lines and threads</h3>
+    <p>Click a line to select it (pink). The selected line stays visible even when filtered. If the line starts with a <code>[thread-id]:</code> pattern, sibling lines from the same thread are tinted alongside it.</p>
+
+    <h3>Keyboard</h3>
+    <p>
+      <kbd>↑</kbd> <kbd>↓</kbd> scroll one line &nbsp;·&nbsp;
+      <kbd>PageUp</kbd> <kbd>PageDown</kbd> scroll one screen &nbsp;·&nbsp;
+      <kbd>Ctrl+Home</kbd> <kbd>Ctrl+End</kbd> jump to top/bottom &nbsp;·&nbsp;
+      <kbd>Esc</kbd> close this help
+    </p>
+  </div>
+</div>
 </body>
 </html>
