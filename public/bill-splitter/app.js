@@ -3,6 +3,7 @@ import { parseReceipt } from './parser.js';
 import { computeTotals, formatCurrency } from './splitter.js';
 
 const PARTICIPANT_COLORS = ['#d97706', '#0ea5e9', '#65a30d', '#db2777', '#7c3aed', '#0d9488', '#dc2626', '#525252'];
+const TIP_OPTIONS = [null, 15, 18, 20, 22, 25];
 
 const state = {
     image: null,                  // ImageBitmap
@@ -10,6 +11,7 @@ const state = {
     parsed: null,                 // parser output
     items: [],                    // items with assignees (Set)
     fees: [],
+    tipPercent: null,             // null = off; otherwise one of TIP_OPTIONS
     participants: [{ id: 'p1', name: 'Me' }],
     nextParticipantSeq: 2,
     locale: 'en-US',
@@ -33,6 +35,8 @@ const els = {
     itemsCount: document.getElementById('items-count'),
     feesList: document.getElementById('fees-list'),
     feesEmpty: document.getElementById('fees-empty'),
+    tipOptions: document.getElementById('tip-options'),
+    tipAmount: document.getElementById('tip-amount'),
     totalsList: document.getElementById('totals-list'),
     totalsWarning: document.getElementById('totals-warning'),
 };
@@ -304,7 +308,9 @@ function renderItems() {
 
 function renderFees() {
     els.feesList.innerHTML = '';
-    els.feesEmpty.hidden = state.fees.length > 0;
+    // Empty hint only fires when there are no parsed fees AND no tip selected,
+    // so the message doesn't contradict a visible tip row.
+    els.feesEmpty.hidden = state.fees.length > 0 || state.tipPercent != null;
     state.fees.forEach((fee) => {
         const li = document.createElement('li');
         li.className = 'fee';
@@ -343,15 +349,56 @@ function renderFees() {
     });
 }
 
+// Tip is a derived fee: base = current sum of item prices (so edits propagate),
+// distributed proportionally by the existing 'tip' fee logic in splitter.js.
+function computeTipFee() {
+    if (state.tipPercent == null) return null;
+    const base = state.items.reduce((a, it) => a + (Number.isFinite(it.price) ? it.price : 0), 0);
+    if (base <= 0) return { id: 'fee-tip', type: 'tip', amount: 0, label: `Tip ${state.tipPercent}%` };
+    return {
+        id: 'fee-tip',
+        type: 'tip',
+        amount: base * (state.tipPercent / 100),
+        label: `Tip ${state.tipPercent}%`,
+    };
+}
+
+function renderTipPicker(tipFee) {
+    els.tipOptions.innerHTML = '';
+    for (const pct of TIP_OPTIONS) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tip-option';
+        btn.dataset.active = state.tipPercent === pct ? 'true' : 'false';
+        btn.textContent = pct == null ? 'Off' : `${pct}%`;
+        btn.addEventListener('click', () => {
+            state.tipPercent = pct;
+            renderFees();
+            renderTotals();
+        });
+        els.tipOptions.appendChild(btn);
+    }
+    if (tipFee && state.tipPercent != null) {
+        els.tipAmount.textContent = formatCurrency(tipFee.amount, state.locale, state.currency);
+        els.tipAmount.hidden = false;
+    } else {
+        els.tipAmount.textContent = '';
+        els.tipAmount.hidden = true;
+    }
+}
+
 function renderTotals() {
     els.totalsList.innerHTML = '';
     // 'total' fees are informational; don't redistribute them.
     const distributableFees = state.fees.filter((f) => f.type !== 'total');
+    const tipFee = computeTipFee();
+    if (tipFee) distributableFees.push(tipFee);
     const result = computeTotals({
         items: state.items,
         fees: distributableFees,
         participants: state.participants,
     });
+    renderTipPicker(tipFee);
 
     result.perParticipant.forEach((row, idx) => {
         const li = document.createElement('li');
@@ -458,8 +505,9 @@ function escapeHtml(s) {
         .replace(/'/g, '&#39;');
 }
 
-// Initial render so the "Me" chip is visible before any photo is loaded.
+// Initial render so the "Me" chip and tip picker are visible before any photo is loaded.
 renderParticipants();
+renderTipPicker(computeTipFee());
 
 // Expose for browser-console debugging. After picking a receipt, you can
 // inspect __billSplitter.state.ocr.{words,lines,rawText} or copy a fixture
