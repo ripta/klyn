@@ -21,6 +21,10 @@ for (const name of goldens) {
     const goldenPath = join(FIXTURE_DIR, name);
     const ocrPath = join(FIXTURE_DIR, `${id}.ocr.json`);
     const golden = JSON.parse(readFileSync(goldenPath, 'utf-8'));
+    if (golden.unblessed) {
+        console.log(`skip   ${id} (unblessed)`);
+        continue;
+    }
     const ocr = JSON.parse(readFileSync(ocrPath, 'utf-8'));
     golden.baseline = canonicalize(parseReceipt(ocr));
     writeFileSync(goldenPath, JSON.stringify(golden, null, 2) + '\n');

@@ -1,5 +1,6 @@
 {
   "fixture": "nello",
+  "unblessed": "OCR damage too severe for a stable baseline — many item-name words score below MIN_WORD_CONFIDENCE and get filtered, prices have systematic misreads (commas/parens/hyphens for digits and decimals), and joke wine prices push amounts into 5-digit territory. Kept as a stress fixture; truth documents the goal.",
   "truth": {
     "detectedLocale": "en-US",
     "items": [

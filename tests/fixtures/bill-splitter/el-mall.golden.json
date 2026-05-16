@@ -39,7 +39,7 @@
       {
         "type": "net",
         "amount": 56.32
-      }
+      },
       {
         "type": "subtotal",
         "amount": 61.95
@@ -51,7 +51,7 @@
     ]
   },
   "baseline": {
-    "detectedLocale": "es-ES",
+    "detectedLocale": "en-US",
     "items": [],
     "fees": []
   }

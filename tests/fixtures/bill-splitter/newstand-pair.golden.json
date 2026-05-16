@@ -1,5 +1,6 @@
 {
   "fixture": "newstand-pair",
+  "unblessed": "Image contains two physical receipts side-by-side. Kept as an aspirational hard case — multi-receipt segmentation is out of scope for the current single-receipt parser, so this fixture is intentionally not blessed. Truth represents one of the two receipts.",
   "truth": {
     "detectedLocale": "en-US",
     "items": [

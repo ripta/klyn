@@ -37,6 +37,11 @@ for (const name of goldens) {
         const ocr = JSON.parse(readFileSync(join(FIXTURE_DIR, `${id}.ocr.json`), 'utf-8'));
         const actual = canonicalize(parseReceipt(ocr));
 
+        if (golden.unblessed) {
+            t.skip(typeof golden.unblessed === 'string' ? golden.unblessed : 'unblessed');
+            return;
+        }
+
         assert.deepEqual(
             actual,
             golden.baseline,

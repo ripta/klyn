@@ -1,7 +1,6 @@
 {
   "fixture": "russian-cafe",
-  "truth": null,
-  "baseline": {
+  "truth": {
     "detectedLocale": "ru-RU",
     "items": [
       {
@@ -64,5 +63,10 @@
         "amount": 7625
       }
     ]
+  },
+  "baseline": {
+    "detectedLocale": "de-DE",
+    "items": [],
+    "fees": []
   }
 }

@@ -48,7 +48,10 @@ function makeParser(locale) {
     return (raw) => {
         if (raw == null) return NaN;
         // Strip currency symbols, letters, and stray punctuation but keep digits + group + decimal + sign.
+        // OCR on creased receipts commonly misreads a trailing digit `1` as `)`
+        // (e.g. `$3.41` → `$3.4)`); coerce it back before stripping.
         const cleaned = String(raw)
+            .replace(/\)/g, '1')
             .replace(/[^0-9\-+.,]/g, '')
             .replace(groupRe, '')
             .replace(decimal, '.');
@@ -64,8 +67,9 @@ function priceRegexFor(locale) {
     const parts = new Intl.NumberFormat(locale).formatToParts(12345.6);
     const decimal = parts.find((p) => p.type === 'decimal')?.value ?? '.';
     const d = decimal === '.' ? '\\.' : decimal;
-    // Match e.g. $12.34, 12,34, 1.234,56, -3.50, 4.00$
-    return new RegExp(`^[\\-+]?[\\$€£¥]?\\d{1,3}(?:[.,]\\d{3})*${d}\\d{2}[\\$€£¥]?$`);
+    // Match e.g. $12.34, 12,34, 1.234,56, -3.50, 4.00$. The trailing cents
+    // position also accepts `)` as a misread digit `1` (creased-receipt OCR).
+    return new RegExp(`^[\\-+]?[\\$€£¥]?\\d{1,3}(?:[.,]\\d{3})*${d}\\d[\\d)][\\$€£¥]?$`);
 }
 
 function lineText(line) {
