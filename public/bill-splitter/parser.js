@@ -300,7 +300,8 @@ export function parseReceipt({ words = [], lines = [] } = {}) {
         if (!priceWord) continue;
 
         let type = null;
-        let label = line.text.trim();
+        const labelWords = lineWords.filter((w) => !w.isPrice);
+        let label = labelWords.map((w) => w.text).join(' ').trim() || line.text.trim();
         for (const [key, keywords] of Object.entries(TOTAL_KEYWORDS)) {
             if (containsAnyKeyword(text, keywords)) {
                 type = key;
