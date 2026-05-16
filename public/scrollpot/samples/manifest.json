@@ -1,0 +1,14 @@
+{
+    "recipes": [
+        {
+            "src": "pancakes.json",
+            "title": "Buttermilk Pancakes",
+            "blurb": "Light, fluffy weekend pancakes. ~25 min including rest."
+        },
+        {
+            "src": "chocolate-chip-cookies.json",
+            "title": "Brown-Butter Chocolate Chip Cookies",
+            "blurb": "Toffee depth from browned butter. Active 20 min, plus chill + bake."
+        }
+    ]
+}

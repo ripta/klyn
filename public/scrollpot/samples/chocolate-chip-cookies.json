@@ -1,0 +1,182 @@
+{
+    "title": "Brown-Butter Chocolate Chip Cookies",
+    "description": "Crisp edges, chewy middles, deep toffee flavor from browned butter.",
+    "servings_default": 18,
+    "servings_unit": "cookie",
+    "source": "house recipe",
+    "tags": ["dessert", "baking", "vegetarian"],
+    "tools": [
+        { "id": "saucepan", "name": "Light-colored saucepan", "notes": "A pale interior helps you see the butter browning." },
+        { "id": "bowl-large", "name": "Large heatproof bowl" },
+        { "id": "bowl-medium", "name": "Medium bowl" },
+        { "id": "whisk", "name": "Whisk" },
+        { "id": "spatula", "name": "Silicone spatula" },
+        { "id": "scoop", "name": "#40 cookie scoop (~1.5 tbsp)", "notes": "Or a heaping tablespoon." },
+        { "id": "sheet", "name": "Half-sheet pan" },
+        { "id": "parchment", "name": "Parchment paper" }
+    ],
+    "ingredients": [
+        {
+            "id": "butter",
+            "name": "unsalted butter",
+            "group": "Browned butter",
+            "quantities": {
+                "volume": { "amount": 1, "unit": "cup" },
+                "weight": { "amount": 226, "unit": "g" }
+            }
+        },
+        {
+            "id": "flour",
+            "name": "all-purpose flour",
+            "group": "Dry",
+            "quantities": {
+                "volume": { "amount": 2.25, "unit": "cup" },
+                "weight": { "amount": 295, "unit": "g" }
+            }
+        },
+        {
+            "id": "baking-soda",
+            "name": "baking soda",
+            "group": "Dry",
+            "quantities": {
+                "volume": { "amount": 1, "unit": "tsp" }
+            }
+        },
+        {
+            "id": "salt",
+            "name": "fine salt",
+            "group": "Dry",
+            "quantities": {
+                "volume": { "amount": 1, "unit": "tsp" }
+            }
+        },
+        {
+            "id": "brown-sugar",
+            "name": "dark brown sugar",
+            "group": "Sugars",
+            "quantities": {
+                "volume": { "amount": 1, "unit": "cup" },
+                "weight": { "amount": 213, "unit": "g" }
+            },
+            "notes": "packed"
+        },
+        {
+            "id": "white-sugar",
+            "name": "granulated sugar",
+            "group": "Sugars",
+            "quantities": {
+                "volume": { "amount": 0.5, "unit": "cup" },
+                "weight": { "amount": 100, "unit": "g" }
+            }
+        },
+        {
+            "id": "eggs",
+            "name": "large eggs",
+            "group": "Wet",
+            "quantities": {
+                "volume": { "amount": 2, "unit": "whole" }
+            }
+        },
+        {
+            "id": "vanilla",
+            "name": "vanilla extract",
+            "group": "Wet",
+            "quantities": {
+                "volume": { "amount": 2, "unit": "tsp" }
+            },
+            "scalable": false
+        },
+        {
+            "id": "chips",
+            "name": "semisweet chocolate chips or chopped chocolate",
+            "group": "Mix-ins",
+            "quantities": {
+                "volume": { "amount": 2, "unit": "cup" },
+                "weight": { "amount": 340, "unit": "g" }
+            }
+        },
+        {
+            "id": "flake-salt",
+            "name": "flaky sea salt",
+            "group": "Finishing",
+            "quantities": {
+                "volume": { "amount": 1, "unit": "pinch" }
+            },
+            "scalable": false,
+            "notes": "for sprinkling"
+        }
+    ],
+    "steps": [
+        {
+            "id": "s1",
+            "heading": "Brown the butter",
+            "body": "Melt {ingredient:butter} in the {tool:saucepan} over medium heat. Once foamy, swirl until the milk solids turn deep amber and smell nutty, 5–7 minutes. Pour into the {tool:bowl-large} — scrape the brown bits in too.",
+            "duration": "5–7 min",
+            "timer": { "name": "Brown the butter", "seconds": 360 },
+            "notes": [
+                { "kind": "warning", "body": "Browned butter goes from amber to burnt in seconds. Pull it off the heat the moment it smells like toffee." },
+                { "kind": "science", "body": "The amber color is Maillard browning of the milk solids. That's the flavor you're paying for." }
+            ]
+        },
+        {
+            "id": "s2",
+            "heading": "Cool the butter",
+            "body": "Let the butter cool until just warm to the touch — it should still be liquid but not hot.",
+            "duration": "15 min",
+            "timer": { "name": "Cool butter", "seconds": 900 },
+            "notes": [
+                { "kind": "tip", "body": "Hot butter scrambles the eggs and melts the sugar into a glassy puddle. Patience here pays off." }
+            ]
+        },
+        {
+            "id": "s3",
+            "heading": "Whisk the dry",
+            "body": "In the {tool:bowl-medium}, {tool:whisk} together {ingredient:flour}, {ingredient:baking-soda}, and {ingredient:salt}.",
+            "notes": []
+        },
+        {
+            "id": "s4",
+            "heading": "Sugars and eggs",
+            "body": "To the cooled {ingredient:butter}, whisk in {ingredient:brown-sugar} and {ingredient:white-sugar} until glossy. Whisk in {ingredient:eggs} one at a time, then {ingredient:vanilla}. Keep whisking for 30 seconds — the batter should ribbon off the whisk.",
+            "notes": [
+                { "kind": "science", "body": "Whisking aerates the eggs and dissolves the sugar, giving the cookies a crackled, glossy top." }
+            ]
+        },
+        {
+            "id": "s5",
+            "heading": "Combine and fold in chips",
+            "body": "Switch to the {tool:spatula}. Add the dry mix and fold until just barely streaky. Add {ingredient:chips} and fold to distribute.",
+            "notes": [
+                { "kind": "warning", "body": "Stop folding before the flour fully disappears — you'll finish mixing on the next pass with the chips." }
+            ]
+        },
+        {
+            "id": "s6",
+            "heading": "Chill",
+            "body": "Cover the dough and refrigerate. This is not optional.",
+            "duration": "30 min",
+            "timer": { "name": "Chill dough", "seconds": 1800 },
+            "notes": [
+                { "kind": "tip", "body": "Up to 48 hours in the fridge gives an even deeper toffee flavor." },
+                { "kind": "science", "body": "Chilling lets the flour hydrate evenly and keeps the cookies from spreading into thin discs." }
+            ]
+        },
+        {
+            "id": "s7",
+            "heading": "Preheat and scoop",
+            "body": "Preheat the oven to 375°F / 190°C. Line a {tool:sheet} with {tool:parchment}. Use the {tool:scoop} to portion balls of dough, leaving 2 inches between.",
+            "notes": []
+        },
+        {
+            "id": "s8",
+            "heading": "Bake",
+            "body": "Bake until the edges are set and golden but the centers still look underdone, 10–12 minutes. Sprinkle with {ingredient:flake-salt} the moment they come out.",
+            "duration": "10–12 min",
+            "timer": { "name": "Bake", "seconds": 660 },
+            "notes": [
+                { "kind": "tip", "body": "Pull them a touch early — they finish setting on the hot pan." },
+                { "kind": "variation", "body": "Bang the pan on the counter twice as soon as they come out for that bakery-style ripple." }
+            ]
+        }
+    ]
+}

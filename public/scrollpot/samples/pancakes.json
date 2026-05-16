@@ -1,0 +1,153 @@
+{
+    "title": "Buttermilk Pancakes",
+    "description": "Light, fluffy pancakes with crisp edges. A weekend staple.",
+    "servings_default": 4,
+    "servings_unit": "pancake",
+    "source": "house recipe",
+    "tags": ["breakfast", "vegetarian"],
+    "tools": [
+        { "id": "bowl-large", "name": "Large mixing bowl" },
+        { "id": "bowl-medium", "name": "Medium mixing bowl" },
+        { "id": "whisk", "name": "Whisk" },
+        { "id": "skillet", "name": "Nonstick skillet or griddle", "notes": "Cast iron also works well." },
+        { "id": "spatula", "name": "Thin spatula" }
+    ],
+    "ingredients": [
+        {
+            "id": "flour",
+            "name": "all-purpose flour",
+            "group": "Dry",
+            "quantities": {
+                "volume": { "amount": 1.5, "unit": "cup" },
+                "weight": { "amount": 195, "unit": "g" }
+            }
+        },
+        {
+            "id": "sugar",
+            "name": "granulated sugar",
+            "group": "Dry",
+            "quantities": {
+                "volume": { "amount": 2, "unit": "tbsp" },
+                "weight": { "amount": 25, "unit": "g" }
+            }
+        },
+        {
+            "id": "baking-powder",
+            "name": "baking powder",
+            "group": "Dry",
+            "quantities": {
+                "volume": { "amount": 1.5, "unit": "tsp" }
+            }
+        },
+        {
+            "id": "baking-soda",
+            "name": "baking soda",
+            "group": "Dry",
+            "quantities": {
+                "volume": { "amount": 0.5, "unit": "tsp" }
+            }
+        },
+        {
+            "id": "salt",
+            "name": "fine salt",
+            "group": "Dry",
+            "quantities": {
+                "volume": { "amount": 0.5, "unit": "tsp" }
+            }
+        },
+        {
+            "id": "buttermilk",
+            "name": "buttermilk",
+            "group": "Wet",
+            "quantities": {
+                "volume": { "amount": 1.5, "unit": "cup" },
+                "weight": { "amount": 360, "unit": "g" }
+            },
+            "notes": "shake the carton first"
+        },
+        {
+            "id": "eggs",
+            "name": "large eggs",
+            "group": "Wet",
+            "quantities": {
+                "volume": { "amount": 2, "unit": "whole" }
+            }
+        },
+        {
+            "id": "butter",
+            "name": "unsalted butter, melted",
+            "group": "Wet",
+            "quantities": {
+                "volume": { "amount": 3, "unit": "tbsp" },
+                "weight": { "amount": 42, "unit": "g" }
+            }
+        },
+        {
+            "id": "vanilla",
+            "name": "vanilla extract",
+            "group": "Wet",
+            "quantities": {
+                "volume": { "amount": 1, "unit": "tsp" }
+            },
+            "scalable": false
+        }
+    ],
+    "steps": [
+        {
+            "id": "s1",
+            "heading": "Mix the dry",
+            "body": "In a {tool:bowl-large}, whisk together {ingredient:flour}, {ingredient:sugar}, {ingredient:baking-powder}, {ingredient:baking-soda}, and {ingredient:salt} until evenly combined.",
+            "notes": [
+                { "kind": "tip", "body": "Whisking the dry ingredients is the easiest way to skip sifting." }
+            ]
+        },
+        {
+            "id": "s2",
+            "heading": "Mix the wet",
+            "body": "In a {tool:bowl-medium}, whisk {ingredient:buttermilk}, {ingredient:eggs}, and {ingredient:vanilla} until uniform. Stream in the melted {ingredient:butter} while whisking so it does not seize.",
+            "notes": [
+                { "kind": "science", "body": "Adding warm butter slowly into the cold buttermilk keeps it emulsified instead of forming butter beads." }
+            ]
+        },
+        {
+            "id": "s3",
+            "heading": "Combine and rest",
+            "body": "Pour the wet into the dry. Fold with a {tool:spatula} **just until** the flour disappears — lumps are fine. Let the batter rest.",
+            "duration": "10 min",
+            "timer": { "name": "Batter rest", "seconds": 600 },
+            "notes": [
+                { "kind": "warning", "body": "Do not overmix. Overworked gluten makes pancakes tough." },
+                { "kind": "tip", "body": "Resting lets the flour hydrate; pancakes puff more reliably." }
+            ]
+        },
+        {
+            "id": "s4",
+            "heading": "Heat the pan",
+            "body": "Set the {tool:skillet} over medium heat. Brush with a thin film of {ingredient:butter}. Drop a few water beads on — they should sizzle and skate, not evaporate instantly.",
+            "notes": [
+                { "kind": "tip", "body": "Test temperature with water before sacrificing a pancake. If beads vanish, the pan is too hot." }
+            ]
+        },
+        {
+            "id": "s5",
+            "heading": "Cook the pancakes",
+            "body": "Ladle ~⅓ cup batter per pancake into the {tool:skillet}. Cook until bubbles form across the surface and the edges look set, about 2 minutes.",
+            "duration": "~2 min",
+            "timer": { "name": "First side", "seconds": 120 },
+            "notes": [
+                { "kind": "variation", "body": "Drop blueberries or chocolate chips onto the wet side now, before flipping." }
+            ]
+        },
+        {
+            "id": "s6",
+            "heading": "Flip and finish",
+            "body": "Flip with the {tool:spatula} and cook until the second side is golden and the center springs back, ~1 minute. Move to a plate and repeat with the remaining batter.",
+            "duration": "~1 min",
+            "timer": { "name": "Second side", "seconds": 60 },
+            "notes": [
+                { "kind": "tip", "body": "Hold finished pancakes in a 200°F / 95°C oven on a rack so they stay crisp." },
+                { "kind": "substitution", "body": "No buttermilk? Stir 1½ tsp lemon juice into 1½ cups whole milk and let sit 5 minutes." }
+            ]
+        }
+    ]
+}
