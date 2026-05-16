@@ -3,15 +3,15 @@
   "truth": {
     "items": [
       {
-        "name": "1 Dos Tacos (Brunch)",
+        "name": "Dos Tacos (Brunch)",
         "price": 18
       },
       {
-        "name": "1 6. Taco y Enchilada (Super Combo)",
+        "name": "6. Taco y Enchilada (Super Combo)",
         "price": 21.95
       },
       {
-        "name": "1 Brunch Reg Lime Margarita",
+        "name": "Brunch Reg Lime Margarita",
         "price": 12.75
       }
     ],

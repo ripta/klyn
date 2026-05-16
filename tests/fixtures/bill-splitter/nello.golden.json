@@ -1,70 +1,107 @@
 {
   "fixture": "nello",
-  "truth": null,
-  "baseline": {
+  "truth": {
     "detectedLocale": "en-US",
     "items": [
       {
-        "name": "1 mare monte",
+        "name": "1 mare monte spagheti",
         "price": 39
       },
       {
-        "name": "1 rigatont sictliana",
-        "price": 906
+        "name": "1 rigatoni sicliana",
+        "price": 36
       },
       {
-        "name": "1",
+        "name": "1 milanesa",
         "price": 55
       },
       {
-        "name": "1",
-        "price": 10
+        "name": "1 insala.carciofi",
+        "price": 18
       },
       {
-        "name": "2 chunks",
+        "name": "2 parmesan chunks",
         "price": 28
       },
       {
-        "name": "1 lg hater",
+        "name": "1 lg water",
         "price": 12
       },
       {
-        "name": "5 tanny. 40)",
+        "name": "5 tanny 40",
         "price": 275
       },
       {
-        "name": "d truffle",
+        "name": "2 truffle carpaccio",
         "price": 200
       },
       {
         "name": "2 asparagus nello",
-        "price": 960
+        "price": 60
       },
       {
-        "name": "3 cappuccino 2 alan,",
+        "name": "3 cappuccino",
         "price": 27
+      },
+      {
+        "name": "2 calam. fritti",
+        "price": 40
+      },
+      {
+        "name": "2 prosc.mozzarella",
+        "price": 68
       },
       {
         "name": "2 espresso",
         "price": 15
       },
       {
-        "name": "1",
+        "name": "1 tiramisu",
         "price": 15
       },
       {
-        "name": "1 ninestrone vero 3 la tache romanee co $15000.00",
+        "name": "1 minestrone verd",
         "price": 18
       },
       {
-        "name": "blue",
+        "name": "3 la tache romanee co",
+        "price": 15000
+      },
+      {
+        "name": "2 chateau petrus",
+        "price": 10000
+      },
+      {
+        "name": "j.w .blue",
         "price": 150
       },
       {
-        "name": "tagliolini 2 oristal rose magnum $10000.00",
-        "price": 505
+        "name": "3 truffle  tagliolini",
+        "price": 585
+      },
+      {
+        "name": " 2 cristal rose magnum",
+        "price": 10000
       }
     ],
-    "fees": []
-  }
+    "fees": [
+      {
+        "type": "tax",
+        "amount": 3251.89
+      },
+      {
+        "type": "subtotal",
+        "amount": 39892.89
+      },
+      {
+        "type": "tip",
+        "amount": 7328.20
+      },
+      {
+        "type": "total",
+        "amount": 47221.09
+      }
+    ]
+  },
+  "baseline": null
 }

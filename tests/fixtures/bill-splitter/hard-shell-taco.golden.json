@@ -3,7 +3,7 @@
   "truth": {
     "items": [
       {
-        "name": "2 Hard Shell Taco",
+        "name": "2 Hard Shell Taco - Molida",
         "price": 3.98
       },
       {
@@ -26,11 +26,13 @@
       },
       {
         "type": "tax",
-        "amount": 0.75
+        "amount": 0.75,
+        "label": "State Tax (6%)"
       },
       {
         "type": "service",
-        "amount": 0.53
+        "amount": 0.53,
+        "label": "Non Cash Adjustment"
       },
       {
         "type": "total",
