@@ -1,0 +1,58 @@
+{
+  "fixture": "el-mall",
+  "truth": {
+    "items": [
+      {
+        "name": "1 Burrata",
+        "price": 16
+      },
+      {
+        "name": "1 Pan de Coca",
+        "price": 3.5
+      },
+      {
+        "name": "2 Solomillo a 1a Sal @ 22,00",
+        "price": 44
+      },
+      {
+        "name": "1 100% Chocolate fondat",
+        "price": 8.5
+      },
+      {
+        "name": "1 Agua 1/2",
+        "price": 4.5
+      },
+      {
+        "name": "2 Copa Aphrodisiaque T. @ 6,00",
+        "price": 12
+      },
+      {
+        "name": "1 Portal Reserva 30% fork 30.00 %",
+        "price": -26.55
+      },
+      {
+        "name": "5,63 IVA 10%",
+        "price": 61.95
+      }
+    ],
+    "fees": [
+      {
+        "type": "net",
+        "amount": 56.32
+      },
+      {
+        "type": "subtotal",
+        "amount": 61.95
+      },
+      {
+        "type": "total",
+        "amount": 61.95
+      }
+    ]
+  },
+  "baseline": {
+    "detectedLocale": "en-US",
+    "items": [],
+    "fees": []
+  }
+}

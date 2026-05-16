@@ -1,0 +1,39 @@
+{
+  "fixture": "good-restaurant",
+  "unblessed": "OCR captured only 10 tiny fragment words (e.g. \"en\", \"ne\", \"co\", \"L\", \"3\") with no item names or prices. The receipt content is effectively absent from the OCR output, so there is nothing for the parser to operate on. Needs a re-OCR with a different config before this fixture can produce a meaningful baseline.",
+  "truth": {
+    "items": [
+      {
+        "name": "1 BISCUITS",
+        "price": 3
+      },
+      {
+        "name": "1 COMBO",
+        "price": 16.5
+      },
+      {
+        "name": "1 FRITTATA",
+        "price": 11.75
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 31.25
+      },
+      {
+        "type": "tax",
+        "amount": 2.62
+      },
+      {
+        "type": "total",
+        "amount": 33.87
+      }
+    ]
+  },
+  "baseline": {
+    "detectedLocale": "en-US",
+    "items": [],
+    "fees": []
+  }
+}

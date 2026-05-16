@@ -1,0 +1,36 @@
+{
+  "fixture": "newstand-pair",
+  "unblessed": "Image contains two physical receipts side-by-side. Kept as an aspirational hard case — multi-receipt segmentation is out of scope for the current single-receipt parser, so this fixture is intentionally not blessed. Truth represents one of the two receipts.",
+  "truth": {
+    "detectedLocale": "en-US",
+    "items": [
+      {
+        "name": "1 regular vietnamese cafe",
+        "price": 7
+      }
+    ],
+    "fees": [
+      {
+        "type": "service",
+        "amount": 0.2,
+        "label": "service fee (2.90%)"
+      },
+      {
+        "type": "subtotal",
+        "amount": 7.2,
+        "label": "subtotal"
+      },
+      {
+        "type": "tax",
+        "amount": 0.59,
+        "label": "tax"
+      },
+      {
+        "type": "total",
+        "amount": 7.79,
+        "label": "total"
+      }
+    ]
+  },
+  "baseline": {}
+}

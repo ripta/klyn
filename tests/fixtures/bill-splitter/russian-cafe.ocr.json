@@ -1,0 +1,1177 @@
+{
+  "words": [
+    {
+      "id": "w-1",
+      "lineId": "1.1.1",
+      "text": "Yak",
+      "bbox": {
+        "x0": 663,
+        "y0": 954,
+        "x1": 772,
+        "y1": 999
+      },
+      "confidence": 78.866226
+    },
+    {
+      "id": "w-2",
+      "lineId": "1.1.1",
+      "text": "FZISZUS8",
+      "bbox": {
+        "x0": 823,
+        "y0": 937,
+        "x1": 1097,
+        "y1": 993
+      },
+      "confidence": 0.097342
+    },
+    {
+      "id": "w-3",
+      "lineId": "1.1.1",
+      "text": "-",
+      "bbox": {
+        "x0": 1147,
+        "y0": 930,
+        "x1": 1219,
+        "y1": 1015
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-4",
+      "lineId": "1.1.1",
+      "text": "CTON",
+      "bbox": {
+        "x0": 1227,
+        "y0": 935,
+        "x1": 1381,
+        "y1": 987
+      },
+      "confidence": 0.499897
+    },
+    {
+      "id": "w-5",
+      "lineId": "1.1.1",
+      "text": "F",
+      "bbox": {
+        "x0": 1431,
+        "y0": 936,
+        "x1": 1458,
+        "y1": 985
+      },
+      "confidence": 83.743813
+    },
+    {
+      "id": "w-6",
+      "lineId": "1.1.1",
+      "text": "41d,",
+      "bbox": {
+        "x0": 1511,
+        "y0": 934,
+        "x1": 1690,
+        "y1": 987
+      },
+      "confidence": 0.38908
+    },
+    {
+      "id": "w-7",
+      "lineId": "1.1.1",
+      "text": "Vocten",
+      "bbox": {
+        "x0": 1951,
+        "y0": 943,
+        "x1": 2170,
+        "y1": 1004
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-8",
+      "lineId": "1.1.1",
+      "text": ",",
+      "bbox": {
+        "x0": 2225,
+        "y0": 983,
+        "x1": 2235,
+        "y1": 1013
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-9",
+      "lineId": "1.1.2",
+      "text": "16.06.2018",
+      "bbox": {
+        "x0": 676,
+        "y0": 1026,
+        "x1": 1057,
+        "y1": 1089
+      },
+      "confidence": 69.50869
+    },
+    {
+      "id": "w-10",
+      "lineId": "1.1.2",
+      "text": "OQrKpbiT",
+      "bbox": {
+        "x0": 1229,
+        "y0": 1025,
+        "x1": 1450,
+        "y1": 1093
+      },
+      "confidence": 8.388157
+    },
+    {
+      "id": "w-11",
+      "lineId": "1.1.2",
+      "text": "18217",
+      "bbox": {
+        "x0": 1525,
+        "y0": 1026,
+        "x1": 1702,
+        "y1": 1086
+      },
+      "confidence": 27.568693
+    },
+    {
+      "id": "w-12",
+      "lineId": "1.1.2",
+      "text": "Tekatb",
+      "bbox": {
+        "x0": 1792,
+        "y0": 1023,
+        "x1": 2026,
+        "y1": 1082
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-13",
+      "lineId": "1.1.2",
+      "text": "19:15",
+      "bbox": {
+        "x0": 2086,
+        "y0": 1032,
+        "x1": 2257,
+        "y1": 1089
+      },
+      "confidence": 50.502792
+    },
+    {
+      "id": "w-14",
+      "lineId": "1.1.3",
+      "text": "KaccHp",
+      "bbox": {
+        "x0": 656,
+        "y0": 1119,
+        "x1": 851,
+        "y1": 1198
+      },
+      "confidence": 10.866957
+    },
+    {
+      "id": "w-15",
+      "lineId": "1.1.3",
+      "text": ":",
+      "bbox": {
+        "x0": 902,
+        "y0": 1132,
+        "x1": 924,
+        "y1": 1188
+      },
+      "confidence": 22.840624
+    },
+    {
+      "id": "w-16",
+      "lineId": "1.1.3",
+      "text": "KaCccup",
+      "bbox": {
+        "x0": 1067,
+        "y0": 1124,
+        "x1": 1334,
+        "y1": 1192
+      },
+      "confidence": 40.4664
+    },
+    {
+      "id": "w-17",
+      "lineId": "1.1.3",
+      "text": "I",
+      "bbox": {
+        "x0": 1306,
+        "y0": 1120,
+        "x1": 1333,
+        "y1": 1199
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-18",
+      "lineId": "1.2.1",
+      "text": "OdMuUMAHT:",
+      "bbox": {
+        "x0": 657,
+        "y0": 1221,
+        "x1": 1007,
+        "y1": 1290
+      },
+      "confidence": 21.533165
+    },
+    {
+      "id": "w-19",
+      "lineId": "1.2.1",
+      "text": "OdWuUWaHT",
+      "bbox": {
+        "x0": 1069,
+        "y0": 1219,
+        "x1": 1416,
+        "y1": 1293
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-20",
+      "lineId": "2.1.1",
+      "text": "bNWAO",
+      "bbox": {
+        "x0": 659,
+        "y0": 1420,
+        "x1": 857,
+        "y1": 1492
+      },
+      "confidence": 13.369036
+    },
+    {
+      "id": "w-21",
+      "lineId": "2.1.2",
+      "text": "MuKC",
+      "bbox": {
+        "x0": 664,
+        "y0": 1627,
+        "x1": 820,
+        "y1": 1685
+      },
+      "confidence": 48.436119
+    },
+    {
+      "id": "w-22",
+      "lineId": "2.1.2",
+      "text": "canaT",
+      "bbox": {
+        "x0": 873,
+        "y0": 1638,
+        "x1": 1064,
+        "y1": 1685
+      },
+      "confidence": 49.676262
+    },
+    {
+      "id": "w-23",
+      "lineId": "2.1.2",
+      "text": "C",
+      "bbox": {
+        "x0": 1120,
+        "y0": 1638,
+        "x1": 1151,
+        "y1": 1684
+      },
+      "confidence": 75.355804
+    },
+    {
+      "id": "w-24",
+      "lineId": "2.1.2",
+      "text": "aBOK.W",
+      "bbox": {
+        "x0": 1201,
+        "y0": 1637,
+        "x1": 1434,
+        "y1": 1684
+      },
+      "confidence": 43.401443
+    },
+    {
+      "id": "w-25",
+      "lineId": "2.1.3",
+      "text": "Kny6.",
+      "bbox": {
+        "x0": 668,
+        "y0": 1726,
+        "x1": 854,
+        "y1": 1795
+      },
+      "confidence": 6.335506
+    },
+    {
+      "id": "w-26",
+      "lineId": "2.1.4",
+      "text": "MaHTbl",
+      "bbox": {
+        "x0": 670,
+        "y0": 1828,
+        "x1": 868,
+        "y1": 1887
+      },
+      "confidence": 36.435196
+    },
+    {
+      "id": "w-27",
+      "lineId": "2.1.4",
+      "text": "C",
+      "bbox": {
+        "x0": 919,
+        "y0": 1838,
+        "x1": 950,
+        "y1": 1883
+      },
+      "confidence": 87.17704
+    },
+    {
+      "id": "w-28",
+      "lineId": "2.1.4",
+      "text": "NOCOCEM",
+      "bbox": {
+        "x0": 1003,
+        "y0": 1836,
+        "x1": 1277,
+        "y1": 1883
+      },
+      "confidence": 63.993973
+    },
+    {
+      "id": "w-29",
+      "lineId": "2.1.5",
+      "text": "law-Ke6ab",
+      "bbox": {
+        "x0": 673,
+        "y0": 1917,
+        "x1": 1035,
+        "y1": 1990
+      },
+      "confidence": 2.330952
+    },
+    {
+      "id": "w-30",
+      "lineId": "2.1.5",
+      "text": "WS",
+      "bbox": {
+        "x0": 1089,
+        "y0": 1932,
+        "x1": 1158,
+        "y1": 1982
+      },
+      "confidence": 84.345055
+    },
+    {
+      "id": "w-31",
+      "lineId": "2.1.5",
+      "text": "KYPHUbI",
+      "bbox": {
+        "x0": 1208,
+        "y0": 1931,
+        "x1": 1439,
+        "y1": 1989
+      },
+      "confidence": 51.856556
+    },
+    {
+      "id": "w-32",
+      "lineId": "2.1.6",
+      "text": "unas",
+      "bbox": {
+        "x0": 678,
+        "y0": 2026,
+        "x1": 873,
+        "y1": 2096
+      },
+      "confidence": 23.2794
+    },
+    {
+      "id": "w-33",
+      "lineId": "2.1.6",
+      "text": "Kabepre.",
+      "bbox": {
+        "x0": 922,
+        "y0": 2020,
+        "x1": 1230,
+        "y1": 2090
+      },
+      "confidence": 38.414787
+    },
+    {
+      "id": "w-34",
+      "lineId": "2.1.7",
+      "text": "Nekdonge",
+      "bbox": {
+        "x0": 687,
+        "y0": 2117,
+        "x1": 999,
+        "y1": 2192
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-35",
+      "lineId": "2.1.7",
+      "text": "750mNn",
+      "bbox": {
+        "x0": 1048,
+        "y0": 2116,
+        "x1": 1242,
+        "y1": 2180
+      },
+      "confidence": 30.264339
+    },
+    {
+      "id": "w-36",
+      "lineId": "2.1.8",
+      "text": "Ceaxan",
+      "bbox": {
+        "x0": 693,
+        "y0": 2213,
+        "x1": 923,
+        "y1": 2278
+      },
+      "confidence": 41.266041
+    },
+    {
+      "id": "w-37",
+      "lineId": "2.1.8",
+      "text": "3enekb",
+      "bbox": {
+        "x0": 970,
+        "y0": 2216,
+        "x1": 1202,
+        "y1": 2280
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-38",
+      "lineId": "2.1.9",
+      "text": "MaHTb",
+      "bbox": {
+        "x0": 687,
+        "y0": 2312,
+        "x1": 881,
+        "y1": 2376
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-39",
+      "lineId": "2.1.9",
+      "text": "C",
+      "bbox": {
+        "x0": 929,
+        "y0": 2330,
+        "x1": 961,
+        "y1": 2376
+      },
+      "confidence": 82.300827
+    },
+    {
+      "id": "w-40",
+      "lineId": "2.1.9",
+      "text": "GapaHHHOM",
+      "bbox": {
+        "x0": 1010,
+        "y0": 2309,
+        "x1": 1360,
+        "y1": 2386
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-41",
+      "lineId": "2.1.10",
+      "text": "OBowl",
+      "bbox": {
+        "x0": 677,
+        "y0": 2409,
+        "x1": 874,
+        "y1": 2484
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-42",
+      "lineId": "2.1.10",
+      "text": "Fpunb",
+      "bbox": {
+        "x0": 924,
+        "y0": 2412,
+        "x1": 1115,
+        "y1": 2484
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-43",
+      "lineId": "2.1.11",
+      "text": "Fopgoxe",
+      "bbox": {
+        "x0": 670,
+        "y0": 2509,
+        "x1": 946,
+        "y1": 2584
+      },
+      "confidence": 7.12328
+    },
+    {
+      "id": "w-44",
+      "lineId": "2.1.11",
+      "text": "Pink",
+      "bbox": {
+        "x0": 993,
+        "y0": 2510,
+        "x1": 1148,
+        "y1": 2575
+      },
+      "confidence": 93.255608
+    },
+    {
+      "id": "w-45",
+      "lineId": "2.1.11",
+      "text": "50mn",
+      "bbox": {
+        "x0": 1198,
+        "y0": 2510,
+        "x1": 1355,
+        "y1": 2576
+      },
+      "confidence": 75.737747
+    },
+    {
+      "id": "w-46",
+      "lineId": "2.1.12",
+      "text": "ToHuK",
+      "bbox": {
+        "x0": 663,
+        "y0": 2610,
+        "x1": 853,
+        "y1": 2677
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-47",
+      "lineId": "2.1.12",
+      "text": "Weenc",
+      "bbox": {
+        "x0": 901,
+        "y0": 2611,
+        "x1": 1101,
+        "y1": 2678
+      },
+      "confidence": 49.521942
+    },
+    {
+      "id": "w-48",
+      "lineId": "2.1.12",
+      "text": "250",
+      "bbox": {
+        "x0": 1149,
+        "y0": 2612,
+        "x1": 1268,
+        "y1": 2679
+      },
+      "confidence": 96.545471
+    },
+    {
+      "id": "w-49",
+      "lineId": "2.1.12",
+      "text": "mn",
+      "bbox": {
+        "x0": 1316,
+        "y0": 2631,
+        "x1": 1392,
+        "y1": 2680
+      },
+      "confidence": 71.490646
+    },
+    {
+      "id": "w-50",
+      "lineId": "2.1.13",
+      "text": "AWYHYYK",
+      "bbox": {
+        "x0": 645,
+        "y0": 2713,
+        "x1": 924,
+        "y1": 2788
+      },
+      "confidence": 52.219849
+    },
+    {
+      "id": "w-51",
+      "lineId": "2.1.14",
+      "text": "Waw-ke6a6",
+      "bbox": {
+        "x0": 631,
+        "y0": 2814,
+        "x1": 1002,
+        "y1": 2887
+      },
+      "confidence": 29.024096
+    },
+    {
+      "id": "w-52",
+      "lineId": "2.1.14",
+      "text": "43",
+      "bbox": {
+        "x0": 1051,
+        "y0": 2835,
+        "x1": 1127,
+        "y1": 2889
+      },
+      "confidence": 51.623463
+    },
+    {
+      "id": "w-53",
+      "lineId": "2.1.14",
+      "text": "bapaHuHbi",
+      "bbox": {
+        "x0": 1177,
+        "y0": 2818,
+        "x1": 1512,
+        "y1": 2904
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-54",
+      "lineId": "2.1.15",
+      "text": "babn",
+      "bbox": {
+        "x0": 616,
+        "y0": 2919,
+        "x1": 779,
+        "y1": 2994
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-55",
+      "lineId": "2.1.15",
+      "text": "ou33",
+      "bbox": {
+        "x0": 828,
+        "y0": 2920,
+        "x1": 991,
+        "y1": 2999
+      },
+      "confidence": 3.525314
+    },
+    {
+      "id": "w-56",
+      "lineId": "2.1.15",
+      "text": "450mn",
+      "bbox": {
+        "x0": 1040,
+        "y0": 2928,
+        "x1": 1248,
+        "y1": 3003
+      },
+      "confidence": 84.89798
+    },
+    {
+      "id": "w-57",
+      "lineId": "2.1.16",
+      "text": "Bop",
+      "bbox": {
+        "x0": 603,
+        "y0": 3027,
+        "x1": 767,
+        "y1": 3114
+      },
+      "confidence": 20.583105
+    },
+    {
+      "id": "w-58",
+      "lineId": "2.1.16",
+      "text": "XadcKuii",
+      "bbox": {
+        "x0": 816,
+        "y0": 3033,
+        "x1": 1112,
+        "y1": 3110
+      },
+      "confidence": 8.682461
+    },
+    {
+      "id": "w-59",
+      "lineId": "3.1.1",
+      "text": "Bo3HarpaxgeHue",
+      "bbox": {
+        "x0": 571,
+        "y0": 3592,
+        "x1": 1186,
+        "y1": 3683
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-60",
+      "lineId": "3.1.1",
+      "text": "ObMuWaHTY",
+      "bbox": {
+        "x0": 1240,
+        "y0": 3609,
+        "x1": 1634,
+        "y1": 3695
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-61",
+      "lineId": "3.1.1",
+      "text": "NpMuBeTCTBYyeTCA",
+      "bbox": {
+        "x0": 1692,
+        "y0": 3638,
+        "x1": 2322,
+        "y1": 3702
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-62",
+      "lineId": "3.1.2",
+      "text": "HO",
+      "bbox": {
+        "x0": 618,
+        "y0": 3721,
+        "x1": 698,
+        "y1": 3770
+      },
+      "confidence": 95.338432
+    },
+    {
+      "id": "w-63",
+      "lineId": "3.1.2",
+      "text": "BCE",
+      "bbox": {
+        "x0": 752,
+        "y0": 3722,
+        "x1": 877,
+        "y1": 3771
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-64",
+      "lineId": "3.1.2",
+      "text": "Aa",
+      "bbox": {
+        "x0": 939,
+        "y0": 3725,
+        "x1": 1010,
+        "y1": 3781
+      },
+      "confidence": 0
+    },
+    {
+      "id": "w-65",
+      "lineId": "3.1.2",
+      "text": "OCTaeTCA",
+      "bbox": {
+        "x0": 1063,
+        "y0": 3728,
+        "x1": 1413,
+        "y1": 3777
+      },
+      "confidence": 55.060768
+    },
+    {
+      "id": "w-66",
+      "lineId": "3.1.2",
+      "text": "Ha",
+      "bbox": {
+        "x0": 1467,
+        "y0": 3735,
+        "x1": 1548,
+        "y1": 3779
+      },
+      "confidence": 93.230743
+    },
+    {
+      "id": "w-67",
+      "lineId": "3.1.2",
+      "text": "Bawe",
+      "bbox": {
+        "x0": 1601,
+        "y0": 3720,
+        "x1": 1773,
+        "y1": 3783
+      },
+      "confidence": 91.923309
+    },
+    {
+      "id": "w-68",
+      "lineId": "3.1.2",
+      "text": "ycmoTpeHuve.",
+      "bbox": {
+        "x0": 1829,
+        "y0": 3741,
+        "x1": 2302,
+        "y1": 3794
+      },
+      "confidence": 32.42469
+    }
+  ],
+  "lines": [
+    {
+      "id": "1.1.1",
+      "text": "Yak FZISZUS8 - CTON F 41d, Vocten ,",
+      "bbox": {
+        "x0": 663,
+        "y0": 930,
+        "x1": 2235,
+        "y1": 1015
+      },
+      "confidence": 0,
+      "wordIds": [
+        "w-1",
+        "w-2",
+        "w-3",
+        "w-4",
+        "w-5",
+        "w-6",
+        "w-7",
+        "w-8"
+      ]
+    },
+    {
+      "id": "1.1.2",
+      "text": "16.06.2018 OQrKpbiT 18217 Tekatb 19:15",
+      "bbox": {
+        "x0": 676,
+        "y0": 1023,
+        "x1": 2257,
+        "y1": 1093
+      },
+      "confidence": 0,
+      "wordIds": [
+        "w-9",
+        "w-10",
+        "w-11",
+        "w-12",
+        "w-13"
+      ]
+    },
+    {
+      "id": "1.1.3",
+      "text": "KaccHp : KaCccup I",
+      "bbox": {
+        "x0": 656,
+        "y0": 1119,
+        "x1": 1334,
+        "y1": 1199
+      },
+      "confidence": 0,
+      "wordIds": [
+        "w-14",
+        "w-15",
+        "w-16",
+        "w-17"
+      ]
+    },
+    {
+      "id": "1.2.1",
+      "text": "OdMuUMAHT: OdWuUWaHT",
+      "bbox": {
+        "x0": 657,
+        "y0": 1219,
+        "x1": 1416,
+        "y1": 1293
+      },
+      "confidence": 0,
+      "wordIds": [
+        "w-18",
+        "w-19"
+      ]
+    },
+    {
+      "id": "2.1.1",
+      "text": "bNWAO",
+      "bbox": {
+        "x0": 659,
+        "y0": 1420,
+        "x1": 857,
+        "y1": 1492
+      },
+      "confidence": 13.369036,
+      "wordIds": [
+        "w-20"
+      ]
+    },
+    {
+      "id": "2.1.2",
+      "text": "MuKC canaT C aBOK.W",
+      "bbox": {
+        "x0": 664,
+        "y0": 1627,
+        "x1": 1434,
+        "y1": 1685
+      },
+      "confidence": 43.401443,
+      "wordIds": [
+        "w-21",
+        "w-22",
+        "w-23",
+        "w-24"
+      ]
+    },
+    {
+      "id": "2.1.3",
+      "text": "Kny6.",
+      "bbox": {
+        "x0": 668,
+        "y0": 1726,
+        "x1": 854,
+        "y1": 1795
+      },
+      "confidence": 6.335506,
+      "wordIds": [
+        "w-25"
+      ]
+    },
+    {
+      "id": "2.1.4",
+      "text": "MaHTbl C NOCOCEM",
+      "bbox": {
+        "x0": 670,
+        "y0": 1828,
+        "x1": 1277,
+        "y1": 1887
+      },
+      "confidence": 36.435196,
+      "wordIds": [
+        "w-26",
+        "w-27",
+        "w-28"
+      ]
+    },
+    {
+      "id": "2.1.5",
+      "text": "law-Ke6ab WS KYPHUbI",
+      "bbox": {
+        "x0": 673,
+        "y0": 1917,
+        "x1": 1439,
+        "y1": 1990
+      },
+      "confidence": 2.330952,
+      "wordIds": [
+        "w-29",
+        "w-30",
+        "w-31"
+      ]
+    },
+    {
+      "id": "2.1.6",
+      "text": "unas Kabepre.",
+      "bbox": {
+        "x0": 678,
+        "y0": 2020,
+        "x1": 1230,
+        "y1": 2096
+      },
+      "confidence": 23.2794,
+      "wordIds": [
+        "w-32",
+        "w-33"
+      ]
+    },
+    {
+      "id": "2.1.7",
+      "text": "Nekdonge 750mNn",
+      "bbox": {
+        "x0": 687,
+        "y0": 2116,
+        "x1": 1242,
+        "y1": 2192
+      },
+      "confidence": 0,
+      "wordIds": [
+        "w-34",
+        "w-35"
+      ]
+    },
+    {
+      "id": "2.1.8",
+      "text": "Ceaxan 3enekb",
+      "bbox": {
+        "x0": 693,
+        "y0": 2213,
+        "x1": 1202,
+        "y1": 2280
+      },
+      "confidence": 0,
+      "wordIds": [
+        "w-36",
+        "w-37"
+      ]
+    },
+    {
+      "id": "2.1.9",
+      "text": "MaHTb C GapaHHHOM",
+      "bbox": {
+        "x0": 687,
+        "y0": 2309,
+        "x1": 1360,
+        "y1": 2386
+      },
+      "confidence": 0,
+      "wordIds": [
+        "w-38",
+        "w-39",
+        "w-40"
+      ]
+    },
+    {
+      "id": "2.1.10",
+      "text": "OBowl Fpunb",
+      "bbox": {
+        "x0": 677,
+        "y0": 2409,
+        "x1": 1115,
+        "y1": 2484
+      },
+      "confidence": 0,
+      "wordIds": [
+        "w-41",
+        "w-42"
+      ]
+    },
+    {
+      "id": "2.1.11",
+      "text": "Fopgoxe Pink 50mn",
+      "bbox": {
+        "x0": 670,
+        "y0": 2509,
+        "x1": 1355,
+        "y1": 2584
+      },
+      "confidence": 7.12328,
+      "wordIds": [
+        "w-43",
+        "w-44",
+        "w-45"
+      ]
+    },
+    {
+      "id": "2.1.12",
+      "text": "ToHuK Weenc 250 mn",
+      "bbox": {
+        "x0": 663,
+        "y0": 2610,
+        "x1": 1392,
+        "y1": 2680
+      },
+      "confidence": 0,
+      "wordIds": [
+        "w-46",
+        "w-47",
+        "w-48",
+        "w-49"
+      ]
+    },
+    {
+      "id": "2.1.13",
+      "text": "AWYHYYK",
+      "bbox": {
+        "x0": 645,
+        "y0": 2713,
+        "x1": 924,
+        "y1": 2788
+      },
+      "confidence": 52.219849,
+      "wordIds": [
+        "w-50"
+      ]
+    },
+    {
+      "id": "2.1.14",
+      "text": "Waw-ke6a6 43 bapaHuHbi",
+      "bbox": {
+        "x0": 631,
+        "y0": 2814,
+        "x1": 1512,
+        "y1": 2904
+      },
+      "confidence": 0,
+      "wordIds": [
+        "w-51",
+        "w-52",
+        "w-53"
+      ]
+    },
+    {
+      "id": "2.1.15",
+      "text": "babn ou33 450mn",
+      "bbox": {
+        "x0": 616,
+        "y0": 2919,
+        "x1": 1248,
+        "y1": 3003
+      },
+      "confidence": 0,
+      "wordIds": [
+        "w-54",
+        "w-55",
+        "w-56"
+      ]
+    },
+    {
+      "id": "2.1.16",
+      "text": "Bop XadcKuii",
+      "bbox": {
+        "x0": 603,
+        "y0": 3027,
+        "x1": 1112,
+        "y1": 3114
+      },
+      "confidence": 8.682461,
+      "wordIds": [
+        "w-57",
+        "w-58"
+      ]
+    },
+    {
+      "id": "3.1.1",
+      "text": "Bo3HarpaxgeHue ObMuWaHTY NpMuBeTCTBYyeTCA",
+      "bbox": {
+        "x0": 571,
+        "y0": 3592,
+        "x1": 2322,
+        "y1": 3702
+      },
+      "confidence": 0,
+      "wordIds": [
+        "w-59",
+        "w-60",
+        "w-61"
+      ]
+    },
+    {
+      "id": "3.1.2",
+      "text": "HO BCE Aa OCTaeTCA Ha Bawe ycmoTpeHuve.",
+      "bbox": {
+        "x0": 618,
+        "y0": 3720,
+        "x1": 2302,
+        "y1": 3794
+      },
+      "confidence": 0,
+      "wordIds": [
+        "w-62",
+        "w-63",
+        "w-64",
+        "w-65",
+        "w-66",
+        "w-67",
+        "w-68"
+      ]
+    }
+  ],
+  "rawText": "Yak FZISZUS8 - CTON F 41d, Vocten ,\n16.06.2018 OQrKpbiT 18217 Tekatb 19:15\nKaccHp : KaCccup I\nOdMuUMAHT: OdWuUWaHT\nbNWAO\nMuKC canaT C aBOK.W\nKny6.\nMaHTbl C NOCOCEM\nlaw-Ke6ab WS KYPHUbI\nunas Kabepre.\nNekdonge 750mNn\nCeaxan 3enekb\nMaHTb C GapaHHHOM\nOBowl Fpunb\nFopgoxe Pink 50mn\nToHuK Weenc 250 mn\nAWYHYYK\nWaw-ke6a6 43 bapaHuHbi\nbabn ou33 450mn\nBop XadcKuii\nBo3HarpaxgeHue ObMuWaHTY NpMuBeTCTBYyeTCA\nHO BCE Aa OCTaeTCA Ha Bawe ycmoTpeHuve."
+}

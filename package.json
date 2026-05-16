@@ -1,0 +1,11 @@
+{
+    "name": "klyn",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "test": "node --test tests/parser.test.mjs",
+        "capture-ocr": "node tools/capture-ocr.mjs",
+        "seed-golden": "node tools/seed-golden.mjs",
+        "bless": "node tools/bless-goldens.mjs"
+    }
+}

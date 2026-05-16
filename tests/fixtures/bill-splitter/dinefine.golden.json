@@ -1,0 +1,79 @@
+{
+  "fixture": "dinefine",
+  "truth": {
+    "detectedLocale": "en-US",
+    "items": [
+      {
+        "name": "2X CAESAR SALAD",
+        "price": 24
+      },
+      {
+        "name": "GRILLED SALMON",
+        "price": 22
+      },
+      {
+        "name": "CHEESECAKE",
+        "price": 7.5
+      },
+      {
+        "name": "2X SPARKLING WATER",
+        "price": 6
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 47.5,
+        "label": "subtotal:"
+      },
+      {
+        "type": "tax",
+        "amount": 3.8,
+        "label": "tax:"
+      },
+      {
+        "type": "total",
+        "amount": 51.3,
+        "label": "total:"
+      }
+    ]
+  },
+  "baseline": {
+    "detectedLocale": "en-US",
+    "items": [
+      {
+        "name": "2x caesar salad",
+        "price": 24
+      },
+      {
+        "name": "grilled salmon",
+        "price": 22
+      },
+      {
+        "name": "cheesecake",
+        "price": 7.5
+      },
+      {
+        "name": "2x sparkling water",
+        "price": 6
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 47.5,
+        "label": "subtotal:"
+      },
+      {
+        "type": "tax",
+        "amount": 3.8,
+        "label": "tax:"
+      },
+      {
+        "type": "total",
+        "amount": 51.3,
+        "label": "total:"
+      }
+    ]
+  }
+}

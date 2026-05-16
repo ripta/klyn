@@ -1,0 +1,35 @@
+{
+  "fixture": "brasa",
+  "unblessed": "OCR damage on prices is too severe for a stable baseline — item prices were captured as \"alee.\" and \"ie\", the total appears as \"g23.85\" (currency symbol misread as letter, confidence 0), subtotal/tax lack any digits. The bottom of the receipt has a paragraph of policy text that dominates the word set. The parser geometry cannot compensate; needs a re-OCR before this fixture can produce a meaningful baseline.",
+  "truth": {
+    "items": [
+      {
+        "name": "Roasted Pork & Over Easy Egg Bowl",
+        "price": 15.25
+      },
+      {
+        "name": "Indeed Mex Honey Lite",
+        "price": 6.5
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 21.75
+      },
+      {
+        "type": "tax",
+        "amount": 2.13
+      },
+      {
+        "type": "total",
+        "amount": 23.88
+      }
+    ]
+  },
+  "baseline": {
+    "detectedLocale": "en-US",
+    "items": [],
+    "fees": []
+  }
+}
