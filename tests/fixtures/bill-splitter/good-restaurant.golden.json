@@ -1,0 +1,38 @@
+{
+  "fixture": "good-restaurant",
+  "truth": {
+    "items": [
+      {
+        "name": "1 Biscuits",
+        "price": 3
+      },
+      {
+        "name": "1 Combo",
+        "price": 16.5
+      },
+      {
+        "name": "1 Frittata",
+        "price": 11.75
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 31.25
+      },
+      {
+        "type": "tax",
+        "amount": 2.62
+      },
+      {
+        "type": "total",
+        "amount": 33.87
+      }
+    ]
+  },
+  "baseline": {
+    "detectedLocale": "en-US",
+    "items": [],
+    "fees": []
+  }
+}

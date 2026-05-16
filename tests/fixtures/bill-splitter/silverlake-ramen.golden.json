@@ -1,0 +1,87 @@
+{
+  "fixture": "silverlake-ramen",
+  "truth": {
+    "items": [
+      {
+        "name": "1x Blaze",
+        "price": 17.25
+      },
+      {
+        "name": "1x Pork",
+        "price": 0
+      },
+      {
+        "name": "1x Medium",
+        "price": 0
+      },
+      {
+        "name": "1x Seasoned Boiled Egg",
+        "price": 2.5
+      },
+      {
+        "name": "1x Calpico",
+        "price": 2.95
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 22.7
+      },
+      {
+        "type": "tax",
+        "amount": 2.44
+      },
+      {
+        "type": "tip",
+        "amount": 3.41
+      },
+      {
+        "type": "total",
+        "amount": 28.55
+      }
+    ]
+  },
+  "baseline": {
+    "detectedLocale": "en-US",
+    "items": [
+      {
+        "name": "ix blaze",
+        "price": 17.25
+      },
+      {
+        "name": "lx pork",
+        "price": 0
+      },
+      {
+        "name": "1x medium",
+        "price": 0
+      },
+      {
+        "name": "ix seasoned boiled egg",
+        "price": 2.5
+      },
+      {
+        "name": "1x calpico",
+        "price": 2.95
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 22.7,
+        "label": "sub total"
+      },
+      {
+        "type": "tax",
+        "amount": 2.44,
+        "label": "tax total"
+      },
+      {
+        "type": "total",
+        "amount": 26.55,
+        "label": "order tota)"
+      }
+    ]
+  }
+}

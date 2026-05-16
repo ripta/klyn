@@ -1,0 +1,40 @@
+{
+  "fixture": "newstand-pair",
+  "truth": null,
+  "baseline": {
+    "detectedLocale": "en-US",
+    "items": [
+      {
+        "name": "4 regular vietnamese cafe",
+        "price": 7
+      }
+    ],
+    "fees": [
+      {
+        "type": "service",
+        "amount": 0.38,
+        "label": "service fee (2.90%)"
+      },
+      {
+        "type": "service",
+        "amount": 0.2,
+        "label": "service fee (2.90%)"
+      },
+      {
+        "type": "subtotal",
+        "amount": 1.2,
+        "label": "subtotal"
+      },
+      {
+        "type": "subtotal",
+        "amount": 1.06,
+        "label": "subtotal"
+      },
+      {
+        "type": "total",
+        "amount": 1.19,
+        "label": "total"
+      }
+    ]
+  }
+}

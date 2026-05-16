@@ -1,0 +1,70 @@
+{
+  "fixture": "nello",
+  "truth": null,
+  "baseline": {
+    "detectedLocale": "en-US",
+    "items": [
+      {
+        "name": "1 mare monte",
+        "price": 39
+      },
+      {
+        "name": "1 rigatont sictliana",
+        "price": 906
+      },
+      {
+        "name": "1",
+        "price": 55
+      },
+      {
+        "name": "1",
+        "price": 10
+      },
+      {
+        "name": "2 chunks",
+        "price": 28
+      },
+      {
+        "name": "1 lg hater",
+        "price": 12
+      },
+      {
+        "name": "5 tanny. 40)",
+        "price": 275
+      },
+      {
+        "name": "d truffle",
+        "price": 200
+      },
+      {
+        "name": "2 asparagus nello",
+        "price": 960
+      },
+      {
+        "name": "3 cappuccino 2 alan,",
+        "price": 27
+      },
+      {
+        "name": "2 espresso",
+        "price": 15
+      },
+      {
+        "name": "1",
+        "price": 15
+      },
+      {
+        "name": "1 ninestrone vero 3 la tache romanee co $15000.00",
+        "price": 18
+      },
+      {
+        "name": "blue",
+        "price": 150
+      },
+      {
+        "name": "tagliolini 2 oristal rose magnum $10000.00",
+        "price": 505
+      }
+    ],
+    "fees": []
+  }
+}

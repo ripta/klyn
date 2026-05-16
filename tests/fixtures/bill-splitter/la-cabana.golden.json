@@ -1,0 +1,53 @@
+{
+  "fixture": "la-cabana",
+  "truth": {
+    "items": [
+      {
+        "name": "1 Dos Tacos (Brunch)",
+        "price": 18
+      },
+      {
+        "name": "1 6. Taco y Enchilada (Super Combo)",
+        "price": 21.95
+      },
+      {
+        "name": "1 Brunch Reg Lime Margarita",
+        "price": 12.75
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 52.7
+      },
+      {
+        "type": "tax",
+        "amount": 5.01
+      },
+      {
+        "type": "total",
+        "amount": 57.71
+      }
+    ]
+  },
+  "baseline": {
+    "detectedLocale": "en-US",
+    "items": [
+      {
+        "name": "1 dos tacos (brunch) 1 6. taco y enchilada (super combo)21,95",
+        "price": 18
+      },
+      {
+        "name": "1 brunch reg lime margarita",
+        "price": 12.75
+      }
+    ],
+    "fees": [
+      {
+        "type": "total",
+        "amount": 57.71,
+        "label": "total"
+      }
+    ]
+  }
+}

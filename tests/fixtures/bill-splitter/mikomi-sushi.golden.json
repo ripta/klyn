@@ -1,0 +1,139 @@
+{
+  "fixture": "mikomi-sushi",
+  "truth": {
+    "items": [
+      {
+        "name": "1 Water",
+        "price": 0
+      },
+      {
+        "name": "1 Sushi Combo 1 (8pcs)",
+        "price": 32
+      },
+      {
+        "name": "Spicy Tuna Roll",
+        "price": 0
+      },
+      {
+        "name": "1 Sushi Combo 1 (8pcs)",
+        "price": 32
+      },
+      {
+        "name": "Tuna Roll",
+        "price": 0
+      },
+      {
+        "name": "1 Garlic Green Beans",
+        "price": 12
+      },
+      {
+        "name": "1 Mixed Tempura",
+        "price": 16
+      },
+      {
+        "name": "1 Ice Tea",
+        "price": 4.5
+      },
+      {
+        "name": "1 Macaron Ice Cream (1pc)",
+        "price": 5
+      },
+      {
+        "name": "Mango",
+        "price": 0
+      },
+      {
+        "name": "1 Macaron Ice Cream (1pc)",
+        "price": 5
+      },
+      {
+        "name": "Green Tea",
+        "price": 0
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 106.5
+      },
+      {
+        "type": "tax",
+        "amount": 11.45
+      },
+      {
+        "type": "total",
+        "amount": 117.95
+      }
+    ]
+  },
+  "baseline": {
+    "detectedLocale": "en-US",
+    "items": [
+      {
+        "name": "1 water",
+        "price": 0
+      },
+      {
+        "name": "1 sushi combo 1 (8pcs)",
+        "price": 32
+      },
+      {
+        "name": "spicy tuna roll",
+        "price": 0
+      },
+      {
+        "name": "1 sushi combo 1 (8pcs)",
+        "price": 32
+      },
+      {
+        "name": "tuna roll",
+        "price": 0
+      },
+      {
+        "name": "garlic green beans",
+        "price": 12
+      },
+      {
+        "name": "1 mixed tempura",
+        "price": 16
+      },
+      {
+        "name": "1 ice tea",
+        "price": 4.5
+      },
+      {
+        "name": "macaron ice cream (1pc)",
+        "price": 5
+      },
+      {
+        "name": "mango",
+        "price": 0
+      },
+      {
+        "name": "1 macaron ice cream (1pc)",
+        "price": 5
+      },
+      {
+        "name": "green tea",
+        "price": 0
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 106.5,
+        "label": "subtotal"
+      },
+      {
+        "type": "tax",
+        "amount": 11.45,
+        "label": "sales tax 10.75%"
+      },
+      {
+        "type": "total",
+        "amount": 117.95,
+        "label": "total"
+      }
+    ]
+  }
+}

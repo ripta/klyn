@@ -1,0 +1,9 @@
+{
+  "fixture": "el-mall",
+  "truth": null,
+  "baseline": {
+    "detectedLocale": "en-US",
+    "items": [],
+    "fees": []
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "fixture": "russian-cafe",
+  "truth": null,
+  "baseline": {
+    "detectedLocale": "de-DE",
+    "items": [],
+    "fees": []
+  }
+}

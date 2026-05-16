@@ -1,0 +1,34 @@
+{
+  "fixture": "brasa",
+  "truth": {
+    "items": [
+      {
+        "name": "Roasted Pork & Over Easy Egg Bowl",
+        "price": 15.25
+      },
+      {
+        "name": "Indeed Mex Honey Lite",
+        "price": 6.5
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 21.75
+      },
+      {
+        "type": "tax",
+        "amount": 2.13
+      },
+      {
+        "type": "total",
+        "amount": 23.88
+      }
+    ]
+  },
+  "baseline": {
+    "detectedLocale": "en-US",
+    "items": [],
+    "fees": []
+  }
+}

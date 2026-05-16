@@ -1,0 +1,57 @@
+{
+  "fixture": "hard-shell-taco",
+  "truth": {
+    "items": [
+      {
+        "name": "2 Hard Shell Taco",
+        "price": 3.98
+      },
+      {
+        "name": "Plus Tomate",
+        "price": 1.5
+      },
+      {
+        "name": "1 Arroz",
+        "price": 1.99
+      },
+      {
+        "name": "1 Fried Ice Cream",
+        "price": 4.99
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 12.46
+      },
+      {
+        "type": "tax",
+        "amount": 0.75
+      },
+      {
+        "type": "service",
+        "amount": 0.53
+      },
+      {
+        "type": "total",
+        "amount": 13.74
+      }
+    ]
+  },
+  "baseline": {
+    "detectedLocale": "en-US",
+    "items": [],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 12.46,
+        "label": "subtotal:"
+      },
+      {
+        "type": "total",
+        "amount": 13.74,
+        "label": "non cash ad) total:"
+      }
+    ]
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "fixture": "the-buffalo",
+  "truth": {
+    "items": [
+      {
+        "name": "1 BOYLANS Root Beer",
+        "price": 3.15
+      },
+      {
+        "name": "1 Buffalo Burger",
+        "price": 13.5
+      },
+      {
+        "name": "1 Lamb Burger",
+        "price": 12.6
+      },
+      {
+        "name": "1 GLS Pio Grigio Pinot Grigio",
+        "price": 6.3
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 35.55
+      },
+      {
+        "type": "tax",
+        "amount": 2.81
+      },
+      {
+        "type": "total",
+        "amount": 38.36
+      },
+      {
+        "type": "discount",
+        "amount": 3.95
+      }
+    ]
+  },
+  "baseline": {
+    "detectedLocale": "en-US",
+    "items": [
+      {
+        "name": "1 boylans root beer sand",
+        "price": 3.15
+      },
+      {
+        "name": "1 buffalo burger",
+        "price": 13.5
+      },
+      {
+        "name": "1 lanb burger",
+        "price": 12.6
+      },
+      {
+        "name": "1g1s plu grigio pinot grigio",
+        "price": 6.3
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 35.55,
+        "label": "sub-total"
+      },
+      {
+        "type": "tax",
+        "amount": 2.81,
+        "label": "sales tax"
+      },
+      {
+        "type": "total",
+        "amount": 3.95,
+        "label": "total discounts"
+      },
+      {
+        "type": "total",
+        "amount": 3.95,
+        "label": "total discounted"
+      }
+    ]
+  }
+}

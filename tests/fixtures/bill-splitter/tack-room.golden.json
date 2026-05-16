@@ -1,0 +1,99 @@
+{
+  "fixture": "tack-room",
+  "truth": {
+    "items": [
+      {
+        "name": "1 BBQ Potato Chips",
+        "price": 7
+      },
+      {
+        "name": "1 Diet Coke",
+        "price": 3
+      },
+      {
+        "name": "1 Trillium Fort Point",
+        "price": 10
+      },
+      {
+        "name": "2 Fried Chicken Sandwich",
+        "price": 34
+      },
+      {
+        "name": "1 Famous Duck Grilled Cheese",
+        "price": 25
+      },
+      {
+        "name": "1 Mac & Cheese",
+        "price": 17
+      },
+      {
+        "name": "1 Burger of the moment",
+        "price": 18
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 114
+      },
+      {
+        "type": "service",
+        "amount": 3.42
+      },
+      {
+        "type": "tax",
+        "amount": 7.11
+      },
+      {
+        "type": "total",
+        "amount": 124.53
+      }
+    ]
+  },
+  "baseline": {
+    "detectedLocale": "en-US",
+    "items": [
+      {
+        "name": "1 bbq potato chips",
+        "price": 7
+      },
+      {
+        "name": "1 diet coke",
+        "price": 3
+      },
+      {
+        "name": "1 trillium fort point",
+        "price": 10
+      },
+      {
+        "name": "2 fried chicken sandwich 1 famous duck grilled cheese $25 .00",
+        "price": 34
+      },
+      {
+        "name": "1 mac & cheese",
+        "price": 17
+      },
+      {
+        "name": "1 burger of the moment",
+        "price": 18
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 114,
+        "label": "subtota $114.00"
+      },
+      {
+        "type": "tax",
+        "amount": 7.11,
+        "label": "tax"
+      },
+      {
+        "type": "total",
+        "amount": 124.53,
+        "label": "total"
+      }
+    ]
+  }
+}

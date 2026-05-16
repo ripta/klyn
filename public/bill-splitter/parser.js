@@ -73,7 +73,24 @@ function lineText(line) {
 }
 
 function containsAnyKeyword(text, keywords) {
-    return keywords.some((kw) => text.includes(kw));
+    if (keywords.some((kw) => text.includes(kw))) return true;
+    // OCR on creased receipts often garbles the trailing character of a word,
+    // e.g. `Total` → `Tota)`, `Subtotal` → `Subtota)`. Accept a keyword when
+    // its first N-1 letters appear as a standalone token after stripping
+    // non-letters. Restricted to keywords of ≥4 letters so that short words
+    // like `tip` / `tax` don't generate 2-letter stubs that match too widely.
+    const tokens = text
+        .split(/\s+/)
+        .map((t) => t.replace(/[^a-z]/g, ''))
+        .filter((t) => t.length >= 3);
+    if (tokens.length === 0) return false;
+    for (const kw of keywords) {
+        const compact = kw.replace(/\s+/g, '');
+        if (compact.length < 4) continue;
+        const stub = compact.slice(0, -1);
+        if (tokens.includes(stub)) return true;
+    }
+    return false;
 }
 
 // 1-D k-means-ish clustering on x-coordinates. For our needs we only really

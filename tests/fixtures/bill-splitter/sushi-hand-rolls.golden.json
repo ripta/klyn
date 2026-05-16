@@ -1,0 +1,122 @@
+{
+  "fixture": "sushi-hand-rolls",
+  "truth": {
+    "items": [
+      {
+        "name": "1 Hand Scallops",
+        "price": 5.25
+      },
+      {
+        "name": "1 Hand Scallops",
+        "price": 5.25
+      },
+      {
+        "name": "1 Hand Scallops",
+        "price": 5.25
+      },
+      {
+        "name": "1 Hand Shrimp",
+        "price": 5.25
+      },
+      {
+        "name": "1 Hand Shrimp",
+        "price": 5.25
+      },
+      {
+        "name": "1 Hand Yamaimo",
+        "price": 5.25
+      },
+      {
+        "name": "1 Hand Eel",
+        "price": 5.25
+      },
+      {
+        "name": "1 Hand Eel",
+        "price": 5.25
+      },
+      {
+        "name": "1 Hand Ytail",
+        "price": 5.75
+      },
+      {
+        "name": "1 Hand Ytail",
+        "price": 5.75
+      },
+      {
+        "name": "1 6-Hand Roll w/Lobster",
+        "price": 28
+      },
+      {
+        "name": "1 Hand Uni",
+        "price": 17
+      },
+      {
+        "name": "1 Hand Scallops",
+        "price": 5.25
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 103.75
+      },
+      {
+        "type": "service",
+        "amount": 16.6
+      },
+      {
+        "type": "tax",
+        "amount": 11.43
+      },
+      {
+        "type": "total",
+        "amount": 131.78
+      }
+    ]
+  },
+  "baseline": {
+    "detectedLocale": "en-US",
+    "items": [
+      {
+        "name": "1 hand scallops 1 hand scallops 5",
+        "price": 5.25
+      },
+      {
+        "name": "1 hand shrimp 1 hand shrimp 5.5",
+        "price": 5.35
+      },
+      {
+        "name": "1 hand eel",
+        "price": 5.26
+      },
+      {
+        "name": "1 hand ytail",
+        "price": 5.75
+      },
+      {
+        "name": "1 hand ytatl",
+        "price": 5.75
+      },
+      {
+        "name": "1 6-hand roll w/lobster",
+        "price": 28
+      },
+      {
+        "name": "1 hand uni 1 hand scallops 5.6",
+        "price": 17
+      }
+    ],
+    "fees": [
+      {
+        "type": "subtotal",
+        "amount": 103.75,
+        "label": "subtotal"
+      },
+      {
+        "type": "total",
+        "amount": 131.78,
+        "label": "total due"
+      }
+    ]
+  }
+}
