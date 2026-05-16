@@ -412,22 +412,41 @@
             preambleDiv.innerHTML = 'Loading...';
 
             try {
+                const markdownUrlObj = new URL(markdownUrl, window.location.href);
+                const baseUrl = markdownUrlObj.href.substring(0, markdownUrlObj.href.lastIndexOf('/') + 1);
+
                 const response = await fetch(markdownUrl);
-                
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
-                const markdownText = await response.text();
-                
-                marked.setOptions({
+                marked.use({
                     breaks: false,
                     gfm: true,
-                    headerIds: true,
-                    mangle: false,
+                    renderer: {
+                        link({href, title, text}) {
+                            try {
+                                return `<a href="${new URL(href, baseUrl).href}" title="${title || ''}">${text}</a>`;
+                            } catch (error) {
+                                console.error(`Error parsing link '${href}':`, error);
+                                return `<a href="${href}" title="${title || ''}">${text}</a>`;
+                            }
+                        },
+                        image({href, title, text}) {
+                            try {
+                                console.log(`Image: ${href}, ${title}, ${text}`);
+                                return `<img src="${new URL(href, baseUrl).href}" title="${title || ''}" alt="${text || ''}">`;
+                            } catch (error) {
+                                console.error(`Error parsing image '${href}':`, error);
+                                return `<img src="${href}" title="${title || ''}" alt="${text || ''}">`;
+                            }
+                        },
+                    },
                 });
 
+                const markdownText = await response.text();
                 const htmlContent = marked.parse(markdownText);
+
                 preambleDiv.innerHTML = '';
                 contentDiv.innerHTML = `<div class="markdown-content">${htmlContent}</div>`;
 
