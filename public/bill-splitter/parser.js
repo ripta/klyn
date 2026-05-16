@@ -130,9 +130,18 @@ export function parseReceipt({ words = [], lines = [] } = {}) {
     const warnings = [];
 
     // Stage 1: drop low-confidence noise, detect locale, classify prices.
-    const cleanWords = words.filter((w) => w.confidence >= MIN_WORD_CONFIDENCE && w.text.trim().length > 0);
-    const { locale: detectedLocale, parse: parseNumber } = buildNumberParser(cleanWords);
+    // Detect locale on the full word set so we get a richer sample, then keep
+    // words above the confidence floor PLUS any word whose text matches the
+    // price regex. Tesseract.js sometimes assigns a perfectly-readable price
+    // a confidence of 0 (seen on this receipt's second `$5.00`); the regex
+    // shape is strict enough that a low-confidence match is almost certainly
+    // a real price.
+    const nonEmpty = words.filter((w) => w.text.trim().length > 0);
+    const { locale: detectedLocale, parse: parseNumber } = buildNumberParser(nonEmpty);
     const priceRe = priceRegexFor(detectedLocale);
+    const cleanWords = nonEmpty.filter(
+        (w) => w.confidence >= MIN_WORD_CONFIDENCE || priceRe.test(w.text.trim()),
+    );
 
     const taggedWords = cleanWords.map((w) => {
         const text = w.text.trim();
@@ -233,6 +242,51 @@ export function parseReceipt({ words = [], lines = [] } = {}) {
             sourceWordIds: [priceWord.id, ...lineWords.map((w) => w.id)],
             assignees: new Set(),
         });
+    }
+
+    // Stage 4b: attach continuation lines. Receipts often wrap long item names
+    // across multiple lines, e.g.
+    //     "1 SUSHI COMBO 1     $32.00"
+    //     "   (8pcs)"
+    // The continuation has no price → it never starts its own item. Find such
+    // orphans in the items region and append them to the closest preceding
+    // item, judging "preceding" and "close" by Y-CENTER. (Tesseract.js often
+    // produces overlapping line bboxes for adjacent rows on a dense receipt;
+    // a strict y1<y0 check would exclude the actual parent line.)
+    const yCenter = (b) => (b.y0 + b.y1) / 2;
+    const linesById = new Map(sortedLines.map((l) => [l.id, l]));
+    const itemSourceLines = items
+        .map((it) => linesById.get(it.sourceLineId))
+        .filter(Boolean);
+    const itemByLineId = new Map(items.map((it) => [it.sourceLineId, it]));
+
+    for (const orphan of sortedLines) {
+        if (orphan.bbox.y0 >= totalsRegionStartY) continue;
+        if (itemByLineId.has(orphan.id)) continue;
+        const orphanWords = wordsByLine.get(orphan.id) || [];
+        if (orphanWords.length === 0) continue;
+        if (orphanWords.some((w) => w.isPrice)) continue;
+
+        const orphanCY = yCenter(orphan.bbox);
+        let bestLine = null;
+        let bestDist = Infinity;
+        for (const itemLine of itemSourceLines) {
+            const itemCY = yCenter(itemLine.bbox);
+            if (itemCY >= orphanCY) continue;
+            const dist = orphanCY - itemCY;
+            if (dist < bestDist) {
+                bestDist = dist;
+                bestLine = itemLine;
+            }
+        }
+        if (!bestLine) continue;
+        const orphanH = orphan.bbox.y1 - orphan.bbox.y0;
+        if (bestDist > orphanH * 1.5) continue;
+
+        const item = itemByLineId.get(bestLine.id);
+        if (!item) continue;
+        item.name = `${item.name} ${orphanWords.map((w) => w.text).join(' ')}`.trim();
+        item.sourceWordIds.push(...orphanWords.map((w) => w.id));
     }
 
     // Stage 5: fees / totals.

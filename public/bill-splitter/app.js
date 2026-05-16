@@ -17,7 +17,8 @@ const state = {
 };
 
 const els = {
-    fileInput: document.getElementById('file-input'),
+    fileInputCamera: document.getElementById('file-input-camera'),
+    fileInputLibrary: document.getElementById('file-input-library'),
     progress: document.getElementById('progress'),
     progressFill: document.getElementById('progress-fill'),
     progressLabel: document.getElementById('progress-label'),
@@ -45,12 +46,17 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 
 // ─── File input ────────────────────────────────────────────────────────────
 
-els.fileInput.addEventListener('change', async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    clearError();
-    await handleFile(file);
-});
+for (const input of [els.fileInputCamera, els.fileInputLibrary]) {
+    input.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        clearError();
+        // Reset both inputs so re-picking the same file still fires change.
+        els.fileInputCamera.value = '';
+        els.fileInputLibrary.value = '';
+        await handleFile(file);
+    });
+}
 
 async function handleFile(file) {
     let bitmap;
@@ -67,7 +73,7 @@ async function handleFile(file) {
     }
     state.image = bitmap;
     drawPreview(bitmap);
-    await runOcr(file);
+    await runOcr(bitmap);
 }
 
 function drawPreview(bitmap) {
@@ -85,15 +91,38 @@ function drawPreview(bitmap) {
 // ─── OCR + parse ───────────────────────────────────────────────────────────
 
 let ocrSession = null;
+let ocrSessionPromise = null;
 
-async function runOcr(blob) {
+function ensureOcrSession() {
+    if (ocrSession) return Promise.resolve(ocrSession);
+    if (!ocrSessionPromise) {
+        ocrSessionPromise = createOcrSession({ onProgress: handleOcrProgress }).then((s) => {
+            ocrSession = s;
+            return s;
+        });
+    }
+    return ocrSessionPromise;
+}
+
+async function runOcr(bitmap) {
     showProgress(0, 'Loading OCR engine…');
     try {
-        if (!ocrSession) {
-            ocrSession = await createOcrSession({ onProgress: handleOcrProgress });
-        }
-        const result = await ocrSession.recognize(blob);
+        await ensureOcrSession();
+
+        // OCR sees the orientation-corrected bitmap, rendered to a canvas.
+        // No pre-binarization: Tesseract's internal Sauvola adaptive binarizer
+        // handles document images well, and a naive global threshold here was
+        // collapsing receipt text into noise (see commit history).
+        const ocrCanvas = document.createElement('canvas');
+        ocrCanvas.width = bitmap.width;
+        ocrCanvas.height = bitmap.height;
+        ocrCanvas.getContext('2d').drawImage(bitmap, 0, 0);
+
+        const result = await ocrSession.recognize(ocrCanvas);
         state.ocr = result;
+        // Surface the raw OCR text in the console so misparses are debuggable
+        // without rebuilding. Cheap; only fires per image pick.
+        console.log('[bill-splitter] OCR raw text:\n' + (result.rawText || '(empty)'));
 
         showProgress(1, 'Parsing receipt…');
         const parsed = parseReceipt(result);
@@ -102,14 +131,17 @@ async function runOcr(blob) {
         state.items = parsed.items.map((it) => ({ ...it, assignees: new Set(it.assignees || []) }));
         state.fees = parsed.fees;
 
-        hideProgress();
+        const n = state.items.length;
+        showProgress(1, `Receipt parsed — ${n} item${n === 1 ? '' : 's'}`, 'done');
         if (parsed.warnings.length) {
             showError(parsed.warnings.join(' '));
         }
         renderAll();
+        // On mobile, the items list is below the preview and easy to miss.
+        els.itemsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) {
         console.error(err);
-        hideProgress();
+        showReady();
         showError(`OCR failed: ${err.message || err}`);
     }
 }
@@ -126,6 +158,16 @@ function handleOcrProgress(m) {
     const label = labels[m.status] || m.status;
     showProgress(m.progress ?? 0, label);
 }
+
+// Kick off OCR engine preload on page load so the user isn't waiting for the
+// 10MB language model after they pick an image. Once it finishes the bar
+// settles into a "Ready" idle state.
+ensureOcrSession()
+    .then(() => showReady())
+    .catch((err) => {
+        console.error(err);
+        showError(`OCR engine failed to load: ${err.message || err}`);
+    });
 
 // ─── Rendering ─────────────────────────────────────────────────────────────
 
@@ -386,15 +428,15 @@ function removeParticipant(id) {
 
 // ─── Progress + error helpers ──────────────────────────────────────────────
 
-function showProgress(fraction, label) {
+function showProgress(fraction, label, kind = 'busy') {
     els.progress.hidden = false;
+    els.progress.dataset.state = kind;
     els.progressFill.style.width = `${Math.max(0, Math.min(1, fraction)) * 100}%`;
     els.progressLabel.textContent = label || '';
 }
 
-function hideProgress() {
-    els.progress.hidden = true;
-    els.progressFill.style.width = '0%';
+function showReady() {
+    showProgress(0, 'Ready', 'ready');
 }
 
 function showError(msg) {
@@ -418,3 +460,8 @@ function escapeHtml(s) {
 
 // Initial render so the "Me" chip is visible before any photo is loaded.
 renderParticipants();
+
+// Expose for browser-console debugging. After picking a receipt, you can
+// inspect __billSplitter.state.ocr.{words,lines,rawText} or copy a fixture
+// into the CLI tool: copy(JSON.stringify(__billSplitter.state.ocr))
+window.__billSplitter = { state };

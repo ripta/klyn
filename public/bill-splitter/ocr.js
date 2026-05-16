@@ -16,11 +16,18 @@ export async function createOcrSession({ onProgress } = {}) {
         },
     });
 
-    // PSM 4 = SINGLE_COLUMN. Pass the literal so we don't depend on
-    // Tesseract.PSM being exposed on the global across versions.
+    // PSM 3 = AUTO. Lets Tesseract do its own page segmentation, which
+    // matters when the receipt only occupies part of the frame (photo against
+    // a dark surface). SINGLE_COLUMN assumed the whole image was one column
+    // and dragged in too much background noise.
+    //
+    // The whitelist is a literal list of characters — NOT a regex. "A-Z"
+    // would only allow A, -, Z. So letter ranges must be spelled out, or
+    // every non-A/Z letter collapses to "A" in the output.
     await worker.setParameters({
-        tessedit_pageseg_mode: 4,
-        tessedit_char_whitelist: "0-9A-Za-z.,$%/#@:&'\"() -",
+        tessedit_pageseg_mode: 3,
+        tessedit_char_whitelist:
+            'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,$%/#@:&\'"() -',
         preserve_interword_spaces: '1',
     });
 

@@ -67,6 +67,7 @@ h1, h2, h3 { margin: 0; color: var(--ink); }
     flex: 0 0 auto;
     display: flex;
     align-items: center;
+    gap: 8px;
 }
 
 .file-button {
@@ -91,11 +92,29 @@ h1, h2, h3 { margin: 0; color: var(--ink); }
     pointer-events: none;
 }
 
+/* Desktop: hide the camera-only button and the mobile label span. */
+.file-button-camera { display: none; }
+.label-mobile { display: none; }
+.label-desktop { display: inline; }
+
 .progress {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-top: 10px;
+}
+
+/* The HTML hidden attribute is otherwise overridden by display: flex above. */
+.progress[hidden] { display: none; }
+
+.progress[data-state="ready"] .progress-fill,
+.progress[data-state="done"] .progress-fill {
+    background: var(--good);
+}
+
+.progress[data-state="ready"] .progress-label,
+.progress[data-state="done"] .progress-label {
+    color: var(--good);
 }
 
 .progress-bar {
@@ -472,6 +491,30 @@ h1, h2, h3 { margin: 0; color: var(--ink); }
         border-top: 1px solid var(--rule);
     }
     .preview-pane {
-        max-height: 40vh;
+        max-height: 28vh;
     }
+    .page-header {
+        padding: 10px 14px;
+    }
+    .page-header h1 { font-size: 16px; }
+    .subtitle { display: none; }
+    .header-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    .header-controls {
+        display: flex;
+        gap: 8px;
+    }
+    .file-button {
+        flex: 1;
+        justify-content: center;
+        padding: 10px 12px;
+    }
+    .file-button-camera { display: inline-flex; }
+    .label-mobile { display: inline; }
+    .label-desktop { display: none; }
+    .progress { margin-top: 8px; }
+    .progress-label { min-width: 0; }
 }
