@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bill Splitter</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+    <header class="page-header">
+        <div class="header-row">
+            <div class="header-text">
+                <h1>Bill Splitter</h1>
+                <p class="subtitle">
+                    Take a photo of a receipt (or pick one from your computer). The page runs OCR locally,
+                    extracts line items, and lets you split them among people. No data leaves your device.
+                </p>
+            </div>
+            <div class="header-controls">
+                <label class="file-button">
+                    <input id="file-input" type="file" accept="image/*" capture="environment" />
+                    <span class="file-button-label">Choose receipt photo…</span>
+                </label>
+            </div>
+        </div>
+        <div id="progress" class="progress" hidden>
+            <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+            <span id="progress-label" class="progress-label">Loading…</span>
+        </div>
+        <p id="error" class="error" hidden></p>
+    </header>
+
+    <main class="layout">
+        <section class="preview-pane" aria-label="Receipt preview">
+            <div id="preview-empty" class="preview-empty">
+                <p>No receipt loaded yet.</p>
+                <p class="preview-empty-hint">On iPhone, “Take Photo” will open the camera. On desktop, pick a JPEG/PNG.</p>
+            </div>
+            <canvas id="preview-canvas" class="preview-canvas" hidden></canvas>
+        </section>
+
+        <aside class="rail" aria-label="Items and totals">
+            <section class="rail-section">
+                <header class="rail-section-header">
+                    <h2>Participants</h2>
+                </header>
+                <ul id="participants-list" class="participants-list"></ul>
+                <form id="add-participant-form" class="add-participant">
+                    <input id="add-participant-input" type="text" placeholder="Add person…" maxlength="24" autocomplete="off" />
+                    <button type="submit">Add</button>
+                </form>
+            </section>
+
+            <section class="rail-section">
+                <header class="rail-section-header">
+                    <h2>Items</h2>
+                    <span id="items-count" class="rail-section-meta"></span>
+                </header>
+                <p id="items-empty" class="rail-empty">Pick a receipt to extract items.</p>
+                <ul id="items-list" class="items-list"></ul>
+            </section>
+
+            <section class="rail-section">
+                <header class="rail-section-header">
+                    <h2>Fees</h2>
+                </header>
+                <p id="fees-empty" class="rail-empty">No fees detected yet.</p>
+                <ul id="fees-list" class="fees-list"></ul>
+            </section>
+
+            <section class="rail-section totals-section">
+                <header class="rail-section-header">
+                    <h2>Totals</h2>
+                </header>
+                <ul id="totals-list" class="totals-list"></ul>
+                <p id="totals-warning" class="totals-warning" hidden></p>
+            </section>
+        </aside>
+    </main>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
