@@ -145,16 +145,16 @@ main.prose .shape-row jamoji-block {
     vertical-align: top;
 }
 
-/* DEBUG borders — remove once alignment is confirmed. */
-main.prose .shape-row              { outline: 1px solid magenta; }
-main.prose .shape-row > span       { outline: 1px solid blue; }
-main.prose .shape-row jamoji-block { outline: 1px solid limegreen; }
-
-main.prose .size-row > span:first-child,
-main.prose .shape-row > span:first-child {
+main.prose .size-row > span:first-child {
     color: var(--muted);
     font-size: 12px;
     min-width: 7em;
+}
+
+main.prose .shape-row > span:first-child {
+    color: var(--muted);
+    font-size: 12px;
+    flex: 0 0 14em;
 }
 
 .s-small { font-size: 12px; }

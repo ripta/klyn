@@ -28,11 +28,16 @@ function inferLayout(count) {
 const SHADOW_CSS = `
 :host {
     display: inline-grid;
+    box-sizing: border-box;
     width: 1em;
     height: 1em;
+    min-width: 0;
+    min-height: 0;
     vertical-align: text-bottom;
     line-height: 1;
     user-select: none;
+    overflow: hidden;
+    contain: size layout;
 }
 
 .cell {
@@ -40,6 +45,8 @@ const SHADOW_CSS = `
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    min-width: 0;
+    min-height: 0;
     width: 100%;
     height: 100%;
 }
