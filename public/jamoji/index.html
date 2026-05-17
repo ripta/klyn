@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>jamoji — emoji typesetting</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module">
+        import { define } from './registry.js';
+        define('speed',    { emojis: ['🚀', '💨'], layout: '2h', label: 'going fast' });
+        define('night',    { emojis: ['🌙', '⭐'], layout: '2h', label: 'a starry night' });
+        define('weather',  { emojis: ['☀️', '🌧'], layout: '2h', label: 'shifting weather' });
+        define('feast',    { emojis: ['🍕', '🍔', '🌮', '🍦'], layout: '4', label: 'a feast' });
+        define('bloom',    { emojis: ['🌸', '🌺', '🌻'], layout: '3t', label: 'three blooms' });
+        define('thunder',  { emojis: ['☁️', '⚡', '🌧'], layout: '3b', label: 'thunderstorm' });
+    </script>
+    <script type="module" src="jamoji.js"></script>
+</head>
+<body>
+    <header class="page-header">
+        <h1>jamoji</h1>
+        <p class="subtitle">
+            Type-setting custom emoji "characters" by composing pieces — like Hangul jamo combining
+            into a syllable block. This page is a Phase 1 showcase: a hand-authored exercise of the
+            <code>&lt;jamoji-block&gt;</code> framework before a composer UI is built on top.
+        </p>
+    </header>
+
+    <main class="prose">
+        <h2>The basics</h2>
+        <p>
+            A single emoji renders as itself — sized to 1em, sitting on the text baseline:
+            here is a <jamoji-block>🚀</jamoji-block> in body copy. Two emojis compose
+            side-by-side: a <jamoji-block label="rocket and fire">🚀🔥</jamoji-block> for speed,
+            a <jamoji-block label="night sky">🌙⭐</jamoji-block> at dusk, or a
+            <jamoji-block label="contrasting weather">☀️🌧</jamoji-block> shifting.
+        </p>
+        <p>
+            Three emojis form a "main + two modifiers" arrangement (first is the main):
+            <jamoji-block label="rocket between sparks">🚀✨💫</jamoji-block> or
+            <jamoji-block label="thunderstorm">☁️⚡🌧</jamoji-block>. Four split into quadrants:
+            <jamoji-block label="four flavors">🍕🍔🌮🍦</jamoji-block> and
+            <jamoji-block label="garden">🌸🌺🌻🌹</jamoji-block>.
+        </p>
+
+        <h3>Sizes — they scale with surrounding text</h3>
+        <div class="demo">
+            <span class="demo-label">same markup, different parent font-size</span>
+            <div class="size-row">
+                <span>caption</span>
+                <span class="s-small">flying fast <jamoji-block label="rocket and fire">🚀🔥</jamoji-block> through the night</span>
+            </div>
+            <div class="size-row">
+                <span>body</span>
+                <span class="s-body">flying fast <jamoji-block label="rocket and fire">🚀🔥</jamoji-block> through the night</span>
+            </div>
+            <div class="size-row">
+                <span>heading</span>
+                <span class="s-large">flying fast <jamoji-block label="rocket and fire">🚀🔥</jamoji-block> through the night</span>
+            </div>
+            <div class="size-row">
+                <span>display</span>
+                <span class="s-huge">fast <jamoji-block label="rocket and fire">🚀🔥</jamoji-block></span>
+            </div>
+        </div>
+
+        <h2>Layout shapes</h2>
+        <p>
+            All six layouts shown explicitly. The default chosen by emoji count is in parentheses.
+        </p>
+        <div class="demo">
+            <div class="shape-row">
+                <span><code>1</code> (default for 1)</span>
+                <span class="s-large"><jamoji-block layout="1" label="rocket">🚀</jamoji-block></span>
+            </div>
+            <div class="shape-row">
+                <span><code>2h</code> (default for 2)</span>
+                <span class="s-large"><jamoji-block layout="2h" label="rocket fire">🚀🔥</jamoji-block></span>
+            </div>
+            <div class="shape-row">
+                <span><code>2v</code></span>
+                <span class="s-large"><jamoji-block layout="2v" label="rocket fire stacked">🚀🔥</jamoji-block></span>
+            </div>
+            <div class="shape-row">
+                <span><code>3t</code> (default for 3)</span>
+                <span class="s-large"><jamoji-block layout="3t" label="rocket flanked">🚀✨💫</jamoji-block></span>
+            </div>
+            <div class="shape-row">
+                <span><code>3b</code></span>
+                <span class="s-large"><jamoji-block layout="3b" label="rocket below sparks">🚀✨💫</jamoji-block></span>
+            </div>
+            <div class="shape-row">
+                <span><code>4</code> (default for 4)</span>
+                <span class="s-large"><jamoji-block layout="4" label="four flavors">🍕🍔🌮🍦</jamoji-block></span>
+            </div>
+        </div>
+
+        <h2>Renderers</h2>
+        <p>
+            The default is <code>renderer="auto"</code>: Apple platforms (macOS, iOS, iPadOS) use the
+            OS's Apple Color Emoji; everywhere else falls back to <a href="https://github.com/googlefonts/noto-emoji">Noto
+            Color Emoji</a> SVGs lazy-fetched from jsDelivr. Both renderers can also be selected explicitly.
+        </p>
+        <div class="demo">
+            <div class="shape-row">
+                <span>auto (default)</span>
+                <span class="s-large">
+                    <jamoji-block label="rocket fire">🚀🔥</jamoji-block>
+                    <jamoji-block label="rocket sparks">🚀✨💫</jamoji-block>
+                    <jamoji-block label="four flavors">🍕🍔🌮🍦</jamoji-block>
+                </span>
+            </div>
+            <div class="shape-row">
+                <span><code>renderer="native"</code></span>
+                <span class="s-large">
+                    <jamoji-block renderer="native" label="rocket fire">🚀🔥</jamoji-block>
+                    <jamoji-block renderer="native" label="rocket sparks">🚀✨💫</jamoji-block>
+                    <jamoji-block renderer="native" label="four flavors">🍕🍔🌮🍦</jamoji-block>
+                </span>
+            </div>
+            <div class="shape-row">
+                <span><code>renderer="noto"</code></span>
+                <span class="s-large">
+                    <jamoji-block renderer="noto" label="rocket fire">🚀🔥</jamoji-block>
+                    <jamoji-block renderer="noto" label="rocket sparks">🚀✨💫</jamoji-block>
+                    <jamoji-block renderer="noto" label="four flavors">🍕🍔🌮🍦</jamoji-block>
+                </span>
+            </div>
+        </div>
+
+        <h2>Named compositions</h2>
+        <p>
+            Register a composition once with <code>jamoji.define(name, …)</code> and reference it
+            by name. The registry carries label, emojis, and layout — the block needs only the name.
+        </p>
+        <ul>
+            <li>
+                <jamoji-block name="speed"></jamoji-block>
+                <code>name="speed"</code> — registered as 🚀💨, labelled "going fast".
+            </li>
+            <li>
+                <jamoji-block name="night"></jamoji-block>
+                <code>name="night"</code> — 🌙⭐, "a starry night".
+            </li>
+            <li>
+                <jamoji-block name="weather"></jamoji-block>
+                <code>name="weather"</code> — ☀️🌧, "shifting weather".
+            </li>
+            <li>
+                <jamoji-block name="bloom"></jamoji-block>
+                <code>name="bloom"</code> — 🌸🌺🌻 in <code>3t</code>, "three blooms".
+            </li>
+            <li>
+                <jamoji-block name="thunder"></jamoji-block>
+                <code>name="thunder"</code> — ☁️⚡🌧 in <code>3b</code>, "thunderstorm".
+            </li>
+            <li>
+                <jamoji-block name="feast"></jamoji-block>
+                <code>name="feast"</code> — 🍕🍔🌮🍦, "a feast".
+            </li>
+        </ul>
+
+        <h2>Accessibility</h2>
+        <p>
+            Each block carries <code>role="img"</code> and an <code>aria-label</code> describing
+            the composed meaning, not the parts. Label precedence is
+            <em>registry → attribute → auto-derived from Unicode names</em>; a multi-emoji block
+            without a meaningful label emits a console warning so authors notice.
+        </p>
+        <p>
+            Try inspecting these blocks in DevTools to see the resolved
+            <code>aria-label</code>:
+            <jamoji-block name="speed"></jamoji-block>
+            (registry),
+            <jamoji-block label="hand-written">🚀🔥</jamoji-block>
+            (attribute),
+            <jamoji-block>🚀🔥</jamoji-block>
+            (auto + warning in console).
+        </p>
+
+        <h2>Grapheme integrity</h2>
+        <p>
+            ZWJ sequences like 👨‍🚀 (astronaut) stay intact — they parse as a single grapheme and
+            occupy one cell: <jamoji-block label="astronaut">👨‍🚀</jamoji-block>. Combine an
+            astronaut with fire and you get a 2h composition:
+            <jamoji-block label="astronaut on fire">👨‍🚀🔥</jamoji-block>.
+        </p>
+
+        <h2>Fallback behaviour</h2>
+        <p>
+            If a Noto SVG is missing or the network fails, the cell silently falls back to native
+            rendering and a one-time console warning is emitted. The block never breaks.
+        </p>
+    </main>
+
+    <footer>
+        Phase 1 of jamoji — framework + showcase. A composer UI replaces this page in Phase 2.
+    </footer>
+</body>
+</html>

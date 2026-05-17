@@ -1,0 +1,171 @@
+:root {
+    --bg: #fafaf9;
+    --panel: #ffffff;
+    --panel-soft: #f5f5f4;
+    --ink: #1c1917;
+    --ink-soft: #44403c;
+    --muted: #78716c;
+    --rule: #e7e5e4;
+    --rule-strong: #d6d3d1;
+    --accent: #d97706;
+    --accent-soft: #fef3c7;
+    --accent-ring: rgba(217, 119, 6, 0.35);
+    --danger: #b91c1c;
+    --good: #15803d;
+    --warn: #ca8a04;
+    --shadow: 0 1px 2px rgba(28, 25, 23, 0.04), 0 1px 1px rgba(28, 25, 23, 0.03);
+
+    /* App-specific. Shadow DOM reads --jamoji-placeholder; cascades through. */
+    --jamoji-placeholder: rgba(28, 25, 23, 0.18);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+        "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    font-size: 16px;
+    line-height: 1.55;
+}
+
+h1, h2, h3 { margin: 0; color: var(--ink); }
+
+.page-header {
+    padding: 16px 32px 14px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--panel);
+}
+
+.page-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.subtitle {
+    margin: 6px 0 0;
+    color: var(--muted);
+    max-width: 64ch;
+    font-size: 14px;
+}
+
+main.prose {
+    max-width: 72ch;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+}
+
+main.prose h2 {
+    font-size: 28px;
+    font-weight: 600;
+    margin-top: 36px;
+    margin-bottom: 12px;
+    letter-spacing: -0.015em;
+}
+
+main.prose h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 24px;
+    margin-bottom: 8px;
+    color: var(--ink-soft);
+}
+
+main.prose p {
+    margin: 12px 0;
+}
+
+main.prose ul {
+    padding-left: 22px;
+    margin: 12px 0;
+}
+
+main.prose li {
+    margin: 6px 0;
+}
+
+main.prose code {
+    background: var(--panel-soft);
+    border: 1px solid var(--rule);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.92em;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+main.prose .demo {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    box-shadow: var(--shadow);
+}
+
+main.prose .demo-label {
+    display: inline-block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+
+main.prose .size-row {
+    display: flex;
+    align-items: baseline;
+    gap: 28px;
+    flex-wrap: wrap;
+    margin: 8px 0;
+}
+
+main.prose .shape-row {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+}
+
+main.prose .shape-row > span { line-height: 1; }
+
+main.prose .shape-row .s-large,
+main.prose .shape-row .s-huge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+main.prose .shape-row jamoji-block {
+    vertical-align: top;
+}
+
+/* DEBUG borders — remove once alignment is confirmed. */
+main.prose .shape-row              { outline: 1px solid magenta; }
+main.prose .shape-row > span       { outline: 1px solid blue; }
+main.prose .shape-row jamoji-block { outline: 1px solid limegreen; }
+
+main.prose .size-row > span:first-child,
+main.prose .shape-row > span:first-child {
+    color: var(--muted);
+    font-size: 12px;
+    min-width: 7em;
+}
+
+.s-small { font-size: 12px; }
+.s-body  { font-size: 16px; }
+.s-large { font-size: 24px; }
+.s-huge  { font-size: 40px; }
+
+footer {
+    max-width: 72ch;
+    margin: 0 auto;
+    padding: 8px 24px 48px;
+    color: var(--muted);
+    font-size: 13px;
+}
