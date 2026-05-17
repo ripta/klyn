@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>jamoji — composer</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="jamoji.js"></script>
+</head>
+<body>
+    <header class="page-header">
+        <div class="header-text">
+            <h1>jamoji composer</h1>
+            <p class="subtitle">
+                Compose multiple emojis into a single typeset character, like Hangul jamo combining
+                into a syllable block. Pick up to six emojis, choose a layout, then embed the result
+                inline with prose.
+            </p>
+        </div>
+        <div class="header-share">
+            <div class="action-row">
+                <button id="copy-embed" type="button" class="button primary">Copy embed</button>
+                <button id="copy-link" type="button" class="button">Copy link</button>
+                <button id="show-help" type="button" class="help-button" aria-label="How to use this embed" title="How to use this embed">?</button>
+            </div>
+            <pre id="embed-output" class="embed-output">&lt;jamoji-block&gt;&lt;/jamoji-block&gt;</pre>
+        </div>
+    </header>
+
+    <main class="layout">
+        <aside class="rail" aria-label="Composition controls">
+            <section class="rail-section">
+                <h2>Composition</h2>
+                <div class="composition-card">
+                    <jamoji-block id="active-block"></jamoji-block>
+                    <ul id="emoji-slots" class="emoji-slots"></ul>
+                </div>
+            </section>
+
+            <section class="rail-section">
+                <h2>Layout</h2>
+                <div id="layout-options" class="layout-options"></div>
+            </section>
+
+            <section class="rail-section">
+                <h2>Accessibility label</h2>
+                <div class="field-row">
+                    <input id="label-input" type="text" placeholder="e.g. going fast" maxlength="80" />
+                </div>
+            </section>
+
+        </aside>
+
+        <section class="main" aria-label="Picker and preview">
+            <section class="picker" aria-label="Emoji picker">
+                <header class="picker-header">
+                    <div class="picker-search-row">
+                        <input id="picker-search" type="search" placeholder="Search emoji by name…" autocomplete="off" />
+                    </div>
+                    <div id="category-tabs" class="category-tabs"></div>
+                    <span id="picker-status" class="picker-status"></span>
+                </header>
+                <div id="emoji-grid" class="emoji-grid" role="listbox"></div>
+            </section>
+
+            <section class="preview" aria-label="Preview">
+                <h3>Preview</h3>
+                <div class="preview-prose">
+                    <p class="display">
+                        a <jamoji-block class="preview-block"></jamoji-block> at display size
+                    </p>
+                    <p class="heading">
+                        a <jamoji-block class="preview-block"></jamoji-block> at heading size
+                    </p>
+                    <p>
+                        And in running prose: composed glyphs sit inline like
+                        <jamoji-block class="preview-block"></jamoji-block> a single
+                        type-set character, scaling with the surrounding text. Does it sit at the
+                        right baseline? Is the visual weight balanced against the running text?
+                    </p>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <dialog id="help-dialog" class="help-dialog" aria-labelledby="help-title">
+        <div class="help-dialog-body">
+            <header class="help-dialog-header">
+                <h2 id="help-title">Using the embed</h2>
+                <button id="help-close" type="button" class="icon-button" aria-label="Close">×</button>
+            </header>
+
+            <p>
+                A jamoji block is a custom HTML element. To use one on another page, you need
+                two things: the framework module loaded once per page, and the
+                <code>&lt;jamoji-block&gt;</code> markup wherever you want a composed glyph.
+            </p>
+
+            <h3>1. Host the framework files</h3>
+            <p>The framework is four ES modules that must sit next to each other:</p>
+            <ul class="help-list">
+                <li><code>jamoji.js</code> — entry point</li>
+                <li><code>registry.js</code></li>
+                <li><code>renderer.js</code></li>
+                <li><code>unicode-names.js</code></li>
+            </ul>
+            <p>
+                Copy all four into a directory on your site (e.g.
+                <code>/assets/jamoji/</code>), or reference this deployment directly.
+            </p>
+
+            <h3>2. Load the module on your page</h3>
+            <p>In <code>&lt;head&gt;</code> or before your first jamoji block:</p>
+            <pre class="help-code">&lt;script type="module" src="/assets/jamoji/jamoji.js"&gt;&lt;/script&gt;</pre>
+
+            <h3>3. Paste your embed snippet</h3>
+            <p>The "Copy embed" button gives you something like:</p>
+            <pre class="help-code">&lt;jamoji-block layout="2h" label="going fast"&gt;🚀🔥&lt;/jamoji-block&gt;</pre>
+            <p>
+                Drop it anywhere in your HTML — inside prose, headings, list items.
+                The block sits inline at the surrounding text's size.
+            </p>
+
+            <h3>Optional: named compositions</h3>
+            <p>
+                If you reuse the same composition across a page, define it once with a name
+                and reference it from markup. Two patterns work:
+            </p>
+            <p><strong>Import the <code>define</code> function (recommended):</strong></p>
+            <pre class="help-code">&lt;script type="module"&gt;
+  import { define } from '/assets/jamoji/jamoji.js';
+
+  define('speed', {
+    emojis: ['🚀', '🔥'],
+    layout: '2h',        // optional — defaults to count-inferred
+    label: 'going fast', // optional — used as aria-label
+  });
+&lt;/script&gt;
+
+&lt;jamoji-block name="speed"&gt;&lt;/jamoji-block&gt;
+&lt;p&gt;…and again later: &lt;jamoji-block name="speed"&gt;&lt;/jamoji-block&gt;&lt;/p&gt;</pre>
+
+            <p><strong>Or use the global, after the module has loaded:</strong></p>
+            <pre class="help-code">&lt;script type="module" src="/assets/jamoji/jamoji.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  // jamoji is attached to window after the module evaluates.
+  window.addEventListener('load', () => {
+    jamoji.define('speed', { emojis: ['🚀', '🔥'], layout: '2h', label: 'going fast' });
+  });
+&lt;/script&gt;</pre>
+
+            <p>
+                Notes: definitions live in memory for the current page only — they don't
+                persist or sync across tabs. Define them in a module that loads before
+                (or alongside) the first <code>&lt;jamoji-block name="…"&gt;</code> that
+                uses them. A registered <code>label</code> takes precedence over any
+                <code>label=</code> attribute on the markup.
+            </p>
+        </div>
+    </dialog>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
