@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>scrollpot</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <header class="page-header">
+        <div class="header-row">
+            <div class="header-text">
+                <h1 id="recipe-title">scrollpot</h1>
+                <p id="recipe-subtitle" class="subtitle">
+                    A recipe is a process. As you scroll through the steps, the ingredients and
+                    tools you need light up on the side. Multiple timers run concurrently and
+                    survive reloads.
+                </p>
+            </div>
+            <div id="header-controls" class="header-controls" hidden>
+                <button id="wakelock-toggle" type="button" class="icon-toggle" hidden
+                        aria-label="Keep screen on" title="Keep screen on">
+                    <span class="wakelock-glyph" aria-hidden="true">☀</span>
+                    <span class="wakelock-label">Stay awake</span>
+                </button>
+                <button id="reset-session" type="button" class="ghost-button" title="Reset servings, units, and timers">Reset</button>
+            </div>
+        </div>
+        <p id="error" class="error" hidden></p>
+    </header>
+
+    <main id="layout" class="layout gallery-mode">
+        <!-- ─── Gallery (empty state) ─────────────────────────────────────── -->
+        <section id="gallery" class="gallery" aria-label="Recipes">
+            <header class="gallery-header">
+                <h2>Pick a recipe</h2>
+                <p>Bundled samples, or pass <code>?recipe=&lt;url&gt;</code> to load your own JSON.</p>
+            </header>
+            <ul id="gallery-list" class="gallery-list">
+                <li class="gallery-empty">Loading recipes…</li>
+            </ul>
+        </section>
+
+        <!-- ─── Recipe view ───────────────────────────────────────────────── -->
+        <aside id="rail" class="rail" aria-label="Timers, tools, and ingredients" hidden>
+            <button id="rail-toggle" type="button" class="rail-toggle" aria-expanded="true">
+                <span class="rail-toggle-label">Tools &amp; ingredients</span>
+                <span class="rail-toggle-glyph" aria-hidden="true">▾</span>
+            </button>
+            <div id="rail-body" class="rail-body">
+                <section class="rail-section timer-section">
+                    <header class="rail-section-header">
+                        <h2>Timers</h2>
+                        <button id="clear-timers" type="button" class="link-button" hidden>Clear all</button>
+                    </header>
+                    <p id="timers-empty" class="rail-empty">Active timers will appear here.</p>
+                    <ul id="timers-list" class="timers-list"></ul>
+                </section>
+
+                <section class="rail-section tools-section">
+                    <header class="rail-section-header">
+                        <h2>Tools</h2>
+                    </header>
+                    <ul id="tools-list" class="tools-list"></ul>
+                </section>
+
+                <section class="rail-section ingredients-section">
+                    <header class="rail-section-header">
+                        <h2>Ingredients</h2>
+                        <div class="unit-toggle" role="group" aria-label="Unit system">
+                            <button id="unit-volume" type="button" data-active="true">Volume</button>
+                            <button id="unit-weight" type="button">Weight</button>
+                        </div>
+                    </header>
+                    <div class="servings-stepper" role="group" aria-label="Servings">
+                        <button id="servings-down" type="button" aria-label="Decrease servings">−</button>
+                        <span id="servings-count" class="servings-count">0</span>
+                        <span id="servings-unit" class="servings-unit">servings</span>
+                        <button id="servings-up" type="button" aria-label="Increase servings">+</button>
+                    </div>
+                    <ul id="ingredients-list" class="ingredients-list"></ul>
+                </section>
+            </div>
+        </aside>
+
+        <section id="main-panel" class="main-panel" hidden>
+            <ol id="steps-list" class="steps-list"></ol>
+            <p class="end-of-recipe">— end of recipe —</p>
+        </section>
+    </main>
+
+    <button id="next-step" type="button" class="next-step-button" hidden>
+        <span class="next-step-glyph" aria-hidden="true">↓</span>
+        <span id="next-step-label">More below</span>
+    </button>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
