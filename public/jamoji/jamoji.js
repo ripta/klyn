@@ -5,9 +5,17 @@ import { define as registryDefine, get as registryGet, resolveLabel } from './re
 import { rendererByName, NotoSvgRenderer } from './renderer.js';
 
 const SEGMENTER = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
-const MAX_CELLS = 4;
-const AREA_LETTERS = ['a', 'b', 'c', 'd'];
-const LAYOUTS = new Set(['1', '2h', '2v', '3t', '3b', '4']);
+const MAX_CELLS = 6;
+const AREA_LETTERS = ['a', 'b', 'c', 'd', 'e', 'f'];
+const LAYOUTS = new Set(['1', '2h', '2v', '3t', '3b', '3v', '4', '5l', '5c', '5r', '6v', '6h']);
+const LAYOUT_CELL_COUNT = {
+    '1': 1,
+    '2h': 2, '2v': 2,
+    '3t': 3, '3b': 3, '3v': 3,
+    '4': 4,
+    '5l': 5, '5c': 5, '5r': 5,
+    '6v': 6, '6h': 6,
+};
 
 function splitGraphemes(text) {
     if (!text) return [];
@@ -22,7 +30,9 @@ function inferLayout(count) {
     if (count <= 1) return '1';
     if (count === 2) return '2h';
     if (count === 3) return '3t';
-    return '4';
+    if (count === 4) return '4';
+    if (count === 5) return '5l';
+    return '6h';
 }
 
 const SHADOW_CSS = `
@@ -68,17 +78,25 @@ const SHADOW_CSS = `
     height: 100%;
 }
 
-:host([data-layout="1"])  { grid-template-areas: "a"; grid-template-columns: 1fr; grid-template-rows: 1fr; }
-:host([data-layout="2h"]) { grid-template-areas: "a b"; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
-:host([data-layout="2v"]) { grid-template-areas: "a" "b"; grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
-:host([data-layout="3t"]) { grid-template-areas: "a a" "b c"; grid-template-columns: 1fr 1fr; grid-template-rows: 2fr 1fr; }
-:host([data-layout="3b"]) { grid-template-areas: "b c" "a a"; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 2fr; }
-:host([data-layout="4"])  { grid-template-areas: "a b" "c d"; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+:host([data-layout="1"])     { grid-template-areas: "a"; grid-template-columns: 1fr; grid-template-rows: 1fr; }
+:host([data-layout="2h"])    { grid-template-areas: "a b"; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+:host([data-layout="2v"])    { grid-template-areas: "a" "b"; grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+:host([data-layout="3t"])    { grid-template-areas: "a a" "b c"; grid-template-columns: 1fr 1fr; grid-template-rows: 2fr 1fr; }
+:host([data-layout="3b"])    { grid-template-areas: "b c" "a a"; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 2fr; }
+:host([data-layout="3v"])    { grid-template-areas: "a" "b" "c"; grid-template-columns: 1fr; grid-template-rows: 1fr 1fr 1fr; }
+:host([data-layout="4"])     { grid-template-areas: "a b" "c d"; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+:host([data-layout="5l"])    { grid-template-areas: "a a" "b c" "d e"; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+:host([data-layout="5c"])    { grid-template-areas: "a b" "c c" "d e"; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+:host([data-layout="5r"])    { grid-template-areas: "a b" "c d" "e e"; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+:host([data-layout="6v"])    { grid-template-areas: "a b" "c d" "e f"; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+:host([data-layout="6h"])    { grid-template-areas: "a b c" "d e f"; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }
 
 .area-a { grid-area: a; }
 .area-b { grid-area: b; }
 .area-c { grid-area: c; }
 .area-d { grid-area: d; }
+.area-e { grid-area: e; }
+.area-f { grid-area: f; }
 
 /* Native emoji glyphs scale with font-size; size them to fit their cell. */
 :host([data-layout="1"])  .cell { font-size: 1em; }
@@ -91,6 +109,12 @@ const SHADOW_CSS = `
 :host([data-layout="3t"]) .area-c,
 :host([data-layout="3b"]) .area-b,
 :host([data-layout="3b"]) .area-c { font-size: 0.33em; }
+:host([data-layout="3v"]) .cell,
+:host([data-layout="5l"]) .cell,
+:host([data-layout="5c"]) .cell,
+:host([data-layout="5r"]) .cell,
+:host([data-layout="6v"]) .cell,
+:host([data-layout="6h"]) .cell { font-size: 0.33em; }
 `;
 
 class JamojiBlock extends HTMLElement {
@@ -140,6 +164,12 @@ class JamojiBlock extends HTMLElement {
         let layout = layoutAttr || entry?.layout || inferLayout(graphemes.length);
         if (!LAYOUTS.has(layout)) {
             console.warn(`jamoji: unknown layout "${layout}"; falling back to inferred.`);
+            layout = inferLayout(graphemes.length);
+        } else if (LAYOUT_CELL_COUNT[layout] !== graphemes.length) {
+            console.warn(
+                `jamoji: layout "${layout}" expects ${LAYOUT_CELL_COUNT[layout]} emojis but got ${graphemes.length}; ` +
+                'using count-inferred layout instead.',
+            );
             layout = inferLayout(graphemes.length);
         }
 
