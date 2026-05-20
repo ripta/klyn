@@ -39,6 +39,18 @@ function loadImageFromFile(file) {
     });
 }
 
+function loadImageFromUrl(url) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        // Required so the canvas isn't tainted and Download still works.
+        // Remote host must send permissive CORS headers.
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("Failed to load image"));
+        img.src = url;
+    });
+}
+
 async function processFile(file) {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -59,6 +71,27 @@ async function processFile(file) {
         return;
     }
 
+    await processImage(img);
+}
+
+async function processUrl(url) {
+    clearError();
+    downloadBtn.disabled = true;
+    setStatus("Fetching image…");
+
+    let img;
+    try {
+        img = await loadImageFromUrl(url);
+    } catch {
+        setStatus("");
+        showError("Couldn't load the image from that URL. The host may not allow cross-origin requests.");
+        return;
+    }
+
+    await processImage(img);
+}
+
+async function processImage(img) {
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
     ctx.drawImage(img, 0, 0);
@@ -177,3 +210,18 @@ themeToggle.addEventListener("click", () => {
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
     if (!localStorage.getItem("theme")) applyTheme(e.matches ? "dark" : "light");
 });
+
+// ?from=<url> — auto-load an image from a remote URL on page open.
+const fromParam = new URLSearchParams(location.search).get("from");
+if (fromParam) {
+    try {
+        const parsed = new URL(fromParam);
+        if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+            processUrl(parsed.href);
+        } else {
+            showError("Unsupported URL scheme in ?from= parameter.");
+        }
+    } catch {
+        showError("Invalid URL in ?from= parameter.");
+    }
+}
