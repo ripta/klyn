@@ -1,21 +1,25 @@
 import { loadDetector } from "./detector.js";
 import { STYLES, GROUP_LABELS, DEFAULT_STYLE } from "./googly.js";
 
-const fileInput     = document.getElementById("file-input");
-const dropZone      = document.getElementById("drop-zone");
-const canvas        = document.getElementById("preview-canvas");
-const ctx           = canvas.getContext("2d");
-const emptyState    = document.getElementById("empty-state");
-const errorOverlay  = document.getElementById("error-overlay");
-const errorMessage  = document.getElementById("error-message");
-const downloadBtn   = document.getElementById("download-btn");
-const statusEl      = document.getElementById("status");
-const themeToggle   = document.getElementById("theme-toggle");
-const styleSelect   = document.getElementById("style-select");
+const fileInput        = document.getElementById("file-input");
+const dropZone         = document.getElementById("drop-zone");
+const canvas           = document.getElementById("preview-canvas");
+const ctx              = canvas.getContext("2d");
+const emptyState       = document.getElementById("empty-state");
+const errorOverlay     = document.getElementById("error-overlay");
+const errorMessage     = document.getElementById("error-message");
+const downloadBtn      = document.getElementById("download-btn");
+const statusEl         = document.getElementById("status");
+const themeToggle      = document.getElementById("theme-toggle");
+const styleSelect      = document.getElementById("style-select");
+const faceRail         = document.getElementById("face-rail");
+const faceRailList     = document.getElementById("face-rail-list");
+const faceRailToggleAll = document.getElementById("face-rail-toggle-all");
 
 let currentObjectUrl = null;
 let lastImage = null;
 let lastFaces = null;
+let selectedFaces = new Set();
 
 const savedStyle = localStorage.getItem("eye-style");
 let currentStyle = STYLES[savedStyle] ? savedStyle : DEFAULT_STYLE;
@@ -60,7 +64,9 @@ function renderEyes() {
     ctx.drawImage(lastImage, 0, 0);
     if (!lastFaces || !lastFaces.length) return;
     const style = STYLES[currentStyle] || STYLES[DEFAULT_STYLE];
-    for (const face of lastFaces) {
+    for (let fi = 0; fi < lastFaces.length; fi++) {
+        if (!selectedFaces.has(fi)) continue;
+        const face = lastFaces[fi];
         const radius = face.faceSize * 0.13;
         const midX = face.eyes.reduce((s, e) => s + e.x, 0) / face.eyes.length;
         const faceSeed = Math.random();
@@ -84,6 +90,90 @@ function renderEyes() {
         }
     }
 }
+
+function buildFaceRail() {
+    faceRailList.innerHTML = "";
+    if (!lastFaces || lastFaces.length < 2) {
+        faceRail.hidden = true;
+        return;
+    }
+    faceRail.hidden = false;
+
+    for (let i = 0; i < lastFaces.length; i++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "face-rail-item";
+        btn.dataset.index = String(i);
+        btn.setAttribute("aria-pressed", selectedFaces.has(i) ? "true" : "false");
+        btn.setAttribute("aria-label", `Face ${i + 1}`);
+
+        const thumb = document.createElement("canvas");
+        thumb.className = "face-rail-thumb";
+        thumb.width = 96;
+        thumb.height = 96;
+        drawFaceThumb(thumb, lastFaces[i]);
+        btn.appendChild(thumb);
+
+        const check = document.createElement("span");
+        check.className = "face-rail-check";
+        check.textContent = "✓";
+        check.setAttribute("aria-hidden", "true");
+        btn.appendChild(check);
+
+        btn.addEventListener("click", () => toggleFace(i, btn));
+        faceRailList.appendChild(btn);
+    }
+    updateToggleAllLabel();
+}
+
+function drawFaceThumb(thumbCanvas, face) {
+    const tctx = thumbCanvas.getContext("2d");
+    tctx.fillStyle = "#000";
+    tctx.fillRect(0, 0, thumbCanvas.width, thumbCanvas.height);
+    if (!lastImage || !face.bbox) return;
+
+    const pad = Math.max(face.bbox.w, face.bbox.h) * 0.15;
+    const sx = Math.max(0, face.bbox.x - pad);
+    const sy = Math.max(0, face.bbox.y - pad);
+    const sw = Math.min(lastImage.naturalWidth - sx, face.bbox.w + pad * 2);
+    const sh = Math.min(lastImage.naturalHeight - sy, face.bbox.h + pad * 2);
+
+    const scale = Math.max(thumbCanvas.width / sw, thumbCanvas.height / sh);
+    const dw = sw * scale;
+    const dh = sh * scale;
+    const dx = (thumbCanvas.width - dw) / 2;
+    const dy = (thumbCanvas.height - dh) / 2;
+    tctx.drawImage(lastImage, sx, sy, sw, sh, dx, dy, dw, dh);
+}
+
+function toggleFace(index, btn) {
+    if (selectedFaces.has(index)) selectedFaces.delete(index);
+    else selectedFaces.add(index);
+    btn.setAttribute("aria-pressed", selectedFaces.has(index) ? "true" : "false");
+    updateToggleAllLabel();
+    renderEyes();
+}
+
+function updateToggleAllLabel() {
+    if (!lastFaces) return;
+    const allSelected = selectedFaces.size === lastFaces.length;
+    faceRailToggleAll.textContent = allSelected ? "Deselect all" : "Select all";
+}
+
+faceRailToggleAll.addEventListener("click", () => {
+    if (!lastFaces) return;
+    const allSelected = selectedFaces.size === lastFaces.length;
+    selectedFaces = new Set();
+    if (!allSelected) {
+        for (let i = 0; i < lastFaces.length; i++) selectedFaces.add(i);
+    }
+    for (const btn of faceRailList.children) {
+        const idx = Number(btn.dataset.index);
+        btn.setAttribute("aria-pressed", selectedFaces.has(idx) ? "true" : "false");
+    }
+    updateToggleAllLabel();
+    renderEyes();
+});
 
 function setStatus(text) {
     statusEl.textContent = text || "";
@@ -168,6 +258,8 @@ async function processImage(img) {
     ctx.drawImage(img, 0, 0);
     emptyState.hidden = true;
     canvas.hidden = false;
+    faceRail.hidden = true;
+    faceRailList.innerHTML = "";
 
     setStatus("Loading face detector…");
     let detector;
@@ -195,12 +287,18 @@ async function processImage(img) {
     if (!faces.length) {
         lastImage = img;
         lastFaces = null;
+        selectedFaces = new Set();
+        buildFaceRail();
         showError("No eyes detected. Try a clearer photo with visible faces.");
         return;
     }
 
+    faces.sort((a, b) => (a.bbox?.x ?? 0) - (b.bbox?.x ?? 0));
+
     lastImage = img;
     lastFaces = faces;
+    selectedFaces = new Set(faces.map((_, i) => i));
+    buildFaceRail();
     renderEyes();
 
     downloadBtn.disabled = false;

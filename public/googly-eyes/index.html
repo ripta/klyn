@@ -13,7 +13,7 @@
                 <h1>Googly Eyes</h1>
                 <p class="subtitle">
                     Drop an image or pick one. Each detected face gets a pair of googly eyes
-                    sized to fit. Detection runs locally — no uploads.
+                    sized to fit. Detection runs locally without any uploads.
                 </p>
             </div>
             <div class="header-controls">
@@ -45,6 +45,13 @@
                 <span id="error-message"></span>
             </div>
         </div>
+        <aside id="face-rail" class="face-rail" aria-label="Face selection" hidden>
+            <div class="face-rail-header">
+                <span class="face-rail-title">Faces</span>
+                <button id="face-rail-toggle-all" type="button" class="face-rail-toggle">Deselect all</button>
+            </div>
+            <div id="face-rail-list" class="face-rail-list" role="group" aria-label="Toggle which faces get googly eyes"></div>
+        </aside>
     </main>
 
     <script type="module" src="app.js"></script>

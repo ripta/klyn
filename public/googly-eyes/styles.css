@@ -220,17 +220,139 @@ main {
     position: relative;
     overflow: hidden;
     min-height: 0;
+    display: flex;
+    flex-direction: row;
 }
 
 .stage {
-    position: absolute;
-    inset: 0;
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
     overflow: auto;
     background: var(--bg);
     padding: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.face-rail {
+    flex: 0 0 auto;
+    width: 132px;
+    background: var(--panel);
+    border-left: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.face-rail[hidden] { display: none; }
+
+.face-rail-header {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 12px 10px;
+    border-bottom: 1px solid var(--rule);
+}
+
+.face-rail-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.face-rail-toggle {
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--rule-strong);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.face-rail-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.face-rail-toggle:focus-visible {
+    outline: 2px solid var(--accent-ring);
+    outline-offset: 1px;
+}
+
+.face-rail-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+    gap: 10px;
+    align-content: start;
+}
+
+.face-rail-item {
+    position: relative;
+    padding: 0;
+    margin: 0;
+    border: 2px solid var(--rule-strong);
+    border-radius: 8px;
+    background: var(--panel-soft);
+    cursor: pointer;
+    overflow: hidden;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    transition: border-color 0.15s, opacity 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.face-rail-item:hover { border-color: var(--accent); }
+
+.face-rail-item:focus-visible {
+    outline: 2px solid var(--accent-ring);
+    outline-offset: 1px;
+}
+
+.face-rail-item:active { transform: scale(0.97); }
+
+.face-rail-item[aria-pressed="false"] { opacity: 0.4; }
+
+.face-rail-item[aria-pressed="true"] { border-color: var(--accent); }
+
+.face-rail-thumb {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.face-rail-check {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.35);
+    color: transparent;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+    pointer-events: none;
+}
+
+.face-rail-item[aria-pressed="true"] .face-rail-check {
+    background: var(--accent);
+    color: white;
 }
 
 .empty-state {
@@ -317,4 +439,45 @@ main {
     .style-select { flex: 1; }
     .style-select select { width: 100%; }
     .theme-toggle { flex: 0 0 auto; }
+
+    main { flex-direction: column; }
+
+    .face-rail {
+        width: auto;
+        flex: 0 0 auto;
+        border-left: none;
+        border-top: 1px solid var(--rule);
+        flex-direction: row;
+        align-items: stretch;
+    }
+
+    .face-rail-header {
+        flex-direction: column;
+        justify-content: center;
+        align-items: stretch;
+        gap: 6px;
+        padding: 8px 10px;
+        border-bottom: none;
+        border-right: 1px solid var(--rule);
+        min-width: 96px;
+    }
+
+    .face-rail-list {
+        flex: 1 1 auto;
+        display: flex;
+        grid-template-columns: none;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 8px 10px;
+        gap: 8px;
+        align-content: stretch;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .face-rail-item {
+        flex: 0 0 auto;
+        width: 56px;
+        height: 56px;
+    }
 }
