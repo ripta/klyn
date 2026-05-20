@@ -5,254 +5,504 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>klyn - Client-Side Single Page Apps</title>
     <style>
+        :root {
+            /* Surfaces */
+            --bg:          #fafaf9;
+            --panel:       #ffffff;
+            --panel-soft:  #f5f5f4;
+
+            /* Ink */
+            --ink:         #1c1917;
+            --ink-soft:    #44403c;
+            --muted:       #78716c;
+
+            /* Rules */
+            --rule:        #e7e5e4;
+            --rule-strong: #d6d3d1;
+
+            /* Accent (amber) */
+            --accent:      #d97706;
+            --accent-soft: #fef3c7;
+            --accent-ring: rgba(217, 119, 6, 0.35);
+
+            /* Status */
+            --danger:      #b91c1c;  --danger-soft: #fee2e2;
+            --good:        #15803d;
+            --warn:        #ca8a04;
+
+            --shadow:      0 1px 2px rgba(28, 25, 23, 0.04), 0 1px 1px rgba(28, 25, 23, 0.03);
+            --shadow-hover: 0 4px 12px rgba(28, 25, 23, 0.08), 0 2px 4px rgba(28, 25, 23, 0.04);
+
+            --toggle-bg:     #e7e5e4;
+            --toggle-handle: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --bg:          #1a1a1a;
+            --panel:       #242424;
+            --panel-soft:  #2d2d2d;
+
+            --ink:         #e9ecef;
+            --ink-soft:    #c9ced3;
+            --muted:       #9aa0a6;
+
+            --rule:        #3a3a3a;
+            --rule-strong: #4a4a4a;
+
+            --accent:      #f59e0b;
+            --accent-soft: #3a2a08;
+            --accent-ring: rgba(245, 158, 11, 0.45);
+
+            --danger:      #f87171;  --danger-soft: #3a1818;
+            --good:        #4ade80;
+            --warn:        #facc15;
+
+            --shadow:      0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.2);
+            --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.25);
+
+            --toggle-bg:     #3a3a3a;
+            --toggle-handle: #e9ecef;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg);
+            color: var(--ink);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.45;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background-color: var(--panel);
+            border-bottom: 1px solid var(--rule);
+            padding: 1rem 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .page-title {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--ink);
+            flex: 1;
+            min-width: 0;
+        }
+
+        .theme-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background-color: var(--toggle-bg);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border: none;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6px;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background-color: var(--toggle-handle);
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        [data-theme="dark"] .theme-toggle::before {
+            transform: translateX(30px);
+        }
+
+        .theme-toggle .sun-icon,
+        .theme-toggle .moon-icon {
+            position: relative;
+            z-index: 0;
+            line-height: 1;
+        }
+
+        .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 2rem;
-            line-height: 1.6;
-            color: #333;
         }
-        h1 {
-            color: #2c3e50;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 0.5rem;
+
+        .intro {
+            color: var(--ink-soft);
+            margin-bottom: 2rem;
         }
-        h2 {
-            color: #34495e;
-            margin-top: 2rem;
-        }
-        .app-list {
-            display: grid;
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-        .app-card {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 1.5rem;
-            transition: box-shadow 0.3s ease;
-        }
-        .app-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .app-card h3 {
-            margin-top: 0;
-            color: #2980b9;
-        }
-        .app-card a {
-            color: #3498db;
+
+        .intro a {
+            color: var(--accent);
             text-decoration: none;
-            font-weight: 500;
         }
-        .app-card a:hover {
+
+        .intro a:hover {
             text-decoration: underline;
         }
-        .app-card p {
-            margin: 0.5rem 0;
-            color: #555;
+
+        .app-list {
+            display: grid;
+            gap: 1.25rem;
         }
+
+        .app-card {
+            background-color: var(--panel);
+            border: 1px solid var(--rule);
+            border-radius: 8px;
+            padding: 1.25rem 1.5rem;
+            box-shadow: var(--shadow);
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .app-card:hover {
+            box-shadow: var(--shadow-hover);
+            border-color: var(--rule-strong);
+        }
+
+        .app-card h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .app-card h3 a {
+            color: var(--ink);
+            text-decoration: none;
+        }
+
+        .app-card h3 a:hover {
+            color: var(--accent);
+        }
+
+        .app-card p {
+            color: var(--ink-soft);
+            margin-bottom: 0.75rem;
+        }
+
+        .app-card p a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .app-card p a:hover {
+            text-decoration: underline;
+        }
+
         .usage {
-            background-color: #f8f9fa;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
+            background-color: var(--panel-soft);
+            border: 1px solid var(--rule);
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+            font-size: 0.85rem;
+            color: var(--ink-soft);
             margin-top: 0.5rem;
         }
+
+        .usage code {
+            color: var(--ink);
+        }
+
         .example {
             margin-top: 0.5rem;
             font-size: 0.9rem;
+            color: var(--muted);
         }
-        footer {
-            margin-top: 3rem;
-            padding-top: 1rem;
-            border-top: 1px solid #ddd;
-            color: #777;
-            font-size: 0.9rem;
+
+        .example a {
+            color: var(--accent);
+            text-decoration: none;
         }
+
+        .example a:hover {
+            text-decoration: underline;
+        }
+
+        .example kbd {
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+            font-size: 0.85em;
+            background-color: var(--panel-soft);
+            border: 1px solid var(--rule-strong);
+            border-radius: 3px;
+            padding: 0.05rem 0.3rem;
+        }
+
         .festive-snake-card {
             position: relative;
             text-align: center;
-            color: #fff;
-            background-color: #2c3e50;
-            border-radius: 8px;
+            color: var(--bg);
+            background-color: var(--ink);
+            border-color: var(--ink);
             overflow: hidden;
         }
+
+        .festive-snake-card h3 a,
+        .festive-snake-card p,
+        .festive-snake-card p a {
+            color: var(--bg);
+        }
+
         .festive-snake-card .tree-bg {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             z-index: 1;
         }
-        .festive-snake-card h3 {
-            position: relative;
-            z-index: 2;
-        }
-        .festive-snake-card p {
-            position: relative;
-            z-index: 2;
-        }
+
+        .festive-snake-card h3,
+        .festive-snake-card p,
         .festive-snake-card a {
             position: relative;
             z-index: 2;
         }
+
+        footer {
+            margin-top: 3rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--rule);
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .container,
+            .header-content {
+                padding: 1.5rem 1rem;
+            }
+
+            .header-content {
+                padding-top: 0;
+                padding-bottom: 0;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>klyn</h1>
-    <p>
-        A collection of purely client-side single page apps.
-        See also <a href="https://github.com/ripta/klyn">the GitHub repo</a>.
-    </p>
+    <header class="header">
+        <div class="header-content">
+            <div class="page-title">klyn</div>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                <span class="sun-icon" role="img" aria-label="Light mode">☀️</span>
+                <span class="moon-icon" role="img" aria-label="Dark mode">🌙</span>
+            </button>
+        </div>
+    </header>
 
-    <div class="app-list">
-        <div class="app-card">
-            <h3><a href="gallery.html">Gallery</a></h3>
-            <p>
-                A dynamic image viewer that loads and displays images based on a JSON
-                manifest file. Provides a thumbnail grid view and full-resolution image
-                viewing.
+    <main class="container">
+        <p class="intro">
+            A collection of purely client-side single page apps.
+            See also <a href="https://github.com/ripta/klyn">the GitHub repo</a>.
+        </p>
 
-                <a href="/markedup.html?from=https://raw.githubusercontent.com/ripta/klyn/refs/heads/main/docs/gallery.md">Read more…</a>
-            </p>
-            <div class="usage">
-                Usage: <code>gallery.html?from=&lt;url&gt;</code>
+        <div class="app-list">
+            <div class="app-card">
+                <h3><a href="gallery.html">Gallery</a></h3>
+                <p>
+                    A dynamic image viewer that loads and displays images based on a JSON
+                    manifest file. Provides a thumbnail grid view and full-resolution image
+                    viewing.
+                    <a href="/markedup.html?from=https://raw.githubusercontent.com/ripta/klyn/refs/heads/main/docs/gallery.md">Read more…</a>
+                </p>
+                <div class="usage">
+                    Usage: <code>gallery.html?from=&lt;url&gt;</code>
+                </div>
+                <div class="example">
+                    <strong>Example:</strong>
+                    <a href="/gallery.html?from=20251013-half-moon-bay-california">view some pretty pics from Half Moon Bay, California in October 2025</a>
+                </div>
             </div>
-            <div class="example">
-                <strong>Example:</strong>
-                <a href="/gallery.html?from=20251013-half-moon-bay-california">view some pretty pics from Half Moon Bay, California in October 2025</a>
+
+            <div class="app-card">
+                <h3><a href="json-viewer.html">JSON Viewer</a></h3>
+                <p>
+                    A client-side JSON viewer that fetches and displays formatted JSON data from URLs.
+                    <a href="/markedup.html?from=https://raw.githubusercontent.com/ripta/klyn/refs/heads/main/docs/json-viewer.md">Read more…</a>
+                </p>
+                <div class="usage">
+                    Usage: <code>json-viewer.html?from=&lt;url&gt;</code>
+                </div>
+                <div class="example">
+                    <strong>Example:</strong>
+                    <a href="/json-viewer.html?from=https%3A%2F%2Fraw.githubusercontent.com%2Fripta%2Frt%2F60114c9d9d1ca266841a0547e0d6ff303402c962%2Fsamples%2Fconfigs%2Fjson_each%2Fone.json">view a sample JSON file</a>
+                </div>
+            </div>
+
+            <div class="app-card">
+                <h3><a href="markedup.html">Markedup</a></h3>
+                <p>
+                    A client-side markdown viewer that fetches and renders GitHub-flavored markdown files from URLs using marked.js.
+                    <a href="/markedup.html?from=https://raw.githubusercontent.com/ripta/klyn/refs/heads/main/docs/markedup.md">Read more…</a>
+                </p>
+                <div class="usage">
+                    Usage: <code>markedup.html?from=&lt;url&gt;</code>
+                </div>
+                <div class="example">
+                    <strong>Example:</strong>
+                    <a href="https://r8y.page/markedup.html?from=https://raw.githubusercontent.com/ripta/klyn/refs/heads/main/docs/markedup.md">view <kbd>markedup.html</kbd>'s own README</a>
+                </div>
+            </div>
+
+            <div class="app-card">
+                <h3><a href="wasm.html">WASM Runner</a></h3>
+                <p>
+                    A client-side WebAssembly module runner that executes WASI-compatible
+                    WASM modules directly in the browser with support for arguments and STDIN.
+                </p>
+                <div class="usage">
+                    Usage: <code>wasm.html?module=&lt;url&gt;&amp;args=&lt;arguments&gt;</code>
+                </div>
+                <div class="example">
+                    <strong>Example:</strong>
+                    <a href="/wasm.html?module=rt_lite.wasm&args=version">run <kbd>rt_lite version</kbd></a> or
+                    <a href="/wasm.html?module=zig_simplecalc.wasm&args=1+2+3+4.56">run a simple calculator</a>
+                </div>
+            </div>
+
+            <div class="app-card">
+                <h3><a href="tap-viewer.html">TAP Viewer</a></h3>
+                <p>
+                    A client-side <a href="https://testanything.org/">Test Anything Protocol</a> output viewer
+                    with color-coded results, summary statistics, and support for subtests and YAML diagnostics.
+                </p>
+                <div class="usage">
+                    Usage: <code>tap-viewer.html?from=&lt;url&gt;</code>
+                </div>
+            </div>
+
+            <div class="app-card">
+                <h3><a href="log-viewer.html">Log Viewer</a></h3>
+                <p>
+                    A client-side log file viewer with live search highlighting, pinned
+                    multi-pattern filters, thread-id color tinting, and keyboard navigation.
+                    Open a local file or fetch one over HTTP.
+                </p>
+                <div class="usage">
+                    Usage: <code>log-viewer.html?from=&lt;url&gt;</code>
+                </div>
+            </div>
+
+            <div class="app-card">
+                <h3><a href="flows/index.html">Flows</a></h3>
+                <p>
+                    A data-driven architecture and call-flow viewer. Pick a flow from the
+                    dropdown; the canvas highlights the participating components and draws
+                    numbered step badges along the arrows, while the side panel narrates
+                    each hop. Flows are authored as JSON (schema included).
+                </p>
+                <div class="usage">
+                    Usage: <code>flows/index.html?from=&lt;url&gt;</code>
+                </div>
+            </div>
+
+            <div class="app-card">
+                <h3><a href="bill-splitter/index.html">Bill Splitter</a></h3>
+                <p>
+                    Take a photo of a paper receipt (iPhone camera or desktop file picker),
+                    run client-side OCR with Tesseract.js, and split line items among named
+                    participants. Tax and tip are distributed proportionally. Everything
+                    runs locally — no data leaves the device.
+                    <a href="/markedup.html?from=https://raw.githubusercontent.com/ripta/klyn/refs/heads/main/docs/bill-splitter.md">Read more…</a>
+                </p>
+                <div class="usage">
+                    Usage: <code>bill-splitter/index.html</code>
+                </div>
+            </div>
+
+            <div class="app-card">
+                <h3><a href="googly-eyes/index.html">Googly Eyes</a></h3>
+                <p>
+                    Drop in a photo, detects faces, then draw a pair of googly eyes scaled to
+                    each face. Save the result as PNG. Quick and silly; all local, no uploads.
+                </p>
+                <div class="usage">
+                    Usage: <code>googly-eyes/index.html</code>
+                </div>
+            </div>
+
+            <div class="app-card">
+                <h3><a href="scrollpot/index.html">scrollpot</a></h3>
+                <p>
+                    A scroll-driven recipe reader. The sidebar keeps the timers, tools, and
+                    ingredients pinned; as you scroll through the steps in the main panel,
+                    the items the current step references light up. Multiple concurrent
+                    timers survive reloads.
+                </p>
+                <div class="usage">
+                    Usage: <code>scrollpot/index.html?recipe=&lt;url&gt;</code>
+                </div>
+                <div class="example">
+                    <strong>Example:</strong>
+                    <a href="/scrollpot/index.html?recipe=samples/pancakes.json">cook the bundled pancakes sample</a>
+                </div>
             </div>
         </div>
 
-        <div class="app-card">
-            <h3><a href="json-viewer.html">JSON Viewer</a></h3>
-            <p>
-                A client-side JSON viewer that fetches and displays formatted JSON data from URLs.
-                <a href="/markedup.html?from=https://raw.githubusercontent.com/ripta/klyn/refs/heads/main/docs/json-viewer.md">Read more…</a>
-            </p>
-            <div class="usage">
-                Usage: <code>json-viewer.html?from=&lt;url&gt;</code>
-            </div>
-            <div class="example">
-                <strong>Example:</strong>
-                <a href="/json-viewer.html?from=https%3A%2F%2Fraw.githubusercontent.com%2Fripta%2Frt%2F60114c9d9d1ca266841a0547e0d6ff303402c962%2Fsamples%2Fconfigs%2Fjson_each%2Fone.json">view a sample JSON file</a>
-            </div>
-        </div>
+        <footer>
+            <p>These are single-page apps that can be served as static files, with no server-side processing required.</p>
+        </footer>
+    </main>
 
-        <div class="app-card">
-            <h3><a href="markedup.html">Markedup</a></h3>
-            <p>
-                A client-side markdown viewer that fetches and renders GitHub-flavored markdown files from URLs using marked.js.
-                <a href="/markedup.html?from=https://raw.githubusercontent.com/ripta/klyn/refs/heads/main/docs/markedup.md">Read more…</a>
-            </p>
-            <div class="usage">
-                Usage: <code>markedup.html?from=&lt;url&gt;</code>
-            </div>
-            <div class="example">
-                <strong>Example:</strong>
-                <a href="https://r8y.page/markedup.html?from=https://raw.githubusercontent.com/ripta/klyn/refs/heads/main/docs/markedup.md">view <kbd>markedup.html</kbd>'s own README</a>
-            </div>
-        </div>
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const root = document.documentElement;
 
-        <div class="app-card">
-            <h3><a href="wasm.html">WASM Runner</a></h3>
-            <p>
-                A client-side WebAssembly module runner that executes WASI-compatible
-                WASM modules directly in the browser with support for arguments and STDIN.
-            </p>
-            <div class="usage">
-                Usage: <code>wasm.html?module=&lt;url&gt;&amp;args=&lt;arguments&gt;</code>
-            </div>
-            <div class="example">
-                <strong>Example:</strong>
-                <a href="/wasm.html?module=rt_lite.wasm&args=version">run <kbd>rt_lite version</kbd></a> or
-                <a href="/wasm.html?module=zig_simplecalc.wasm&args=1+2+3+4.56">run a simple calculator</a>
-            </div>
-        </div>
-        <div class="app-card">
-            <h3><a href="tap-viewer.html">TAP Viewer</a></h3>
-            <p>
-                A client-side <a href="https://testanything.org/">Test Anything Protocol</a> output viewer
-                with color-coded results, summary statistics, and support for subtests and YAML diagnostics.
-            </p>
-            <div class="usage">
-                Usage: <code>tap-viewer.html?from=&lt;url&gt;</code>
-            </div>
-        </div>
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+        if (initialTheme === 'dark') {
+            root.setAttribute('data-theme', 'dark');
+        }
 
-        <div class="app-card">
-            <h3><a href="log-viewer.html">Log Viewer</a></h3>
-            <p>
-                A client-side log file viewer with live search highlighting, pinned
-                multi-pattern filters, thread-id color tinting, and keyboard navigation.
-                Open a local file or fetch one over HTTP.
-            </p>
-            <div class="usage">
-                Usage: <code>log-viewer.html?from=&lt;url&gt;</code>
-            </div>
-        </div>
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = root.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            if (newTheme === 'dark') {
+                root.setAttribute('data-theme', 'dark');
+            } else {
+                root.removeAttribute('data-theme');
+            }
+            localStorage.setItem('theme', newTheme);
+        });
 
-        <div class="app-card">
-            <h3><a href="flows/index.html">Flows</a></h3>
-            <p>
-                A data-driven architecture and call-flow viewer. Pick a flow from the
-                dropdown; the canvas highlights the participating components and draws
-                numbered step badges along the arrows, while the side panel narrates
-                each hop. Flows are authored as JSON (schema included).
-            </p>
-            <div class="usage">
-                Usage: <code>flows/index.html?from=&lt;url&gt;</code>
-            </div>
-        </div>
-
-        <div class="app-card">
-            <h3><a href="bill-splitter/index.html">Bill Splitter</a></h3>
-            <p>
-                Take a photo of a paper receipt (iPhone camera or desktop file picker),
-                run client-side OCR with Tesseract.js, and split line items among named
-                participants. Tax and tip are distributed proportionally. Everything
-                runs locally — no data leaves the device.
-                <a href="/markedup.html?from=https://raw.githubusercontent.com/ripta/klyn/refs/heads/main/docs/bill-splitter.md">Read more…</a>
-            </p>
-            <div class="usage">
-                Usage: <code>bill-splitter/index.html</code>
-            </div>
-        </div>
-
-        <div class="app-card">
-            <h3><a href="googly-eyes/index.html">Googly Eyes</a></h3>
-            <p>
-                Drop in a photo, detects faces, then draw a pair of googly eyes scaled to
-                each face. Save the result as PNG. Quick and silly; all local, no uploads.
-            </p>
-            <div class="usage">
-                Usage: <code>googly-eyes/index.html</code>
-            </div>
-        </div>
-
-        <div class="app-card">
-            <h3><a href="scrollpot/index.html">scrollpot</a></h3>
-            <p>
-                A scroll-driven recipe reader. The sidebar keeps the timers, tools, and
-                ingredients pinned; as you scroll through the steps in the main panel,
-                the items the current step references light up. Multiple concurrent
-                timers survive reloads.
-            </p>
-            <div class="usage">
-                Usage: <code>scrollpot/index.html?recipe=&lt;url&gt;</code>
-            </div>
-            <div class="example">
-                <strong>Example:</strong>
-                <a href="/scrollpot/index.html?recipe=samples/pancakes.json">cook the bundled pancakes sample</a>
-            </div>
-        </div>
-    </div>
-
-    <footer>
-        <p>These are single-page apps that can be served as static files, with no server-side processing required.</p>
-    </footer>
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                if (e.matches) {
+                    root.setAttribute('data-theme', 'dark');
+                } else {
+                    root.removeAttribute('data-theme');
+                }
+            }
+        });
+    </script>
 </body>
 </html>
