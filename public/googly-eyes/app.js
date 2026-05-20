@@ -1,5 +1,5 @@
 import { loadDetector } from "./detector.js";
-import { STYLES, DEFAULT_STYLE } from "./googly.js";
+import { STYLES, GROUP_LABELS, DEFAULT_STYLE } from "./googly.js";
 
 const fileInput     = document.getElementById("file-input");
 const dropZone      = document.getElementById("drop-zone");
@@ -20,12 +20,33 @@ let lastFaces = null;
 const savedStyle = localStorage.getItem("eye-style");
 let currentStyle = STYLES[savedStyle] ? savedStyle : DEFAULT_STYLE;
 
+const grouped = {};
 for (const [key, style] of Object.entries(STYLES)) {
-    const opt = document.createElement("option");
-    opt.value = key;
-    opt.textContent = style.label;
-    if (key === currentStyle) opt.selected = true;
-    styleSelect.appendChild(opt);
+    (grouped[style.group] ||= []).push({ key, label: style.label });
+}
+for (const list of Object.values(grouped)) {
+    list.sort((a, b) => a.label.localeCompare(b.label));
+}
+if (grouped.wobbly) {
+    const classicIdx = grouped.wobbly.findIndex((s) => s.key === DEFAULT_STYLE);
+    if (classicIdx > 0) {
+        const [classic] = grouped.wobbly.splice(classicIdx, 1);
+        grouped.wobbly.unshift(classic);
+    }
+}
+for (const groupKey of Object.keys(GROUP_LABELS)) {
+    const items = grouped[groupKey];
+    if (!items?.length) continue;
+    const optgroup = document.createElement("optgroup");
+    optgroup.label = GROUP_LABELS[groupKey];
+    for (const item of items) {
+        const opt = document.createElement("option");
+        opt.value = item.key;
+        opt.textContent = item.label;
+        if (item.key === currentStyle) opt.selected = true;
+        optgroup.appendChild(opt);
+    }
+    styleSelect.appendChild(optgroup);
 }
 
 styleSelect.addEventListener("change", () => {
@@ -42,12 +63,23 @@ function renderEyes() {
     for (const face of lastFaces) {
         const radius = face.faceSize * 0.13;
         const midX = face.eyes.reduce((s, e) => s + e.x, 0) / face.eyes.length;
-        for (const eye of face.eyes) {
-            const rotation = Math.sign(eye.x - midX) * (Math.PI / 12);
+        const faceSeed = Math.random();
+        for (let i = 0; i < face.eyes.length; i++) {
+            const eye = face.eyes[i];
+            const side = Math.sign(eye.x - midX) || 1;
+            const rotation = style.fan === false ? 0 : side * (Math.PI / 12);
+            const opts = {
+                inwardX: -side * Math.cos(rotation),
+                inwardY: Math.abs(Math.sin(rotation)),
+                side,
+                eyeIndex: i,
+                eyeCount: face.eyes.length,
+                faceSeed,
+            };
             ctx.save();
             ctx.translate(eye.x, eye.y);
             ctx.rotate(rotation);
-            style.draw(ctx, 0, 0, radius);
+            style.draw(ctx, 0, 0, radius, opts);
             ctx.restore();
         }
     }
