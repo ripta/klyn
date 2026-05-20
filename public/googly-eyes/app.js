@@ -1,5 +1,5 @@
 import { loadDetector } from "./detector.js";
-import { drawGooglyEye } from "./googly.js";
+import { STYLES, DEFAULT_STYLE } from "./googly.js";
 
 const fileInput     = document.getElementById("file-input");
 const dropZone      = document.getElementById("drop-zone");
@@ -11,8 +11,47 @@ const errorMessage  = document.getElementById("error-message");
 const downloadBtn   = document.getElementById("download-btn");
 const statusEl      = document.getElementById("status");
 const themeToggle   = document.getElementById("theme-toggle");
+const styleSelect   = document.getElementById("style-select");
 
 let currentObjectUrl = null;
+let lastImage = null;
+let lastFaces = null;
+
+const savedStyle = localStorage.getItem("eye-style");
+let currentStyle = STYLES[savedStyle] ? savedStyle : DEFAULT_STYLE;
+
+for (const [key, style] of Object.entries(STYLES)) {
+    const opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = style.label;
+    if (key === currentStyle) opt.selected = true;
+    styleSelect.appendChild(opt);
+}
+
+styleSelect.addEventListener("change", () => {
+    currentStyle = STYLES[styleSelect.value] ? styleSelect.value : DEFAULT_STYLE;
+    localStorage.setItem("eye-style", currentStyle);
+    renderEyes();
+});
+
+function renderEyes() {
+    if (!lastImage) return;
+    ctx.drawImage(lastImage, 0, 0);
+    if (!lastFaces || !lastFaces.length) return;
+    const style = STYLES[currentStyle] || STYLES[DEFAULT_STYLE];
+    for (const face of lastFaces) {
+        const radius = face.faceSize * 0.13;
+        const midX = face.eyes.reduce((s, e) => s + e.x, 0) / face.eyes.length;
+        for (const eye of face.eyes) {
+            const rotation = Math.sign(eye.x - midX) * (Math.PI / 12);
+            ctx.save();
+            ctx.translate(eye.x, eye.y);
+            ctx.rotate(rotation);
+            style.draw(ctx, 0, 0, radius);
+            ctx.restore();
+        }
+    }
+}
 
 function setStatus(text) {
     statusEl.textContent = text || "";
@@ -122,16 +161,15 @@ async function processImage(img) {
     setStatus("");
 
     if (!faces.length) {
+        lastImage = img;
+        lastFaces = null;
         showError("No eyes detected. Try a clearer photo with visible faces.");
         return;
     }
 
-    for (const face of faces) {
-        const radius = face.faceSize * 0.13;
-        for (const eye of face.eyes) {
-            drawGooglyEye(ctx, eye.x, eye.y, radius);
-        }
-    }
+    lastImage = img;
+    lastFaces = faces;
+    renderEyes();
 
     downloadBtn.disabled = false;
 }
