@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Googly Eyes</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <header class="page-header">
+        <div class="header-row">
+            <div class="header-text">
+                <h1>Googly Eyes</h1>
+                <p class="subtitle">
+                    Drop an image or pick one. Each detected face gets a pair of googly eyes
+                    sized to fit. Detection runs locally without any uploads.
+                </p>
+            </div>
+            <div class="header-controls">
+                <label class="file-button">
+                    <input id="file-input" type="file" accept="image/*" />
+                    <span>Choose image</span>
+                </label>
+                <label class="style-select" aria-label="Eye style">
+                    <select id="style-select"></select>
+                </label>
+                <button id="download-btn" type="button" class="ghost-button" disabled>Download</button>
+                <button id="theme-toggle" type="button" class="theme-toggle" aria-label="Toggle dark mode">
+                    <span class="sun-icon" role="img" aria-label="Light mode">☀️</span>
+                    <span class="moon-icon" role="img" aria-label="Dark mode">🌙</span>
+                </button>
+            </div>
+        </div>
+        <p id="status" class="status" hidden></p>
+    </header>
+
+    <main>
+        <div id="drop-zone" class="stage drop-zone">
+            <div id="empty-state" class="empty-state">
+                <h2>Drop an image here</h2>
+                <p>Or use “Choose image” above. JPEG, PNG, WebP — anything the browser can decode.</p>
+            </div>
+            <canvas id="preview-canvas" class="preview-canvas" hidden></canvas>
+            <div id="error-overlay" class="error-overlay" role="alert" hidden>
+                <span id="error-message"></span>
+            </div>
+        </div>
+        <aside id="face-rail" class="face-rail" aria-label="Face selection" hidden>
+            <div class="face-rail-header">
+                <span class="face-rail-title">Faces</span>
+                <button id="face-rail-toggle-all" type="button" class="face-rail-toggle">Deselect all</button>
+            </div>
+            <div id="face-rail-list" class="face-rail-list" role="group" aria-label="Toggle which faces get googly eyes"></div>
+        </aside>
+    </main>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
