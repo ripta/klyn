@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>fortune</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Berkshire+Swash&family=Cormorant+Garamond:ital,wght@1,500;1,600&display=swap" />
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <a class="home-link" href="/">← klyn</a>
+    <canvas id="scene"></canvas>
+    <div class="pulse-anchor" id="pulse-anchor"><div class="pulse-glow"></div></div>
+    <div class="fortune-text" id="fortune-text" aria-live="polite"></div>
+    <div class="hint-text" id="hint-text">Click for fortune</div>
+    <div id="status">summoning…</div>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
