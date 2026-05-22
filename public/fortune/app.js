@@ -206,6 +206,23 @@ async function init() {
     canvas.addEventListener("click", onPointer)
     canvas.addEventListener("mousemove", onMove)
     canvas.addEventListener("mouseleave", () => { canvas.style.cursor = "" })
+
+    let textDownPos = null
+    textEl.addEventListener("mousedown", (e) => {
+      textDownPos = { x: e.clientX, y: e.clientY }
+    })
+    textEl.addEventListener("click", (e) => {
+      if (animating) return
+      if (window.getSelection().toString().length > 0) return
+      if (textDownPos) {
+        const dx = e.clientX - textDownPos.x
+        const dy = e.clientY - textDownPos.y
+        textDownPos = null
+        if (dx * dx + dy * dy > 16) return
+      }
+      startReveal()
+    })
+
     window.addEventListener("resize", () => {
       resize()
       if (textEl.classList.contains("visible")) positionText()
