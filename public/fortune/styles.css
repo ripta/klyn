@@ -77,6 +77,9 @@ html, body {
   opacity: 0;
   transition: opacity 0.55s ease-out;
   pointer-events: none;
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
   overflow: hidden;
   word-break: break-word;
   hyphens: auto;
@@ -85,6 +88,7 @@ html, body {
 
 .fortune-text.visible {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .pulse-anchor {
