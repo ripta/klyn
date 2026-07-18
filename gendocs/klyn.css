@@ -199,8 +199,9 @@ body {
     background-color: var(--panel-soft);
     border: 1px solid var(--rule);
     border-radius: 8px;
-    padding: 0.75rem 1rem;
+    padding: 0.6rem 1rem;
     margin-bottom: 1.5rem;
+    font-size: 0.85rem;
 }
 
 .toc summary {
@@ -210,7 +211,7 @@ body {
 }
 
 .toc nav {
-    margin-top: 0.75rem;
+    margin-top: 0.5rem;
 }
 
 .toc ul {
@@ -224,7 +225,7 @@ body {
 }
 
 .toc li {
-    margin: 0.35rem 0;
+    margin: 0.2rem 0;
 }
 
 .toc a {

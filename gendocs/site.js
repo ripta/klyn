@@ -35,3 +35,17 @@ document.addEventListener('keydown', function (e) {
     if (input) input.focus();
   }
 });
+
+(function () {
+  var toc = document.querySelector('.toc');
+  if (!toc) return;
+
+  var savedTocOpen = localStorage.getItem('tocOpen');
+  if (savedTocOpen !== null) {
+    toc.open = savedTocOpen === 'true';
+  }
+
+  toc.addEventListener('toggle', function () {
+    localStorage.setItem('tocOpen', toc.open);
+  });
+})();
