@@ -13,6 +13,12 @@ sitejs="$scriptdir/site.js"
 searchpage="$scriptdir/search.html"
 filters=(--lua-filter="$scriptdir/h1-title.lua" --lua-filter="$scriptdir/md-links.lua")
 
+exclude_files=(AGENTS.md CLAUDE.md)
+exclude_prune=(-false)
+for name in "${exclude_files[@]}"; do
+  exclude_prune+=(-o -name "$name")
+done
+
 outdir="output"
 verbose=0
 
@@ -35,7 +41,7 @@ log "Building docs in $(pwd) -> $outdir"
 mkdir -p "$outdir"
 prune="./${outdir#./}"
 
-find . -path ./target -prune -o -path ./.git -prune -o -path "$prune" -prune -o -name '*.md' -print | while read -r f; do
+find . -path ./target -prune -o -path ./.git -prune -o -path "$prune" -prune -o \( "${exclude_prune[@]}" \) -prune -o -name '*.md' -print | while read -r f; do
   rel="${f#./}"
   out="$outdir/${rel%.md}.html"
   mkdir -p "$(dirname "$out")"
