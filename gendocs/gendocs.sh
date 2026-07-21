@@ -1,5 +1,25 @@
 #!/usr/bin/env bash
 
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [-h|--help] [-o output_dir] [-v]
+
+Convert Markdown files under the current directory into HTML docs with
+pandoc, then build a pagefind search index over the output.
+
+Options:
+  -o output_dir   Directory to write generated docs to (default: output)
+  -v              Verbose output
+  -h, --help      Show this help message and exit
+EOF
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    -h|--help) usage; exit 0 ;;
+  esac
+done
+
 if ! command -v pandoc >/dev/null 2>&1; then
   echo "gendocs.sh: pandoc not found in PATH" >&2
   exit 1
@@ -22,11 +42,12 @@ done
 outdir="output"
 verbose=0
 
-while getopts "o:v" opt; do
+while getopts "ho:v" opt; do
   case "$opt" in
+    h) usage; exit 0 ;;
     o) outdir="$OPTARG" ;;
     v) verbose=1 ;;
-    *) echo "Usage: $0 [-o output_dir] [-v]" >&2; exit 1 ;;
+    *) usage >&2; exit 1 ;;
   esac
 done
 
