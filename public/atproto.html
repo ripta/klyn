@@ -1237,16 +1237,23 @@
         }
 
         // ELSEWHERE lists apps with a per-account web page. A link shows only when the repo has the signal collection.
+        // A signal ending in "." matches any collection with that prefix.
         const ELSEWHERE = [
             { name: 'bsky.app', signal: 'app.bsky.actor.profile', url: (id) => `https://bsky.app/profile/${id.did}` },
+            // Older Tangled accounts may lack sh.tangled.actor.profile, so any sh.tangled.* collection counts.
+            { name: 'tangled.org', signal: 'sh.tangled.', url: (id) => `https://tangled.org/${id.did}` },
         ];
+
+        function hasSignal(colls, signal) {
+            return signal.endsWith('.') ? colls.some((c) => c.startsWith(signal)) : colls.includes(signal);
+        }
 
         function elsewhereCard(id) {
             const c = card('Elsewhere', null);
             c.hidden = true;
             repoInfo(id).then((repo) => {
-                const colls = new Set(repo.collections || []);
-                const links = ELSEWHERE.filter((app) => colls.has(app.signal)).map((app) => extLink(app.url(id), app.name));
+                const colls = repo.collections || [];
+                const links = ELSEWHERE.filter((app) => hasSignal(colls, app.signal)).map((app) => extLink(app.url(id), app.name));
                 if (!links.length) return;
                 c.append(h('div', { class: 'card-actions' }, links));
                 c.hidden = false;
