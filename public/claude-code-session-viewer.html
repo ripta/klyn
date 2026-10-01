@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Sessions</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/16.3.0/lib/marked.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.6/purify.min.js"></script>
+    <script src="claude-code-session-schema.js"></script>
+    <script src="claude-code-session-registry.js"></script>
+    <style>
+        :root {
+            /* Surfaces */
+            --bg:          #fafaf9;
+            --panel:       #ffffff;
+            --panel-soft:  #f5f5f4;
+
+            /* Ink */
+            --ink:         #1c1917;
+            --ink-soft:    #44403c;
+            --muted:       #78716c;
+
+            /* Rules */
+            --rule:        #e7e5e4;
+            --rule-strong: #d6d3d1;
+
+            /* Accent (amber) */
+            --accent:      #d97706;
+            --accent-soft: #fef3c7;
+            --accent-ring: rgba(217, 119, 6, 0.35);
+
+            /* Status */
+            --danger:      #b91c1c;  --danger-soft: #fee2e2;
+            --good:        #15803d;  --good-soft:   #dcfce7;
+
+            /* Row type chips */
+            --c-user:      #1d4ed8;  --c-user-soft:      #dbeafe;
+            --c-assistant: #b45309;  --c-assistant-soft: #fef3c7;
+            --c-attach:    #7e22ce;  --c-attach-soft:    #f3e8ff;
+            --c-system:    #0f766e;  --c-system-soft:    #ccfbf1;
+            --c-meta:      #57534e;  --c-meta-soft:      #f5f5f4;
+
+            /* JSON highlighting */
+            --j-key:       #1d4ed8;
+            --j-str:       #15803d;
+            --j-num:       #b45309;
+            --j-lit:       #7e22ce;
+
+            --diff-add:    #dcfce7;
+            --diff-del:    #fee2e2;
+
+            --shadow:      0 1px 2px rgba(28, 25, 23, 0.04), 0 1px 1px rgba(28, 25, 23, 0.03);
+
+            --toggle-bg:     #e7e5e4;
+            --toggle-handle: #ffffff;
+
+            --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+            --header-h: 55px;
+        }
+
+        [data-theme="dark"] {
+            --bg:          #1a1a1a;
+            --panel:       #242424;
+            --panel-soft:  #2d2d2d;
+
+            --ink:         #e9ecef;
+            --ink-soft:    #c9ced3;
+            --muted:       #9aa0a6;
+
+            --rule:        #3a3a3a;
+            --rule-strong: #4a4a4a;
+
+            --accent:      #f59e0b;
+            --accent-soft: #3a2a08;
+            --accent-ring: rgba(245, 158, 11, 0.45);
+
+            --danger:      #f87171;  --danger-soft: #3a1818;
+            --good:        #4ade80;  --good-soft:   #14301e;
+
+            --c-user:      #93c5fd;  --c-user-soft:      #172554;
+            --c-assistant: #fbbf24;  --c-assistant-soft: #3a2a08;
+            --c-attach:    #d8b4fe;  --c-attach-soft:    #2e1065;
+            --c-system:    #5eead4;  --c-system-soft:    #042f2e;
+            --c-meta:      #a8a29e;  --c-meta-soft:      #2d2d2d;
+
+            --j-key:       #93c5fd;
+            --j-str:       #86efac;
+            --j-num:       #fcd34d;
+            --j-lit:       #d8b4fe;
+
+            --diff-add:    #14301e;
+            --diff-del:    #3a1818;
+
+            --shadow:      0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.2);
+
+            --toggle-bg:     #3a3a3a;
+            --toggle-handle: #e9ecef;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--ink);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.45;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .mono { font-family: var(--mono); font-size: 0.92em; }
+        .muted { color: var(--muted); }
+        [hidden] { display: none !important; }
+
+        /* Header */
+
+        .header {
+            position: sticky;
+            top: 0;
+            background-color: var(--panel);
+            border-bottom: 1px solid var(--rule);
+            padding: 12px 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header h1 { font-size: 18px; font-weight: 600; flex: 0 0 auto; }
+
+        .file-info {
+            flex: 1 1 auto;
+            min-width: 0;
+            color: var(--muted);
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 7px 14px;
+            font: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            flex: 0 0 auto;
+        }
+
+        .file-button:hover { background: #b45309; }
+
+        .ghost-button {
+            background: transparent;
+            border: 1px solid var(--rule-strong);
+            color: var(--ink-soft);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font: inherit;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .ghost-button:hover { background: var(--panel-soft); color: var(--ink); }
+
+        .link-button {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0;
+        }
+
+        .theme-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background-color: var(--toggle-bg);
+            border-radius: 15px;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6px;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background-color: var(--toggle-handle);
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        [data-theme="dark"] .theme-toggle::before { transform: translateX(30px); }
+        .theme-toggle span { position: relative; z-index: 0; line-height: 1; }
+
+        /* Content */
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 20px 48px;
+        }
+
+        .dropzone {
+            border: 2px dashed var(--rule-strong);
+            border-radius: 8px;
+            padding: 48px 24px;
+            text-align: center;
+            color: var(--muted);
+            background: var(--panel);
+        }
+
+        .dropzone p + p { margin-top: 8px; }
+        body.dragging .dropzone { border-color: var(--accent); background: var(--accent-soft); }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--rule);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .card h2, .card summary.h2 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .card summary.h2 { cursor: pointer; margin-bottom: 0; }
+        .card details[open] > summary.h2 { margin-bottom: 10px; }
+
+        .error {
+            padding: 8px 12px;
+            background: var(--danger-soft);
+            color: var(--danger);
+            border-radius: 6px;
+            font-size: 13px;
+            word-break: break-word;
+            margin-bottom: 16px;
+        }
+
+        .facts {
+            display: grid;
+            grid-template-columns: max-content 1fr;
+            gap: 2px 16px;
+            font-size: 13px;
+        }
+
+        .facts dt { color: var(--muted); }
+        .facts dd { min-width: 0; word-break: break-word; }
+
+        .type-counts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+        /* Schema drift panel */
+
+        .drift-status { font-size: 13px; }
+        .drift-status.ok { color: var(--good); }
+        .drift-group { margin-top: 10px; }
+        .drift-group h3 { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+        .drift-list { list-style: none; font-size: 12px; }
+        .drift-list li { padding: 2px 0; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+        .drift-list .what { font-family: var(--mono); word-break: break-all; }
+        .drift-list .where { color: var(--muted); }
+        .drift-actions { margin-top: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .drift-copy { width: 100%; height: 160px; margin-top: 8px; font-family: var(--mono); font-size: 11px; }
+
+        /* Toolbar */
+
+        .toolbar {
+            position: sticky;
+            top: var(--header-h);
+            z-index: 50;
+            background: var(--bg);
+            padding: 8px 0;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--rule);
+        }
+
+        .segmented { display: inline-flex; border: 1px solid var(--rule-strong); border-radius: 999px; overflow: hidden; }
+
+        .segmented button {
+            background: var(--panel-soft);
+            border: none;
+            border-right: 1px solid var(--rule-strong);
+            color: var(--ink-soft);
+            font: inherit;
+            font-size: 12px;
+            padding: 4px 14px;
+            cursor: pointer;
+        }
+
+        .segmented button:last-child { border-right: none; }
+        .segmented button:hover { color: var(--ink); }
+        .segmented button.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+        .toolbar .hint { color: var(--muted); font-size: 12px; margin-left: auto; }
+
+        /* Timeline */
+
+        .timeline { list-style: none; }
+
+        .row {
+            display: grid;
+            grid-template-columns: 3.5em 9.5em 14em minmax(0, 1fr);
+            gap: 0 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--rule);
+            scroll-margin-top: calc(var(--header-h) + 52px);
+        }
+
+        .row.flash { animation: flash 1.6s ease-out; }
+        @keyframes flash { from { background: var(--accent-soft); } to { background: transparent; } }
+
+        .row-n { font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: right; padding-top: 2px; }
+        .row-n a { color: inherit; }
+        .row-time { font-family: var(--mono); font-size: 12px; color: var(--muted); padding-top: 2px; line-height: 1.35; }
+        .row-time.full { color: var(--ink); }
+        .row-time .gap { display: block; font-size: 11px; color: var(--accent); }
+        .row-chip { padding-top: 1px; min-width: 0; }
+        .row-body { min-width: 0; min-height: 1.4em; }
+
+        .chip {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 0 8px;
+            font-size: 11px;
+            font-weight: 500;
+            border: 1px solid var(--rule-strong);
+            background: var(--panel-soft);
+            color: var(--ink-soft);
+            white-space: nowrap;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: 1px;
+        }
+
+        .chip .sub { opacity: 0.75; font-weight: 400; }
+        .chip.t-user      { background: var(--c-user-soft);      border-color: var(--c-user);      color: var(--c-user); }
+        .chip.t-assistant { background: var(--c-assistant-soft); border-color: var(--c-assistant); color: var(--c-assistant); }
+        .chip.t-attach    { background: var(--c-attach-soft);    border-color: var(--c-attach);    color: var(--c-attach); }
+        .chip.t-system    { background: var(--c-system-soft);    border-color: var(--c-system);    color: var(--c-system); }
+        .chip.t-meta      { background: var(--c-meta-soft);      border-color: var(--rule-strong); color: var(--c-meta); }
+        .chip.t-bad       { background: var(--danger-soft);      border-color: var(--danger);      color: var(--danger); }
+        .chip.t-unknown   { border-style: dashed; }
+        .chip.good { background: var(--good-soft); border-color: var(--good); color: var(--good); }
+        .chip.bad  { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+
+        /* Row bodies */
+
+        .clamp { max-height: 28em; overflow: hidden; position: relative; }
+        .clamp::after {
+            content: '';
+            position: absolute;
+            left: 0; right: 0; bottom: 0;
+            height: 3em;
+            background: linear-gradient(transparent, var(--bg));
+            pointer-events: none;
+        }
+        .more { margin-top: 4px; }
+
+        pre, .pre {
+            font-family: var(--mono);
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.45;
+        }
+
+        pre.box {
+            background: var(--panel-soft);
+            border: 1px solid var(--rule);
+            border-radius: 6px;
+            padding: 6px 10px;
+        }
+
+        .block + .block { margin-top: 8px; }
+        .label { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+        .label b { color: var(--ink-soft); font-weight: 600; }
+        .oneline { color: var(--ink-soft); word-break: break-word; }
+        .oneline .k { color: var(--muted); }
+        .fallback-note { font-size: 11px; color: var(--danger); margin-bottom: 2px; }
+
+        .tool {
+            border: 1px solid var(--rule);
+            border-left: 3px solid var(--c-assistant);
+            border-radius: 6px;
+            padding: 6px 10px;
+            background: var(--panel);
+        }
+
+        .tool.result { border-left-color: var(--c-user); }
+        .tool.result.is-error { border-left-color: var(--danger); }
+        .tool-head { font-size: 12px; margin-bottom: 4px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+        .tool-name { font-family: var(--mono); font-weight: 600; color: var(--ink); }
+
+        .notice {
+            border: 1px solid var(--rule);
+            border-radius: 6px;
+            padding: 6px 10px;
+            background: var(--panel-soft);
+        }
+
+        .notice .tool-head { margin-bottom: 2px; }
+
+        .command { font-family: var(--mono); font-size: 13px; }
+        .command .name { font-weight: 600; color: var(--c-user); }
+
+        .kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 1px 12px; font-size: 12px; }
+        .kv dt { color: var(--muted); font-family: var(--mono); }
+        .kv dd { min-width: 0; word-break: break-word; }
+        .kv dd pre { margin: 0; }
+
+        details.fold > summary { cursor: pointer; font-size: 12px; color: var(--muted); }
+        details.fold[open] > summary { margin-bottom: 4px; }
+
+        .diff { font-family: var(--mono); font-size: 12px; white-space: pre-wrap; word-break: break-word; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+        .diff div { padding: 0 8px; }
+        .diff .add { background: var(--diff-add); }
+        .diff .del { background: var(--diff-del); }
+        .diff .hunk { color: var(--muted); background: var(--panel-soft); }
+
+        .md { word-break: break-word; }
+        .md > * + * { margin-top: 0.6em; }
+        .md h1, .md h2, .md h3, .md h4 { font-size: 14px; font-weight: 600; }
+        .md ul, .md ol { padding-left: 1.5em; }
+        .md code { font-family: var(--mono); font-size: 0.92em; background: var(--panel-soft); padding: 0 3px; border-radius: 3px; }
+        .md pre { background: var(--panel-soft); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 10px; }
+        .md pre code { background: none; padding: 0; }
+        .md blockquote { border-left: 3px solid var(--rule-strong); padding-left: 10px; color: var(--ink-soft); }
+        .md table { border-collapse: collapse; font-size: 13px; }
+        .md th, .md td { border: 1px solid var(--rule); padding: 2px 8px; text-align: left; }
+
+        .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+        .tool-result-img { max-width: 100%; max-height: 360px; border: 1px solid var(--rule); border-radius: 6px; }
+
+        .json .k { color: var(--j-key); }
+        .json .s { color: var(--j-str); }
+        .json .n { color: var(--j-num); }
+        .json .l { color: var(--j-lit); }
+
+        @media (max-width: 760px) {
+            .header-content { flex-wrap: wrap; padding: 0 16px; }
+            .file-info { order: 3; flex-basis: 100%; }
+            .theme-toggle { margin-left: auto; }
+            .container { padding: 16px 16px 40px; }
+            .row { grid-template-columns: auto auto minmax(0, 1fr); gap: 2px 8px; }
+            .row-time { text-align: left; }
+            .row-chip { text-align: right; }
+            .row-body { grid-column: 1 / -1; margin-top: 4px; }
+            .toolbar .hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header" id="header">
+        <div class="header-content">
+            <h1>Claude Code Sessions</h1>
+            <span class="file-info" id="fileInfo"></span>
+            <button class="file-button" id="openButton">Open JSONL</button>
+            <input type="file" id="fileInput" accept=".jsonl,.json,.txt,application/json" hidden>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                <span role="img" aria-label="Light mode">☀️</span>
+                <span role="img" aria-label="Dark mode">🌙</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="error" id="error" hidden></div>
+
+        <div class="dropzone" id="dropzone">
+            <p>Open a session transcript, or drop one anywhere on this page.</p>
+            <p>Transcripts live in <span class="mono">~/.claude/projects/&lt;project&gt;/&lt;session&gt;.jsonl</span>.</p>
+            <p>The file is read in your browser. Nothing is uploaded.</p>
+        </div>
+
+        <section class="card" id="summary" hidden></section>
+        <section class="card" id="drift" hidden></section>
+
+        <div class="toolbar" id="toolbar" hidden>
+            <div class="segmented" role="group" aria-label="View mode">
+                <button data-mode="friendly">Friendly</button>
+                <button data-mode="text">Text</button>
+                <button data-mode="json">JSON</button>
+            </div>
+            <span class="hint" id="toolbarHint"></span>
+        </div>
+
+        <ol class="timeline" id="timeline"></ol>
+    </main>
+
+    <script>
+        // Theme handling. Same pattern as statusphere.html.
+        (() => {
+            const themeToggle = document.getElementById('themeToggle');
+            const root = document.documentElement;
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+            const stored = () => { try { return localStorage.getItem('theme'); } catch { return null; } };
+            const apply = (theme) => {
+                if (theme === 'dark') root.setAttribute('data-theme', 'dark');
+                else root.removeAttribute('data-theme');
+            };
+            apply(stored() || (prefersDark.matches ? 'dark' : 'light'));
+            themeToggle.addEventListener('click', () => {
+                const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                apply(next);
+                try { localStorage.setItem('theme', next); } catch {}
+            });
+            prefersDark.addEventListener('change', (e) => {
+                if (!stored()) apply(e.matches ? 'dark' : 'light');
+            });
+        })();
+    </script>
+
+    <script>
+        const HOUR = 3600 * 1000;
+        const MODES = ['friendly', 'text', 'json'];
+
+        // Fields every transcript row repeats. The friendly view leaves them out.
+        const ENVELOPE = new Set([
+            'type', 'subtype', 'uuid', 'parentUuid', 'sessionId', 'session_id', 'timestamp', 'cwd',
+            'version', 'gitBranch', 'entrypoint', 'userType', 'isSidechain', 'slug', 'logicalParentUuid',
+        ]);
+
+        // Row types that only record session state. They get a muted chip.
+        const META_TYPES = new Set([
+            'mode', 'permission-mode', 'ai-title', 'agent-name', 'last-prompt', 'atis-latch',
+            'file-history-snapshot', 'file-history-delta', 'cost-state', 'queue-operation', 'summary',
+        ]);
+
+        const state = {
+            rows: [],            // { n, raw, data, error }
+            toolUses: new Map(), // tool_use id -> { name, n }
+            mode: 'friendly',
+        };
+
+        const $ = (id) => document.getElementById(id);
+
+        // ---------- DOM helpers ----------
+
+        function h(tag, attrs, ...children) {
+            const el = document.createElement(tag);
+            if (attrs) {
+                for (const [k, v] of Object.entries(attrs)) {
+                    if (v == null || v === false) continue;
+                    if (k === 'class') el.className = v;
+                    else if (k === 'text') el.textContent = v;
+                    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+                    else el.setAttribute(k, v === true ? '' : v);
+                }
+            }
+            for (const c of children.flat(Infinity)) {
+                if (c == null || c === false) continue;
+                el.append(c instanceof Node ? c : String(c));
+            }
+            return el;
+        }
+
+        function pre(text, cls) {
+            return h('pre', { class: cls || '' }, text);
+        }
+
+        // Wrap tall content so it starts collapsed with a "Show more" button.
+        // The height check waits a frame so the content has been laid out.
+        function clamp(el) {
+            const wrap = h('div', { class: 'clamp' }, el);
+            const outer = h('div', null, wrap);
+            requestAnimationFrame(() => {
+                if (wrap.scrollHeight <= wrap.clientHeight + 4) {
+                    wrap.classList.remove('clamp');
+                    return;
+                }
+                outer.append(h('button', {
+                    class: 'link-button more',
+                    text: 'Show more',
+                    onclick: (e) => {
+                        const open = wrap.classList.toggle('clamp');
+                        e.target.textContent = open ? 'Show more' : 'Show less';
+                    },
+                }));
+            });
+            return outer;
+        }
+
+        function chip(text, cls) {
+            return h('span', { class: 'chip ' + (cls || '') }, text);
+        }
+
+        function rowLink(n) {
+            return h('a', { href: '#r' + n, class: 'mono', onclick: (e) => { e.preventDefault(); jumpTo(n); } }, '#' + n);
+        }
+
+        // ---------- formatting ----------
+
+        function fmtFull(d) {
+            return d.toLocaleString(undefined, {
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short',
+            });
+        }
+
+        function fmtTime(d) {
+            return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function fmtDuration(ms) {
+            if (!isFinite(ms)) return '';
+            const s = Math.round(ms / 1000);
+            if (ms < 1000) return Math.round(ms) + 'ms';
+            if (s < 60) return (ms < 10000 ? (ms / 1000).toFixed(1) : s) + 's';
+            const m = Math.floor(s / 60);
+            if (m < 60) return m + 'm ' + (s % 60) + 's';
+            const hr = Math.floor(m / 60);
+            if (hr < 48) return hr + 'h ' + (m % 60) + 'm';
+            return Math.floor(hr / 24) + 'd ' + (hr % 24) + 'h';
+        }
+
+        function fmtBytes(n) {
+            if (n < 1024) return n + ' B';
+            if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+            return (n / 1024 / 1024).toFixed(1) + ' MB';
+        }
+
+        function plural(n, word) {
+            return n + ' ' + word + (n === 1 ? '' : 's');
+        }
+
+        // ---------- markdown ----------
+
+        function markdown(text, opts) {
+            if (!window.marked || !window.DOMPurify) return pre(text);
+            const html = DOMPurify.sanitize(marked.parse(text, { gfm: true, breaks: !!(opts && opts.breaks) }));
+            const div = h('div', { class: 'md' });
+            div.innerHTML = html;
+            for (const a of div.querySelectorAll('a')) {
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+            }
+            return div;
+        }
+
+        // Some report text is indented as a block. Remove the common indent so
+        // markdown doesn't read it as a code block.
+        function dedent(text) {
+            const lines = text.split('\n');
+            let min = Infinity;
+            for (const l of lines) {
+                if (!l.trim()) continue;
+                min = Math.min(min, l.match(/^ */)[0].length);
+            }
+            return min && isFinite(min) ? lines.map((l) => l.slice(min)).join('\n') : text;
+        }
+
+        // ---------- JSON view ----------
+
+        function jsonView(value) {
+            const text = JSON.stringify(value, null, 2);
+            const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const html = esc.replace(
+                /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g,
+                (m, str, colon, lit) => {
+                    if (str) return colon ? `<span class="k">${str}</span>${colon}` : `<span class="s">${str}</span>`;
+                    if (lit) return `<span class="l">${lit}</span>`;
+                    return `<span class="n">${m}</span>`;
+                },
+            );
+            const el = h('pre', { class: 'json' });
+            el.innerHTML = html;
+            return el;
+        }
+
+        // ---------- tag scanning ----------
+
+        // Prompt text carries XML-like tags such as <command-name>. This scan
+        // is deliberately loose. Tool output inside a tag often has stray < and
+        // &, which a real XML parser would reject.
+        const TAG_RE = /<([a-z][a-z0-9_-]*)((?:\s+[a-zA-Z_:-]+="[^"]*")*)\s*>([\s\S]*?)<\/\1>/g;
+
+        function scanTags(text) {
+            const out = [];
+            let last = 0;
+            for (const m of text.matchAll(TAG_RE)) {
+                if (m.index > last) out.push({ text: text.slice(last, m.index) });
+                const attrs = {};
+                for (const a of m[2].matchAll(/([a-zA-Z_:-]+)="([^"]*)"/g)) attrs[a[1]] = a[2];
+                out.push({ tag: m[1], attrs, inner: m[3] });
+                last = m.index + m[0].length;
+            }
+            if (last < text.length) out.push({ text: text.slice(last) });
+            return out;
+        }
+
+        // Child tags as a name -> inner-text map. Used for task notifications.
+        function tagFields(text) {
+            const f = {};
+            for (const s of scanTags(text)) if (s.tag) f[s.tag] = s.inner;
+            return f;
+        }
+
+        function tryPrettyJSON(text) {
+            const t = text.trim();
+            if (!(t.startsWith('{') || t.startsWith('['))) return text;
+            try { return JSON.stringify(JSON.parse(t), null, 2); } catch { return text; }
+        }
+
+        function renderTagged(text, opts) {
+            const segs = scanTags(text);
+            const out = [];
+            let cmd = null;
+            const flush = () => {
+                if (!cmd) return;
+                out.push(h('div', { class: 'block command' },
+                    h('span', { class: 'name' }, cmd['command-name'] || '/' + (cmd['command-message'] || '?')),
+                    cmd['command-args'] ? ' ' + cmd['command-args'] : ''));
+                cmd = null;
+            };
+            for (const s of segs) {
+                if (s.text != null) {
+                    if (!s.text.trim()) continue;
+                    flush();
+                    out.push(h('div', { class: 'block' }, markdown(s.text.trim(), { breaks: true })));
+                    continue;
+                }
+                if (s.tag.startsWith('command-')) {
+                    cmd = cmd || {};
+                    cmd[s.tag] = s.inner.trim();
+                    continue;
+                }
+                flush();
+                out.push(renderTag(s, opts));
+            }
+            flush();
+            return out;
+        }
+
+        function renderTag(s, opts) {
+            const inner = s.inner;
+            switch (s.tag) {
+                case 'local-command-caveat':
+                    return h('div', { class: 'block label' }, inner.trim());
+                case 'local-command-stdout':
+                case 'local-command-stderr':
+                case 'bash-stdout':
+                case 'bash-stderr': {
+                    const label = s.tag.replace(/^.*-/, '');
+                    return h('div', { class: 'block' },
+                        h('div', { class: 'label' }, label),
+                        inner.trim() ? clamp(pre(inner.trim(), 'box')) : h('span', { class: 'muted' }, '(no output)'));
+                }
+                case 'bash-input':
+                    return h('div', { class: 'block command' }, h('span', { class: 'name' }, '!'), ' ' + inner.trim());
+                case 'task-notification': {
+                    const f = tagFields(inner);
+                    const status = (f.status || '').trim();
+                    const box = h('div', { class: 'block notice' },
+                        h('div', { class: 'tool-head' },
+                            h('span', { class: 'tool-name' }, 'Task notification'),
+                            status ? chip(status, status === 'completed' ? 'good' : status === 'failed' ? 'bad' : '') : null,
+                            f['task-id'] ? h('span', { class: 'mono muted' }, f['task-id'].trim()) : null),
+                        f.summary ? h('div', null, f.summary.trim()) : null);
+                    if (f.result) box.append(h('div', { class: 'label' }, 'result'), clamp(pre(tryPrettyJSON(f.result.trim()), 'box')));
+                    const extra = {};
+                    for (const k of ['tool-use-id', 'output-file', 'note', 'usage']) if (f[k]) extra[k] = f[k].trim();
+                    if (Object.keys(extra).length) box.append(h('details', { class: 'fold' }, h('summary', null, 'details'), kvTable(extra)));
+                    return box;
+                }
+                case 'agent-message':
+                    return h('div', { class: 'block notice' },
+                        h('div', { class: 'tool-head' },
+                            h('span', { class: 'tool-name' }, 'Agent message'),
+                            s.attrs.from ? h('span', { class: 'mono muted' }, 'from ' + s.attrs.from) : null),
+                        clamp(markdown(dedent(inner.replace(/^\n+/, '')).trim())));
+                case 'system-reminder':
+                    return h('details', { class: 'block fold' },
+                        h('summary', null, 'system reminder'),
+                        clamp(pre(inner.trim(), 'box')));
+                default:
+                    return h('div', { class: 'block' },
+                        h('div', { class: 'label' }, '<' + s.tag + '>'),
+                        clamp(pre(inner.trim(), 'box')));
+            }
+        }
+
+        // ---------- generic renderers ----------
+
+        function valueNode(v) {
+            if (v == null) return h('span', { class: 'muted' }, String(v));
+            if (typeof v === 'string') return v.includes('\n') ? clamp(pre(v, 'box')) : h('span', { class: 'mono' }, v);
+            if (typeof v !== 'object') return h('span', { class: 'mono' }, String(v));
+            return clamp(jsonView(v));
+        }
+
+        function kvTable(obj, skip) {
+            const dl = h('dl', { class: 'kv' });
+            for (const [k, v] of Object.entries(obj)) {
+                if (skip && skip.has(k)) continue;
+                dl.append(h('dt', null, k), h('dd', null, valueNode(v)));
+            }
+            return dl;
+        }
+
+        // A short "key: value" line for rows that only record one thing.
+        function oneLine(pairs) {
+            const el = h('div', { class: 'oneline' });
+            pairs.forEach(([k, v], i) => {
+                if (i) el.append(' · ');
+                el.append(h('span', { class: 'k' }, k + ' '), v instanceof Node ? v : String(v));
+            });
+            return el;
+        }
+
+        function nonEnvelope(row) {
+            const o = {};
+            for (const [k, v] of Object.entries(row)) if (!ENVELOPE.has(k)) o[k] = v;
+            return o;
+        }
+
+        function patchView(hunks) {
+            const el = h('div', { class: 'diff' });
+            for (const hk of hunks) {
+                el.append(h('div', { class: 'hunk' }, `@@ -${hk.oldStart},${hk.oldLines} +${hk.newStart},${hk.newLines} @@`));
+                for (const line of hk.lines || []) {
+                    const c = line[0] === '+' ? 'add' : line[0] === '-' ? 'del' : '';
+                    el.append(h('div', { class: c }, line || ' '));
+                }
+            }
+            return clamp(el);
+        }
+
+        function replaceView(oldStr, newStr) {
+            const el = h('div', { class: 'diff' });
+            for (const l of String(oldStr).split('\n')) el.append(h('div', { class: 'del' }, '-' + l));
+            for (const l of String(newStr).split('\n')) el.append(h('div', { class: 'add' }, '+' + l));
+            return clamp(el);
+        }
+
+        // ---------- tool use ----------
+
+        function toolInput(name, input) {
+            const i = input || {};
+            const s = (v) => (typeof v === 'string' ? v : JSON.stringify(v));
+            switch (name) {
+                case 'Bash':
+                    return [
+                        i.description ? h('div', { class: 'muted' }, i.description) : null,
+                        clamp(pre('$ ' + s(i.command), 'box')),
+                    ];
+                case 'Read':
+                    return h('div', { class: 'mono' }, i.file_path,
+                        i.offset != null || i.limit != null ? h('span', { class: 'muted' }, ` (offset ${i.offset ?? 0}, limit ${i.limit ?? '-'})`) : null);
+                case 'Edit':
+                    return [
+                        h('div', { class: 'mono' }, i.file_path, i.replace_all ? h('span', { class: 'muted' }, ' (replace all)') : null),
+                        replaceView(i.old_string ?? '', i.new_string ?? ''),
+                    ];
+                case 'Write':
+                    return [h('div', { class: 'mono' }, i.file_path), clamp(pre(i.content ?? '', 'box'))];
+                case 'Agent':
+                case 'Task':
+                    return [
+                        h('div', null, h('b', null, i.description || ''), i.subagent_type ? h('span', { class: 'muted' }, ' · ' + i.subagent_type) : null),
+                        i.prompt ? clamp(markdown(i.prompt)) : null,
+                    ];
+                case 'AskUserQuestion':
+                    return (i.questions || []).map((q) => h('div', { class: 'block' },
+                        h('div', null, h('b', null, q.header ? q.header + ': ' : ''), q.question),
+                        h('ul', { style: 'padding-left: 1.5em' }, (q.options || []).map((o) =>
+                            h('li', null, o.label, o.description ? h('span', { class: 'muted' }, ' — ' + o.description) : null)))));
+                case 'TodoWrite':
+                    return h('ul', { style: 'list-style: none' }, (i.todos || []).map((t) =>
+                        h('li', null, t.status === 'completed' ? '☑ ' : t.status === 'in_progress' ? '◐ ' : '☐ ', t.content)));
+                case 'ExitPlanMode':
+                    return i.plan ? clamp(markdown(i.plan)) : kvTable(i);
+                default:
+                    return kvTable(i);
+            }
+        }
+
+        function renderToolUse(b) {
+            return h('div', { class: 'block tool' },
+                h('div', { class: 'tool-head' },
+                    h('span', { class: 'tool-name' }, b.name),
+                    h('span', { class: 'mono muted' }, b.id || '')),
+                toolInput(b.name, b.input));
+        }
+
+        function toolResultContent(c) {
+            if (typeof c === 'string') return c ? clamp(pre(c, 'box')) : h('span', { class: 'muted' }, '(empty)');
+            if (!Array.isArray(c)) return valueNode(c);
+            return c.map((b) => {
+                if (b.type === 'text') return clamp(pre(b.text, 'box'));
+                if (b.type === 'image' && b.source && b.source.type === 'base64') {
+                    return h('img', { class: 'tool-result-img', src: `data:${b.source.media_type};base64,${b.source.data}`, alt: 'image' });
+                }
+                if (b.type === 'tool_reference') return chip(b.tool_name);
+                return valueNode(b);
+            });
+        }
+
+        function renderToolResult(b, row) {
+            const use = state.toolUses.get(b.tool_use_id);
+            const head = h('div', { class: 'tool-head' },
+                h('span', null, '↳ result of '),
+                h('span', { class: 'tool-name' }, use ? use.name : 'tool'),
+                use ? rowLink(use.n) : h('span', { class: 'mono muted' }, b.tool_use_id || ''),
+                b.is_error ? chip('error', 'bad') : null);
+            const tur = row.toolUseResult;
+            const patch = tur && Array.isArray(tur.structuredPatch) && tur.structuredPatch.length ? patchView(tur.structuredPatch) : null;
+            return h('div', { class: 'block tool result' + (b.is_error ? ' is-error' : '') },
+                head,
+                patch || toolResultContent(b.content));
+        }
+
+        // ---------- per-type friendly renderers ----------
+
+        function renderContentBlocks(content, row) {
+            if (typeof content === 'string') return renderTagged(content);
+            if (!Array.isArray(content)) throw new Error('unexpected message.content');
+            return content.map((b) => {
+                switch (b.type) {
+                    case 'text':
+                        return row.type === 'user'
+                            ? h('div', { class: 'block' }, renderTagged(b.text))
+                            : h('div', { class: 'block' }, markdown(b.text));
+                    case 'thinking':
+                        return h('details', { class: 'block fold' },
+                            h('summary', null, b.thinking ? 'thinking' : 'thinking (redacted)'),
+                            b.thinking ? clamp(markdown(b.thinking)) : null);
+                    case 'redacted_thinking':
+                        return h('div', { class: 'block label' }, 'thinking (redacted)');
+                    case 'tool_use':
+                    case 'server_tool_use':
+                        return renderToolUse(b);
+                    case 'tool_result':
+                        return renderToolResult(b, row);
+                    case 'image':
+                        return toolResultContent([b]);
+                    default:
+                        return h('div', { class: 'block' }, h('div', { class: 'label' }, b.type), valueNode(b));
+                }
+            });
+        }
+
+        function renderUser(row) {
+            const parts = renderContentBlocks(row.message && row.message.content, row);
+            if (row.isMeta) parts.unshift(h('div', { class: 'label' }, 'meta message (not shown to the user)'));
+            return parts;
+        }
+
+        function renderAssistant(row) {
+            return renderContentBlocks(row.message && row.message.content, row);
+        }
+
+        function headLine(title, ...rest) {
+            return h('div', { class: 'tool-head' }, h('span', { class: 'tool-name' }, title), ...rest);
+        }
+
+        const ATTACHMENTS = {
+            hook_success: (a) => [
+                headLine(`${a.hookEvent} hook`, h('span', { class: 'muted' }, a.hookName),
+                    a.exitCode != null ? chip('exit ' + a.exitCode, a.exitCode === 0 ? 'good' : 'bad') : null,
+                    a.durationMs != null ? h('span', { class: 'muted' }, fmtDuration(a.durationMs)) : null),
+                a.command ? clamp(pre('$ ' + a.command, 'box')) : null,
+                a.stdout ? h('div', { class: 'block' }, h('div', { class: 'label' }, 'stdout'), clamp(pre(a.stdout, 'box'))) : null,
+                a.stderr ? h('div', { class: 'block' }, h('div', { class: 'label' }, 'stderr'), clamp(pre(a.stderr, 'box'))) : null,
+            ],
+            hook_blocking_error: (a) => [
+                headLine(`${a.hookEvent} hook blocked`, h('span', { class: 'muted' }, a.hookName), chip('blocked', 'bad')),
+                a.blockingError && a.blockingError.command ? clamp(pre('$ ' + a.blockingError.command, 'box')) : null,
+                a.blockingError ? h('div', { class: 'block error' }, a.blockingError.blockingError) : null,
+            ],
+            hook_additional_context: (a) => [
+                headLine(`${a.hookEvent} hook context`, h('span', { class: 'muted' }, a.hookName)),
+                clamp(pre([].concat(a.content).join('\n'), 'box')),
+            ],
+            edited_text_file: (a) => [
+                headLine('File changed outside Claude', h('span', { class: 'mono' }, a.filename)),
+                a.snippet ? clamp(pre(a.snippet, 'box')) : null,
+            ],
+            queued_command: (a) => [
+                headLine('Queued command', a.commandMode ? h('span', { class: 'muted' }, a.commandMode) : null),
+                renderTagged(a.prompt || ''),
+            ],
+            instructions: (a) => (a.files || []).map((f) =>
+                h('details', { class: 'block fold' },
+                    h('summary', null, f.type + ' instructions: ', h('span', { class: 'mono' }, f.path)),
+                    clamp(markdown(f.content || '')))),
+            skill_listing: (a) => [
+                headLine(plural(a.skillCount ?? (a.names || []).length, 'skill')),
+                h('div', { class: 'chips' }, (a.names || []).map((n) => chip(n))),
+            ],
+            prompt_snapshot: (a) => [
+                headLine('Prompt snapshot'),
+                h('details', { class: 'block fold' },
+                    h('summary', null, 'system prompt (' + plural((a.systemPrompt || []).length, 'part') + ')'),
+                    clamp(pre((a.systemPrompt || []).join('\n\n'), 'box'))),
+                a.tools ? h('div', { class: 'block chips' }, a.tools.map((t) => chip(t.name))) : null,
+            ],
+            deferred_tools_record: (a) => [
+                headLine('Deferred tools loaded'),
+                h('div', { class: 'chips' }, (a.entries || []).map((e) => chip(e.name))),
+            ],
+        };
+
+        // Attachments that add or remove names from a listing.
+        function deltaView(a) {
+            const out = [headLine(a.type.replace(/_/g, ' '))];
+            for (const [k, v] of Object.entries(a)) {
+                if (!Array.isArray(v) || !v.length || !/^(added|removed|readded|surfaced)(Names|Types)$/.test(k)) continue;
+                out.push(h('div', { class: 'block' },
+                    h('div', { class: 'label' }, k.replace(/(Names|Types)$/, '')),
+                    h('div', { class: 'chips' }, v.map((n) => chip(n, k.startsWith('removed') ? 'bad' : '')))));
+            }
+            return out;
+        }
+
+        function renderAttachment(row) {
+            const a = row.attachment || {};
+            const fn = ATTACHMENTS[a.type];
+            if (fn) return fn(a);
+            if (/_delta$/.test(a.type)) return deltaView(a);
+            if (typeof a.text === 'string') return renderTagged(a.text);
+            if (typeof a.content === 'string') return renderTagged(a.content);
+            if (Array.isArray(row.rendered) && row.rendered.length) {
+                return row.rendered.map((r) => h('div', { class: 'block' }, renderTagged(r.content || '')));
+            }
+            const rest = { ...a };
+            delete rest.type;
+            return kvTable(rest);
+        }
+
+        function renderSystem(row) {
+            switch (row.subtype) {
+                case 'local_command': {
+                    const c = row.commandRun || {};
+                    return [
+                        h('div', { class: 'block command' }, h('span', { class: 'name' }, '/' + (c.command || '')), c.args ? ' ' + c.args : ''),
+                        typeof row.content === 'string' ? renderTagged(row.content) : null,
+                    ];
+                }
+                case 'turn_duration':
+                    return oneLine([
+                        ['turn took', fmtDuration(row.durationMs)],
+                        ['messages', row.messageCount],
+                        ...(row.pendingBackgroundAgentCount ? [['background agents', row.pendingBackgroundAgentCount]] : []),
+                    ]);
+                case 'stop_hook_summary':
+                    return [
+                        headLine('Stop hooks', h('span', { class: 'muted' }, plural(row.hookCount ?? 0, 'hook')),
+                            row.preventedContinuation ? chip('prevented continuation', 'bad') : null),
+                        h('ul', { style: 'list-style: none' }, (row.hookInfos || []).map((hi) =>
+                            h('li', { class: 'mono' }, hi.command, h('span', { class: 'muted' }, ' ' + fmtDuration(hi.durationMs))))),
+                        (row.hookErrors || []).length ? h('div', { class: 'block error' }, row.hookErrors.join('\n')) : null,
+                    ];
+                default: {
+                    const rest = nonEnvelope(row);
+                    const content = rest.content;
+                    delete rest.content;
+                    return [
+                        typeof content === 'string' ? renderTagged(content) : null,
+                        Object.keys(rest).length ? kvTable(rest) : null,
+                    ];
+                }
+            }
+        }
+
+        function renderCostState(row) {
+            const out = [oneLine([
+                ['cost', '$' + (row.totalCostUSD ?? 0).toFixed(2)],
+                ['wall', fmtDuration(row.totalDuration)],
+                ['API', fmtDuration(row.totalAPIDuration)],
+                ['tools', fmtDuration(row.totalToolDuration)],
+                ['lines', `+${row.totalLinesAdded ?? 0} −${row.totalLinesRemoved ?? 0}`],
+            ])];
+            if (row.modelUsage) {
+                const dl = h('dl', { class: 'kv block' });
+                for (const [model, u] of Object.entries(row.modelUsage)) {
+                    dl.append(h('dt', null, model), h('dd', null,
+                        `$${(u.costUSD ?? 0).toFixed(2)} · in ${u.inputTokens} · out ${u.outputTokens} · cache read ${u.cacheReadInputTokens} · cache write ${u.cacheCreationInputTokens}`));
+                }
+                out.push(dl);
+            }
+            return out;
+        }
+
+        const RENDERERS = {
+            user: renderUser,
+            assistant: renderAssistant,
+            attachment: renderAttachment,
+            system: renderSystem,
+            'cost-state': renderCostState,
+            mode: (r) => oneLine([['mode', r.mode]]),
+            'permission-mode': (r) => oneLine([['permission mode', r.permissionMode]]),
+            'ai-title': (r) => oneLine([['title', r.aiTitle]]),
+            'agent-name': (r) => oneLine([['agent name', r.agentName]]),
+            'last-prompt': (r) => oneLine([['last prompt', r.lastPrompt]]),
+            'atis-latch': (r) => oneLine([['atis', r.atis === '' ? '(empty)' : r.atis]]),
+            'file-history-snapshot': (r) => {
+                const files = Object.keys((r.snapshot && r.snapshot.trackedFileBackups) || {});
+                return [
+                    oneLine([['file snapshot', plural(files.length, 'tracked file')], ...(r.isSnapshotUpdate ? [['update', 'yes']] : [])]),
+                    files.length ? h('div', { class: 'mono muted' }, files.join('\n')) : null,
+                ];
+            },
+            'file-history-delta': (r) => oneLine([
+                ['backed up', h('span', { class: 'mono' }, r.trackingPath)],
+                ['version', r.backup ? r.backup.version : '?'],
+            ]),
+            'queue-operation': (r) => [
+                oneLine([['queue', r.operation], ...(r.reason ? [['reason', r.reason]] : [])]),
+                typeof r.content === 'string' ? renderTagged(r.content) : null,
+            ],
+            summary: (r) => oneLine([['summary', r.summary]]),
+        };
+
+        // ---------- text view ----------
+
+        // Everything readable in a row, exactly as written. No tags are parsed.
+        function textOf(row) {
+            const parts = [];
+            const blocks = (c) => {
+                if (typeof c === 'string') { parts.push(c); return; }
+                if (!Array.isArray(c)) return;
+                for (const b of c) {
+                    if (b.type === 'text') parts.push(b.text);
+                    else if (b.type === 'thinking') parts.push(b.thinking || '[thinking redacted]');
+                    else if (b.type === 'tool_use' || b.type === 'server_tool_use') parts.push(b.name + ' ' + JSON.stringify(b.input, null, 2));
+                    else if (b.type === 'tool_result') {
+                        if (typeof b.content === 'string') parts.push(b.content);
+                        else if (Array.isArray(b.content)) {
+                            for (const x of b.content) parts.push(x.type === 'text' ? x.text : '[' + x.type + ']');
+                        }
+                    } else parts.push('[' + b.type + ']');
+                }
+            };
+            if (row.type === 'user' || row.type === 'assistant') {
+                blocks(row.message && row.message.content);
+            } else if (row.type === 'attachment' && Array.isArray(row.rendered) && row.rendered.length) {
+                for (const r of row.rendered) parts.push(r.content);
+            } else {
+                const src = row.type === 'attachment' ? row.attachment || {} : nonEnvelope(row);
+                for (const [k, v] of Object.entries(src)) {
+                    if (k === 'type') continue;
+                    parts.push(k + ': ' + (typeof v === 'string' ? v : JSON.stringify(v)));
+                }
+            }
+            return parts.join('\n\n');
+        }
+
+        // ---------- row rendering ----------
+
+        function renderBody(row, mode) {
+            if (row.error) {
+                return [h('div', { class: 'fallback-note' }, 'Not valid JSON: ' + row.error), clamp(pre(row.raw, 'box'))];
+            }
+            if (mode === 'json') return clamp(jsonView(row.data));
+            if (mode === 'friendly') {
+                try {
+                    const fn = RENDERERS[row.data.type];
+                    const out = fn ? fn(row.data) : kvTable(nonEnvelope(row.data));
+                    return h('div', null, out);
+                } catch (err) {
+                    console.warn('friendly view failed for row', row.n, err);
+                    return [h('div', { class: 'fallback-note' }, 'Showing text: ' + err.message), renderBody(row, 'text')];
+                }
+            }
+            try {
+                const text = textOf(row.data);
+                return text ? clamp(pre(text)) : h('span', { class: 'muted' }, '(no text)');
+            } catch (err) {
+                return [h('div', { class: 'fallback-note' }, 'Showing JSON: ' + err.message), renderBody(row, 'json')];
+            }
+        }
+
+        function chipFor(row) {
+            if (row.error) return chip('invalid', 't-bad');
+            const d = row.data;
+            const type = typeof d.type === 'string' ? d.type : '(no type)';
+            let sub = null;
+            if (type === 'system' && d.subtype) sub = d.subtype;
+            else if (type === 'attachment' && d.attachment && d.attachment.type) sub = d.attachment.type;
+            else if (type === 'user' && Array.isArray(d.message && d.message.content) &&
+                     d.message.content.length && d.message.content.every((b) => b.type === 'tool_result')) sub = 'tool_result';
+            const cls = {
+                user: 't-user', assistant: 't-assistant', attachment: 't-attach', system: 't-system',
+            }[type] || (META_TYPES.has(type) ? 't-meta' : 't-unknown');
+            const el = chip(type, cls);
+            if (sub) el.append(h('span', { class: 'sub' }, ' · ' + sub));
+            el.title = sub ? type + ' · ' + sub : type;
+            return el;
+        }
+
+        // Gaps are measured from the last row that had a timestamp. Rows
+        // without one show nothing and don't reset the gap.
+        function timeCell(row, prevTs) {
+            const cell = h('div', { class: 'row-time' });
+            const ts = row.data && typeof row.data.timestamp === 'string' ? Date.parse(row.data.timestamp) : NaN;
+            if (isNaN(ts)) return { cell, ts: prevTs };
+            const d = new Date(ts);
+            const gap = prevTs == null ? null : ts - prevTs;
+            cell.title = d.toISOString() + (gap != null ? `\n+${fmtDuration(gap)} since the previous timestamp` : '');
+            if (prevTs == null || gap > HOUR) {
+                cell.classList.add('full');
+                cell.append(fmtFull(d));
+                if (gap != null) cell.append(h('span', { class: 'gap' }, '+' + fmtDuration(gap)));
+            } else {
+                cell.append(fmtTime(d));
+            }
+            return { cell, ts };
+        }
+
+        // Row bodies render when they scroll near the viewport, so a large
+        // file doesn't stall the page. A mode switch re-renders the visible
+        // rows now and the rest as they come into view.
+        const visible = new Set();
+        const observer = new IntersectionObserver((entries) => {
+            for (const e of entries) {
+                const li = e.target;
+                if (e.isIntersecting) {
+                    visible.add(li);
+                    ensureBody(li);
+                } else {
+                    visible.delete(li);
+                }
+            }
+        }, { rootMargin: '1200px 0px' });
+
+        function ensureBody(li) {
+            if (li.dataset.mode === state.mode) return;
+            const row = state.rows[Number(li.dataset.i)];
+            const body = li.querySelector('.row-body');
+            body.replaceChildren(...[].concat(renderBody(row, state.mode)).flat(Infinity).filter(Boolean));
+            li.dataset.mode = state.mode;
+        }
+
+        function renderTimeline() {
+            const ol = $('timeline');
+            observer.disconnect();
+            visible.clear();
+            ol.replaceChildren();
+            const frag = document.createDocumentFragment();
+            let prevTs = null;
+            state.rows.forEach((row, i) => {
+                const t = timeCell(row, prevTs);
+                prevTs = t.ts;
+                const li = h('li', { class: 'row', id: 'r' + row.n, 'data-i': i },
+                    h('div', { class: 'row-n' }, h('a', { href: '#r' + row.n }, '#' + row.n)),
+                    t.cell,
+                    h('div', { class: 'row-chip' }, chipFor(row)),
+                    h('div', { class: 'row-body' }));
+                frag.append(li);
+            });
+            ol.append(frag);
+            for (const li of ol.children) observer.observe(li);
+        }
+
+        function setMode(mode) {
+            if (!MODES.includes(mode)) mode = 'friendly';
+            // Keep the first visible row in the same place across the switch.
+            const top = [...visible].sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
+                .find((li) => li.getBoundingClientRect().bottom > $('toolbar').getBoundingClientRect().bottom);
+            const before = top ? top.getBoundingClientRect().top : 0;
+            state.mode = mode;
+            try { localStorage.setItem('ccsv-mode', mode); } catch {}
+            for (const b of document.querySelectorAll('.segmented button')) {
+                b.classList.toggle('active', b.dataset.mode === mode);
+            }
+            for (const li of visible) ensureBody(li);
+            if (top) window.scrollBy(0, top.getBoundingClientRect().top - before);
+        }
+
+        function jumpTo(n) {
+            const li = $('r' + n);
+            if (!li) return;
+            ensureBody(li);
+            li.scrollIntoView({ block: 'start' });
+            li.classList.remove('flash');
+            void li.offsetWidth;
+            li.classList.add('flash');
+            history.replaceState(null, '', '#r' + n);
+        }
+
+        // ---------- summary and drift panels ----------
+
+        function renderSummary(file) {
+            const rows = state.rows;
+            const counts = new Map();
+            const sessions = new Set();
+            const versions = new Set();
+            const branches = new Set();
+            const cwds = new Set();
+            const models = new Set();
+            let title = null;
+            let first = null;
+            let last = null;
+            for (const { data } of rows) {
+                if (!data) continue;
+                const key = data.type === 'system' && data.subtype ? 'system' : data.type;
+                counts.set(key, (counts.get(key) || 0) + 1);
+                if (data.sessionId) sessions.add(data.sessionId);
+                if (data.version) versions.add(data.version);
+                if (data.gitBranch) branches.add(data.gitBranch);
+                if (data.cwd) cwds.add(data.cwd);
+                if (data.type === 'assistant' && data.message && data.message.model) models.add(data.message.model);
+                if (data.type === 'ai-title' && data.aiTitle) title = data.aiTitle;
+                const ts = Date.parse(data.timestamp);
+                if (!isNaN(ts)) {
+                    if (first == null || ts < first) first = ts;
+                    if (last == null || ts > last) last = ts;
+                }
+            }
+            const bad = rows.filter((r) => r.error).length;
+            const facts = h('dl', { class: 'facts' });
+            const fact = (k, v) => v && facts.append(h('dt', null, k), h('dd', null, v));
+            fact('File', `${file.name} (${fmtBytes(file.size)})`);
+            fact('Rows', rows.length + (bad ? ` (${bad} invalid)` : ''));
+            fact('Title', title);
+            fact('Session', [...sessions].join(', '));
+            fact('Directory', [...cwds].join(', '));
+            fact('Branch', [...branches].join(', '));
+            fact('Models', [...models].join(', '));
+            fact('Versions', [...versions].join(', '));
+            if (first != null) fact('Time', `${fmtFull(new Date(first))} → ${fmtFull(new Date(last))} (${fmtDuration(last - first)})`);
+            const typeChips = h('div', { class: 'type-counts' });
+            for (const [type, c] of [...counts].sort((a, b) => b[1] - a[1])) {
+                const el = chipFor({ data: { type } });
+                el.title = '';
+                el.append(h('span', { class: 'sub' }, ' ' + c));
+                typeChips.append(el);
+            }
+            $('summary').replaceChildren(h('h2', null, 'Session'), facts, typeChips);
+            $('summary').hidden = false;
+        }
+
+        function renderDrift() {
+            const panel = $('drift');
+            const schema = window.ccSessionSchema;
+            const registry = window.ccSessionRegistry;
+            if (!schema || !registry) {
+                panel.replaceChildren(h('h2', null, 'Schema check'),
+                    h('div', { class: 'drift-status' }, 'The schema files did not load, so drift could not be checked.'));
+                panel.hidden = false;
+                return;
+            }
+            const observed = schema.survey(state.rows);
+            const { newScopes, newPaths, newTags } = schema.diff(registry, observed);
+            const fileVersions = [...observed.versions];
+            const known = registry.versions || [];
+            const newer = fileVersions.filter((v) => !known.includes(v));
+
+            const where = (e) => h('span', { class: 'where' }, '×' + e.count + ' ', e.rows.map((n, i) => [i ? ' ' : '', rowLink(n)]));
+            const group = (title, items, render) => items.length
+                ? h('div', { class: 'drift-group' }, h('h3', null, `${title} (${items.length})`), h('ul', { class: 'drift-list' }, items.map(render)))
+                : null;
+
+            // A field that is new on many types at once is one change, not many.
+            const byPath = new Map();
+            for (const e of newPaths) {
+                let g = byPath.get(e.path);
+                if (!g) byPath.set(e.path, (g = { path: e.path, scopes: [], count: 0, rows: [], nested: 0 }));
+                g.scopes.push(e.scope);
+                g.count += e.count;
+                g.nested = Math.max(g.nested, e.nested || 0);
+                for (const n of e.rows) if (g.rows.length < 3 && !g.rows.includes(n)) g.rows.push(n);
+            }
+            for (const g of byPath.values()) g.rows.sort((a, b) => a - b);
+            const total = newScopes.length + byPath.size + newTags.length;
+
+            const status = total
+                ? h('div', { class: 'drift-status' },
+                    `This file has ${plural(total, 'shape')} the registry hasn't seen.`,
+                    newer.length ? ` It was written by ${newer.join(', ')}, which is newer than the registry, so some drift is expected.` : '')
+                : h('div', { class: 'drift-status ok' }, '✓ Every row type, field, and tag in this file is in the registry.');
+
+            const copyArea = h('textarea', { class: 'drift-copy', readonly: true, hidden: true });
+            const copyButton = h('button', {
+                class: 'ghost-button',
+                text: 'Copy updated registry',
+                onclick: async () => {
+                    const text = schema.formatRegistry(schema.merge(registry, observed));
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        copyButton.textContent = 'Copied';
+                        setTimeout(() => { copyButton.textContent = 'Copy updated registry'; }, 1500);
+                    } catch {
+                        copyArea.value = text;
+                        copyArea.hidden = false;
+                        copyArea.select();
+                    }
+                },
+            });
+
+            const details = h('details', total ? { open: true } : null,
+                h('summary', { class: 'h2' }, 'Schema check' + (total ? ` · ${total} new` : '')),
+                status,
+                h('div', { class: 'label', style: 'margin-top: 4px' },
+                    `Registry versions: ${known.join(', ') || 'none'}. This file: ${fileVersions.join(', ') || 'none'}.`),
+                group('New row types', newScopes, (e) => h('li', null, h('span', { class: 'what' }, e.scope), where(e))),
+                group('New fields', [...byPath.values()], (g) => h('li', null,
+                    h('span', { class: 'what' }, g.path),
+                    g.nested ? h('span', { class: 'where' }, `+${g.nested} nested`) : null,
+                    h('span', { class: 'where' }, 'on ' + (g.scopes.length > 3 ? plural(g.scopes.length, 'type') : g.scopes.join(', '))),
+                    where(g))),
+                group('New tags in prompt text', newTags, (e) => h('li', null, h('span', { class: 'what' }, '<' + e.tag + '>'), where(e))),
+                h('div', { class: 'drift-actions' },
+                    copyButton,
+                    h('span', { class: 'label' }, 'Paste it over claude-code-session-registry.js to accept this file\'s shapes.')),
+                copyArea);
+            panel.replaceChildren(details);
+            panel.hidden = false;
+        }
+
+        // ---------- loading ----------
+
+        function showError(msg) {
+            const el = $('error');
+            el.textContent = msg;
+            el.hidden = !msg;
+        }
+
+        async function load(file) {
+            showError('');
+            let text;
+            try {
+                text = await file.text();
+            } catch (err) {
+                showError(`Could not read ${file.name}: ${err.message}`);
+                return;
+            }
+            const rows = [];
+            const toolUses = new Map();
+            let n = 0;
+            for (const raw of text.split(/\r?\n/)) {
+                if (!raw.trim()) continue;
+                n++;
+                try {
+                    const data = JSON.parse(raw);
+                    if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('row is not a JSON object');
+                    rows.push({ n, raw, data });
+                    const content = data.type === 'assistant' && data.message && data.message.content;
+                    if (Array.isArray(content)) {
+                        for (const b of content) if (b && b.type === 'tool_use') toolUses.set(b.id, { name: b.name, n });
+                    }
+                } catch (err) {
+                    rows.push({ n, raw, error: err.message });
+                }
+            }
+            if (!rows.length) {
+                showError(`${file.name} has no rows.`);
+                return;
+            }
+            state.rows = rows;
+            state.toolUses = toolUses;
+            document.title = file.name + ' · Claude Code Sessions';
+            $('fileInfo').textContent = file.name;
+            $('dropzone').hidden = true;
+            $('toolbar').hidden = false;
+            $('toolbarHint').textContent = plural(rows.length, 'row');
+            renderSummary(file);
+            renderDrift();
+            renderTimeline();
+            setMode(state.mode);
+            window.scrollTo(0, 0);
+        }
+
+        // ---------- wiring ----------
+
+        $('openButton').addEventListener('click', () => $('fileInput').click());
+        $('fileInput').addEventListener('change', (e) => {
+            const f = e.target.files[0];
+            if (f) load(f);
+            e.target.value = '';
+        });
+
+        let dragDepth = 0;
+        window.addEventListener('dragenter', (e) => { e.preventDefault(); dragDepth++; document.body.classList.add('dragging'); });
+        window.addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('dragging'); } });
+        window.addEventListener('dragover', (e) => e.preventDefault());
+        window.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dragDepth = 0;
+            document.body.classList.remove('dragging');
+            const f = e.dataTransfer.files[0];
+            if (f) load(f);
+        });
+
+        for (const b of document.querySelectorAll('.segmented button')) {
+            b.addEventListener('click', () => setMode(b.dataset.mode));
+        }
+
+        // The toolbar sticks just under the header, whose height can change.
+        new ResizeObserver(() => {
+            document.documentElement.style.setProperty('--header-h', $('header').offsetHeight + 'px');
+        }).observe($('header'));
+
+        try { state.mode = localStorage.getItem('ccsv-mode') || 'friendly'; } catch {}
+        if (!MODES.includes(state.mode)) state.mode = 'friendly';
+    </script>
+</body>
+</html>
