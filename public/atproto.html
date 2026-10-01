@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>atproto Explorer</title>
+    <style>
+        :root {
+            /* Surfaces */
+            --bg:          #fafaf9;
+            --panel:       #ffffff;
+            --panel-soft:  #f5f5f4;
+
+            /* Ink */
+            --ink:         #1c1917;
+            --ink-soft:    #44403c;
+            --muted:       #78716c;
+
+            /* Rules */
+            --rule:        #e7e5e4;
+            --rule-strong: #d6d3d1;
+
+            /* Accent (amber) */
+            --accent:      #d97706;
+            --accent-soft: #fef3c7;
+            --accent-ring: rgba(217, 119, 6, 0.35);
+
+            /* Status */
+            --danger:      #b91c1c;  --danger-soft: #fee2e2;
+            --good:        #15803d;  --good-soft:   #dcfce7;
+            --warn:        #ca8a04;
+
+            /* JSON syntax */
+            --j-key:       #9a3412;
+            --j-str:       #166534;
+            --j-num:       #1d4ed8;
+            --j-lit:       #7e22ce;
+
+            --shadow:      0 1px 2px rgba(28, 25, 23, 0.04), 0 1px 1px rgba(28, 25, 23, 0.03);
+
+            --toggle-bg:     #e7e5e4;
+            --toggle-handle: #ffffff;
+
+            --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        }
+
+        [data-theme="dark"] {
+            --bg:          #1a1a1a;
+            --panel:       #242424;
+            --panel-soft:  #2d2d2d;
+
+            --ink:         #e9ecef;
+            --ink-soft:    #c9ced3;
+            --muted:       #9aa0a6;
+
+            --rule:        #3a3a3a;
+            --rule-strong: #4a4a4a;
+
+            --accent:      #f59e0b;
+            --accent-soft: #3a2a08;
+            --accent-ring: rgba(245, 158, 11, 0.45);
+
+            --danger:      #f87171;  --danger-soft: #3a1818;
+            --good:        #4ade80;  --good-soft:   #14301e;
+            --warn:        #facc15;
+
+            --j-key:       #fdba74;
+            --j-str:       #86efac;
+            --j-num:       #93c5fd;
+            --j-lit:       #d8b4fe;
+
+            --shadow:      0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.2);
+
+            --toggle-bg:     #3a3a3a;
+            --toggle-handle: #e9ecef;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body { height: 100%; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--ink);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.45;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* Links that leave the explorer get a trailing arrow. */
+        a.ext::after {
+            content: '↗';
+            display: inline-block;
+            margin-left: 2px;
+            font-size: 0.85em;
+            color: var(--muted);
+        }
+
+        code, .mono { font-family: var(--mono); font-size: 0.92em; }
+
+        /* Header */
+
+        .page-header {
+            background: var(--panel);
+            border-bottom: 1px solid var(--rule);
+            padding: 12px 20px;
+            flex: 0 0 auto;
+        }
+
+        .header-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-text { flex: 0 0 auto; }
+
+        .header-text h1 { font-size: 18px; font-weight: 600; }
+        .header-text h1 a { color: var(--ink); }
+        .header-text h1 a:hover { text-decoration: none; color: var(--accent); }
+
+        .subtitle { color: var(--muted); font-size: 12px; }
+
+        .lookup {
+            flex: 1 1 auto;
+            display: flex;
+            gap: 8px;
+            max-width: 640px;
+        }
+
+        .lookup input {
+            flex: 1 1 auto;
+            min-width: 0;
+            font: inherit;
+            font-family: var(--mono);
+            font-size: 13px;
+            padding: 7px 10px;
+            border: 1px solid var(--rule-strong);
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--ink);
+        }
+
+        .lookup input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-ring);
+        }
+
+        .file-button {
+            display: inline-flex;
+            align-items: center;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 7px 14px;
+            font: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+
+        .file-button:hover { background: #b45309; }
+
+        .ghost-button {
+            background: transparent;
+            border: 1px solid var(--rule-strong);
+            color: var(--ink-soft);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font: inherit;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .ghost-button:hover { background: var(--panel-soft); color: var(--ink); }
+        .ghost-button:disabled { opacity: 0.5; cursor: default; }
+
+        .theme-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            margin-left: auto;
+            background-color: var(--toggle-bg);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border: none;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6px;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background-color: var(--toggle-handle);
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        [data-theme="dark"] .theme-toggle::before { transform: translateX(30px); }
+
+        .theme-toggle span { position: relative; z-index: 0; line-height: 1; }
+
+        /* Layout */
+
+        .layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .rail {
+            border-right: 1px solid var(--rule);
+            background: var(--panel);
+            overflow: auto;
+            min-height: 0;
+        }
+
+        .rail-section {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--rule);
+        }
+
+        .rail-section:last-child { border-bottom: none; }
+
+        .rail-section-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .rail-section h2, .card h2 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .rail-section-meta { font-size: 11px; color: var(--muted); }
+
+        .rail-empty { color: var(--muted); font-size: 13px; }
+
+        .who {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .who img {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--panel-soft);
+            flex: 0 0 auto;
+        }
+
+        .who-text { min-width: 0; }
+        .who-handle { font-weight: 600; word-break: break-all; }
+        .who-did { font-family: var(--mono); font-size: 11px; color: var(--muted); word-break: break-all; }
+
+        .nav-list { list-style: none; }
+
+        .nav-list a {
+            display: block;
+            padding: 3px 8px;
+            margin: 0 -8px;
+            border-radius: 4px;
+            color: var(--ink-soft);
+            word-break: break-all;
+        }
+
+        .nav-list a:hover { background: var(--panel-soft); color: var(--ink); text-decoration: none; }
+        .nav-list a.active { background: var(--accent-soft); color: var(--ink); font-weight: 500; }
+
+        .rail-filter {
+            width: 100%;
+            font: inherit;
+            font-family: var(--mono);
+            font-size: 12px;
+            padding: 5px 8px;
+            border: 1px solid var(--rule-strong);
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--ink);
+        }
+
+        .rail-filter:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-ring);
+        }
+
+        .nsid-group { margin-top: 8px; }
+        .nsid-group-title { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+        .nsid-group .nav-list a { font-family: var(--mono); font-size: 12px; padding-left: 16px; }
+
+        .content {
+            overflow: auto;
+            min-height: 0;
+            padding: 20px 24px 40px;
+        }
+
+        .content-inner { max-width: 1000px; }
+
+        /* Content components */
+
+        .crumbs {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 4px;
+            word-break: break-all;
+        }
+
+        .crumbs .sep { margin: 0 4px; }
+
+        .view-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            word-break: break-all;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--rule);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .card-actions { display: flex; gap: 8px; flex-wrap: wrap; font-size: 12px; }
+
+        .kv {
+            display: grid;
+            grid-template-columns: max-content 1fr;
+            gap: 4px 16px;
+        }
+
+        .kv dt { color: var(--muted); }
+        .kv dd { word-break: break-all; min-width: 0; }
+
+        .chip {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 0 8px;
+            font-size: 11px;
+            font-weight: 500;
+            border: 1px solid var(--rule-strong);
+            background: var(--panel-soft);
+            color: var(--ink-soft);
+            vertical-align: 1px;
+            white-space: nowrap;
+        }
+
+        .chip.good { background: var(--good-soft); border-color: var(--good); color: var(--good); }
+        .chip.bad  { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+        .chip.accent { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); }
+
+        .error {
+            padding: 8px 12px;
+            background: var(--danger-soft);
+            color: var(--danger);
+            border-radius: 6px;
+            font-size: 13px;
+            word-break: break-word;
+        }
+
+        .muted { color: var(--muted); }
+        .loading { color: var(--muted); font-style: italic; }
+
+        table.list {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table.list th {
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            font-weight: 600;
+            padding: 4px 8px;
+            border-bottom: 1px solid var(--rule-strong);
+        }
+
+        table.list td {
+            padding: 6px 8px;
+            border-bottom: 1px solid var(--rule);
+            vertical-align: top;
+        }
+
+        table.list tr:hover td { background: var(--panel-soft); }
+
+        td.rkey { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+        td.when { white-space: nowrap; color: var(--muted); font-size: 12px; }
+        td.summary { word-break: break-word; color: var(--ink-soft); }
+
+        .more-row { margin-top: 12px; display: flex; gap: 12px; align-items: center; }
+
+        pre.json {
+            font-family: var(--mono);
+            font-size: 12.5px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-all;
+            background: var(--panel-soft);
+            border: 1px solid var(--rule);
+            border-radius: 6px;
+            padding: 10px 12px;
+            overflow: auto;
+        }
+
+        .j-key { color: var(--j-key); }
+        .j-str { color: var(--j-str); }
+        .j-num { color: var(--j-num); }
+        .j-lit { color: var(--j-lit); }
+        pre.json a { text-decoration: underline; text-decoration-color: var(--rule-strong); }
+
+        .method-table td:first-child { white-space: nowrap; }
+        .method-table td { font-size: 13px; }
+
+        .timeline { list-style: none; }
+
+        .timeline > li {
+            border-left: 2px solid var(--rule-strong);
+            padding: 0 0 14px 14px;
+            position: relative;
+        }
+
+        .timeline > li::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .timeline > li.nullified::before { background: var(--rule-strong); }
+        .timeline > li.nullified .changes { text-decoration: line-through; color: var(--muted); }
+
+        .timeline .when { font-size: 12px; color: var(--muted); }
+        .timeline .changes { margin: 4px 0 4px 18px; }
+        .timeline details summary { cursor: pointer; font-size: 12px; color: var(--muted); }
+        .timeline details pre { margin-top: 6px; }
+
+        .blob-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .blob-tile {
+            border: 1px solid var(--rule);
+            border-radius: 6px;
+            background: var(--panel-soft);
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .blob-tile .cid { font-family: var(--mono); font-size: 11px; word-break: break-all; color: var(--ink-soft); }
+        .blob-tile .meta { font-size: 11px; color: var(--muted); }
+        .blob-tile img, .blob-tile video { width: 100%; max-height: 220px; object-fit: contain; background: var(--panel); border-radius: 4px; }
+        .blob-tile pre { font-family: var(--mono); font-size: 11px; max-height: 160px; overflow: auto; white-space: pre-wrap; word-break: break-all; }
+        .blob-tile .actions { display: flex; gap: 8px; align-items: center; font-size: 12px; }
+
+        .welcome { max-width: 680px; }
+        .welcome p { margin-bottom: 10px; color: var(--ink-soft); }
+        .welcome ul { margin: 0 0 10px 20px; color: var(--ink-soft); }
+
+        @media (max-width: 900px) {
+            body { overflow: auto; display: block; height: auto; }
+            .header-row { flex-wrap: wrap; }
+            .lookup { order: 3; flex-basis: 100%; max-width: none; }
+            .subtitle { display: none; }
+            .layout { display: block; }
+            .rail { border-right: none; border-bottom: 1px solid var(--rule); }
+            .content { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="page-header">
+        <div class="header-row">
+            <div class="header-text">
+                <h1><a href="?">atproto Explorer</a></h1>
+                <div class="subtitle">identity, repo, and blobs, fetched from your browser</div>
+            </div>
+            <form class="lookup" id="lookup">
+                <input id="q" type="text" placeholder="handle, DID, or at:// URI" autocomplete="off" spellcheck="false" aria-label="Handle, DID, or at:// URI">
+                <button type="submit" class="file-button">Go</button>
+            </form>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                <span role="img" aria-label="Light mode">☀️</span>
+                <span role="img" aria-label="Dark mode">🌙</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="layout">
+        <aside class="rail" id="rail"></aside>
+        <section class="content" id="content"></section>
+    </main>
+
+    <script>
+        // Theme handling. Same pattern as index.html.
+        (() => {
+            const themeToggle = document.getElementById('themeToggle');
+            const root = document.documentElement;
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+            const apply = (theme) => {
+                if (theme === 'dark') root.setAttribute('data-theme', 'dark');
+                else root.removeAttribute('data-theme');
+            };
+            apply(localStorage.getItem('theme') || (prefersDark.matches ? 'dark' : 'light'));
+            themeToggle.addEventListener('click', () => {
+                const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                apply(next);
+                localStorage.setItem('theme', next);
+            });
+            prefersDark.addEventListener('change', (e) => {
+                if (!localStorage.getItem('theme')) apply(e.matches ? 'dark' : 'light');
+            });
+        })();
+    </script>
+
+    <script>
+        const DOH = 'https://cloudflare-dns.com/dns-query';
+        const PLC = 'https://plc.directory';
+        const APPVIEW = 'https://public.api.bsky.app';
+        const FETCH_TIMEOUT_MS = 15000;
+        const PAGE_SIZE = 50;
+        const BLOB_PAGE_SIZE = 60;
+        // Blob previews larger than this are not downloaded.
+        const MAX_PREVIEW_BYTES = 25 * 1024 * 1024;
+
+        const railEl = document.getElementById('rail');
+        const contentEl = document.getElementById('content');
+        const qEl = document.getElementById('q');
+
+        // ---------- DOM helpers ----------
+
+        // h builds an element. Strings become text nodes, so untrusted data is never parsed as HTML.
+        function h(tag, attrs, ...kids) {
+            const el = document.createElement(tag);
+            for (const [k, v] of Object.entries(attrs || {})) {
+                if (v == null || v === false) continue;
+                if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+                else if (k === 'class') el.className = v;
+                else if (k === 'dataset') Object.assign(el.dataset, v);
+                else el.setAttribute(k, v === true ? '' : v);
+            }
+            appendKids(el, kids);
+            return el;
+        }
+
+        function appendKids(el, kids) {
+            for (const kid of kids.flat(Infinity)) {
+                if (kid == null || kid === false) continue;
+                el.append(kid instanceof Node ? kid : String(kid));
+            }
+        }
+
+        function card(title, opts, ...kids) {
+            return h('section', { class: 'card' },
+                h('div', { class: 'card-header' },
+                    h('h2', null, title),
+                    opts && opts.actions ? h('div', { class: 'card-actions' }, opts.actions) : null),
+                kids);
+        }
+
+        function kv(rows) {
+            const dl = h('dl', { class: 'kv' });
+            for (const [k, v] of rows) {
+                if (v === undefined) continue;
+                dl.append(h('dt', null, k), h('dd', null, v == null || v === '' ? h('span', { class: 'muted' }, '—') : v));
+            }
+            return dl;
+        }
+
+        function chip(text, kind) {
+            return h('span', { class: 'chip' + (kind ? ' ' + kind : '') }, text);
+        }
+
+        function errorBox(err) {
+            return h('div', { class: 'error' }, err instanceof Error ? err.message : String(err));
+        }
+
+        function loading(text) {
+            return h('div', { class: 'loading' }, text || 'Loading…');
+        }
+
+        function extLink(url, text) {
+            if (!/^https?:\/\//i.test(url)) return text || url;
+            return h('a', { href: url, class: 'ext', target: '_blank', rel: 'noopener noreferrer', title: 'Opens outside atproto Explorer' }, text || url);
+        }
+
+        function mono(text) {
+            return h('span', { class: 'mono' }, text);
+        }
+
+        function fmtDate(d) {
+            if (!d || isNaN(d)) return null;
+            return h('span', { title: d.toISOString() }, d.toLocaleString());
+        }
+
+        function fmtBytes(n) {
+            if (n == null || isNaN(n)) return '?';
+            const units = ['B', 'KiB', 'MiB', 'GiB'];
+            let i = 0;
+            while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+            return (i === 0 ? n : n.toFixed(1)) + ' ' + units[i];
+        }
+
+        function shorten(s, head = 12, tail = 6) {
+            return s.length > head + tail + 1 ? s.slice(0, head) + '…' + s.slice(-tail) : s;
+        }
+
+        // ---------- Routing ----------
+
+        // A target is {authority, collection?, rkey?}. It maps 1:1 onto an at:// URI.
+        function parseTarget(raw) {
+            let s = (raw || '').trim();
+            if (!s) return null;
+
+            // Accept bsky.app web URLs as a convenience.
+            if (/^https?:\/\//i.test(s)) {
+                try {
+                    const u = new URL(s);
+                    const m = u.pathname.match(/^\/profile\/([^/]+)(?:\/(post|feed|lists)\/([^/]+))?/);
+                    if (m) {
+                        const coll = { post: 'app.bsky.feed.post', feed: 'app.bsky.feed.generator', lists: 'app.bsky.graph.list' }[m[2]];
+                        return normTarget({ authority: decodeURIComponent(m[1]), collection: coll, rkey: m[3] });
+                    }
+                } catch (_) { /* fall through */ }
+                return null;
+            }
+
+            s = s.replace(/^at:\/\//i, '').replace(/^@/, '').replace(/[?#].*$/, '');
+            const [authority, collection, rkey] = s.split('/');
+            if (!authority) return null;
+            return normTarget({ authority, collection: collection || undefined, rkey: rkey || undefined });
+        }
+
+        function normTarget(t) {
+            // Handles are case-insensitive. DIDs are not.
+            if (!t.authority.startsWith('did:')) t.authority = t.authority.toLowerCase();
+            return t;
+        }
+
+        function targetString(t) {
+            let s = t.authority;
+            if (t.collection) s += '/' + t.collection;
+            if (t.collection && t.rkey) s += '/' + t.rkey;
+            return s;
+        }
+
+        // Keep ':' and '/' readable in the address bar.
+        function encParam(s) {
+            return encodeURIComponent(s).replace(/%3A/gi, ':').replace(/%2F/gi, '/');
+        }
+
+        function hrefFor(t, view) {
+            let q = '?at=' + encParam(targetString(t));
+            if (view) q += '&view=' + encodeURIComponent(view);
+            return q;
+        }
+
+        function navLink(text, t, view, cls) {
+            return h('a', { href: hrefFor(t, view), class: cls, dataset: { nav: '1' } }, text);
+        }
+
+        function navigate(href) {
+            try {
+                history.pushState(null, '', href);
+            } catch (_) {
+                // Some browsers refuse pushState on file:// pages. A full load still works.
+                location.assign(href);
+                return;
+            }
+            render();
+        }
+
+        document.addEventListener('click', (e) => {
+            const a = e.target.closest('a[data-nav]');
+            if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            e.preventDefault();
+            navigate(a.getAttribute('href'));
+        });
+
+        window.addEventListener('popstate', render);
+
+        document.getElementById('lookup').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const t = parseTarget(qEl.value);
+            if (!t) {
+                contentEl.replaceChildren(h('div', { class: 'content-inner' }, errorBox(`Cannot parse "${qEl.value}". Try a handle, a DID, or an at:// URI.`)));
+                return;
+            }
+            navigate(hrefFor(t));
+        });
+
+        // ---------- Network ----------
+
+        async function fetchX(url, opts = {}) {
+            const host = new URL(url).host;
+            try {
+                return await fetch(url, { ...opts, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+            } catch (e) {
+                if (e.name === 'TimeoutError') throw new Error(`Timed out talking to ${host}.`);
+                throw new Error(`Network error talking to ${host}. It may be down or may not allow cross-origin requests.`);
+            }
+        }
+
+        async function getJSON(url, opts) {
+            const r = await fetchX(url, opts);
+            if (!r.ok) {
+                let msg = `${r.status} ${r.statusText}`.trim();
+                try {
+                    const j = await r.json();
+                    const detail = [j.error, j.message].filter(Boolean).join(': ');
+                    if (detail) msg += ` (${detail})`;
+                } catch (_) { /* body was not JSON */ }
+                throw new Error(`${new URL(url).host} responded ${msg}.`);
+            }
+            return r.json();
+        }
+
+        function xrpcURL(base, nsid, params) {
+            const u = new URL('/xrpc/' + nsid, base);
+            for (const [k, v] of Object.entries(params || {})) {
+                if (v != null && v !== '') u.searchParams.set(k, v);
+            }
+            return u.toString();
+        }
+
+        function blobURL(id, cid) {
+            return xrpcURL(id.pds, 'com.atproto.sync.getBlob', { did: id.did, cid });
+        }
+
+        // memo caches a promise per key. Failures are evicted so a retry can succeed.
+        function memo(fn) {
+            const cache = new Map();
+            return (key) => {
+                if (!cache.has(key)) {
+                    cache.set(key, fn(key).catch((e) => { cache.delete(key); throw e; }));
+                }
+                return cache.get(key);
+            };
+        }
+
+        const settle = (p) => p.then((did) => ({ did }), (e) => ({ error: e.message }));
+
+        // ---------- Identity ----------
+
+        async function resolveViaDNS(handle) {
+            const url = `${DOH}?name=_atproto.${encodeURIComponent(handle)}&type=TXT`;
+            const j = await getJSON(url, { headers: { accept: 'application/dns-json' } });
+            const txts = (j.Answer || [])
+                .filter((a) => a.type === 16)
+                // A TXT record may be split into several quoted strings.
+                .map((a) => a.data.replace(/^"|"$/g, '').replace(/"\s*"/g, ''));
+            const hit = txts.find((t) => t.startsWith('did='));
+            if (!hit) throw new Error(`No did= TXT record at _atproto.${handle}.`);
+            return hit.slice(4);
+        }
+
+        async function resolveViaHTTP(handle) {
+            const r = await fetchX(`https://${handle}/.well-known/atproto-did`);
+            if (!r.ok) throw new Error(`${handle} responded ${r.status}.`);
+            const text = (await r.text()).trim();
+            if (!text.startsWith('did:')) throw new Error('Response is not a DID.');
+            return text;
+        }
+
+        async function resolveViaAppView(handle) {
+            const j = await getJSON(xrpcURL(APPVIEW, 'com.atproto.identity.resolveHandle', { handle }));
+            return j.did;
+        }
+
+        const resolveHandle = memo(async (handle) => {
+            const [dns, http, appview] = await Promise.all([
+                settle(resolveViaDNS(handle)),
+                settle(resolveViaHTTP(handle)),
+                settle(resolveViaAppView(handle)),
+            ]);
+            return { dns, http, appview };
+        });
+
+        function didWebURL(did) {
+            const parts = did.slice('did:web:'.length).split(':').map(decodeURIComponent);
+            const host = parts.shift();
+            return parts.length ? `https://${host}/${parts.join('/')}/did.json` : `https://${host}/.well-known/did.json`;
+        }
+
+        function didDocURL(did) {
+            if (did.startsWith('did:plc:')) return `${PLC}/${did}`;
+            if (did.startsWith('did:web:')) return didWebURL(did);
+            throw new Error(`Unsupported DID method: ${did}`);
+        }
+
+        const fetchDidDoc = memo((did) => getJSON(didDocURL(did)));
+
+        function findService(doc, fragment) {
+            return (doc.service || []).find((s) => s.id === '#' + fragment || s.id === doc.id + '#' + fragment);
+        }
+
+        function findVerificationMethod(doc, fragment) {
+            return (doc.verificationMethod || []).find((v) => v.id === '#' + fragment || v.id === doc.id + '#' + fragment);
+        }
+
+        // resolveIdentity turns a handle or DID into everything the views need.
+        const resolveIdentity = memo(async (authority) => {
+            const id = { input: authority, handle: null, did: null, methods: null, doc: null, pds: null };
+            if (authority.startsWith('did:')) {
+                id.did = authority;
+            } else {
+                id.handle = authority;
+                id.methods = await resolveHandle(authority);
+                const m = id.methods;
+                id.did = m.dns.did || m.http.did || m.appview.did;
+                if (!id.did) {
+                    throw new Error(`Could not resolve handle ${authority}. DNS: ${m.dns.error} HTTPS: ${m.http.error} AppView: ${m.appview.error}`);
+                }
+            }
+
+            id.doc = await fetchDidDoc(id.did);
+            const aka = (id.doc.alsoKnownAs || []).find((a) => a.startsWith('at://'));
+            id.docHandle = aka ? aka.slice('at://'.length).toLowerCase() : null;
+            if (!id.handle && id.docHandle) {
+                id.handle = id.docHandle;
+                id.methods = await resolveHandle(id.docHandle);
+            }
+
+            // A handle is valid when it resolves to the DID and the DID doc claims it back.
+            const m = id.methods;
+            id.handleAgrees = !!m && [m.dns.did, m.http.did, m.appview.did].includes(id.did);
+            id.handleVerified = !!id.handle && id.docHandle === id.handle && id.handleAgrees;
+
+            const svc = findService(id.doc, 'atproto_pds');
+            id.pds = svc ? String(svc.serviceEndpoint).replace(/\/+$/, '') : null;
+            return id;
+        });
+
+        const describeRepo = memo(async (key) => {
+            const [pds, did] = key.split(' ');
+            return getJSON(xrpcURL(pds, 'com.atproto.repo.describeRepo', { repo: did }));
+        });
+
+        function repoInfo(id) {
+            if (!id.pds) return Promise.reject(new Error('DID document has no #atproto_pds service'));
+            return describeRepo(`${id.pds} ${id.did}`);
+        }
+
+        // ---------- atproto helpers ----------
+
+        const S32 = '234567abcdefghijklmnopqrstuvwxyz';
+
+        // tidToDate decodes a TID record key. The top 53 bits after the sign bit are microseconds.
+        function tidToDate(s) {
+            if (typeof s !== 'string' || !/^[2-7a-j][2-7a-z]{12}$/.test(s)) return null;
+            let n = 0n;
+            for (const c of s) n = n * 32n + BigInt(S32.indexOf(c));
+            const d = new Date(Number((n >> 10n) / 1000n));
+            const y = d.getUTCFullYear();
+            return y >= 2022 && y < 2100 ? d : null;
+        }
+
+        function recordDate(rkey, value) {
+            const fromTid = tidToDate(rkey);
+            if (fromTid) return fromTid;
+            if (value && typeof value.createdAt === 'string') {
+                const d = new Date(value.createdAt);
+                if (!isNaN(d)) return d;
+            }
+            return null;
+        }
+
+        // linkString renders a string value, turning at:// URIs, DIDs, and URLs into links.
+        function linkString(s) {
+            if (/^at:\/\//.test(s)) {
+                const t = parseTarget(s);
+                if (t) return navLink(s, t);
+            }
+            if (/^did:(plc|web):[A-Za-z0-9._:%-]+$/.test(s)) return navLink(s, { authority: s });
+            if (/^https?:\/\/\S+$/.test(s)) return extLink(s);
+            return s;
+        }
+
+        function summarize(v) {
+            if (!v || typeof v !== 'object') return '';
+            for (const k of ['text', 'displayName', 'name', 'title', 'status', 'description', 'handle', 'key']) {
+                if (typeof v[k] === 'string' && v[k].trim()) return v[k];
+            }
+            if (typeof v.subject === 'string') return v.subject;
+            if (v.subject && typeof v.subject.uri === 'string') return v.subject.uri;
+            return '';
+        }
+
+        // findBlobs walks a record and collects blob references, including the legacy {cid, mimeType} shape.
+        function findBlobs(v, out = []) {
+            if (Array.isArray(v)) {
+                v.forEach((x) => findBlobs(x, out));
+            } else if (v && typeof v === 'object') {
+                if (v.$type === 'blob' && v.ref && typeof v.ref.$link === 'string') {
+                    out.push({ cid: v.ref.$link, mimeType: v.mimeType, size: v.size });
+                } else if (typeof v.cid === 'string' && typeof v.mimeType === 'string' && Object.keys(v).length === 2) {
+                    out.push({ cid: v.cid, mimeType: v.mimeType });
+                } else {
+                    Object.values(v).forEach((x) => findBlobs(x, out));
+                }
+            }
+            return out;
+        }
+
+        // ---------- JSON rendering ----------
+
+        function renderJSON(value, id) {
+            const pre = h('pre', { class: 'json' });
+            writeJSON(pre, value, 0, id, null);
+            return pre;
+        }
+
+        function writeJSON(out, v, depth, id, parent) {
+            const pad = '  '.repeat(depth + 1);
+            const closePad = '  '.repeat(depth);
+            if (v === null || typeof v === 'boolean') {
+                out.append(h('span', { class: 'j-lit' }, String(v)));
+            } else if (typeof v === 'number') {
+                out.append(h('span', { class: 'j-num' }, String(v)));
+            } else if (typeof v === 'string') {
+                // A blob ref's $link points at a blob on the PDS.
+                const isBlobLink = parent && parent.key === '$link' && parent.blob && id && id.pds;
+                const inner = isBlobLink ? extLink(blobURL(id, v), v) : linkString(v);
+                out.append(h('span', { class: 'j-str' }, '"', inner, '"'));
+            } else if (Array.isArray(v)) {
+                if (!v.length) { out.append('[]'); return; }
+                out.append('[\n');
+                v.forEach((x, i) => {
+                    out.append(pad);
+                    writeJSON(out, x, depth + 1, id, null);
+                    out.append(i < v.length - 1 ? ',\n' : '\n');
+                });
+                out.append(closePad + ']');
+            } else if (typeof v === 'object') {
+                const keys = Object.keys(v);
+                if (!keys.length) { out.append('{}'); return; }
+                const blob = parent && parent.blobRef;
+                const isBlobObj = v.$type === 'blob';
+                out.append('{\n');
+                keys.forEach((k, i) => {
+                    out.append(pad, h('span', { class: 'j-key' }, JSON.stringify(k)), ': ');
+                    const childParent = { key: k, blob, blobRef: isBlobObj && k === 'ref' };
+                    writeJSON(out, v[k], depth + 1, id, childParent);
+                    out.append(i < keys.length - 1 ? ',\n' : '\n');
+                });
+                out.append(closePad + '}');
+            }
+        }
+
+        // ---------- Blob previews ----------
+
+        function blobTile(id, cid, hint) {
+            const body = h('div');
+            const meta = h('div', { class: 'meta' }, hint && hint.mimeType ? `${hint.mimeType}${hint.size != null ? ', ' + fmtBytes(hint.size) : ''}` : '');
+            const btn = h('button', { class: 'ghost-button', type: 'button' }, 'Preview');
+            const tile = h('div', { class: 'blob-tile' },
+                body,
+                h('div', { class: 'cid', title: cid }, shorten(cid, 16, 8)),
+                meta,
+                h('div', { class: 'actions' }, btn, extLink(blobURL(id, cid), 'Open')));
+            tile.preview = async () => {
+                if (btn.disabled) return;
+                btn.disabled = true;
+                btn.textContent = 'Loading…';
+                try {
+                    await loadPreview(id, cid, body, meta);
+                    btn.remove();
+                } catch (e) {
+                    body.replaceChildren(errorBox(e));
+                    btn.disabled = false;
+                    btn.textContent = 'Retry';
+                }
+            };
+            btn.addEventListener('click', tile.preview);
+            return tile;
+        }
+
+        async function loadPreview(id, cid, body, meta) {
+            const r = await fetchX(blobURL(id, cid));
+            if (!r.ok) throw new Error(`getBlob responded ${r.status}`);
+            const type = (r.headers.get('content-type') || 'application/octet-stream').split(';')[0].trim();
+            const len = Number(r.headers.get('content-length'));
+            if (len > MAX_PREVIEW_BYTES) {
+                r.body && r.body.cancel();
+                meta.textContent = `${type}, ${fmtBytes(len)} (too large to preview)`;
+                return;
+            }
+            const blob = await r.blob();
+            meta.textContent = `${type}, ${fmtBytes(blob.size)}`;
+            if (type.startsWith('image/')) {
+                body.replaceChildren(h('img', { src: URL.createObjectURL(blob), alt: cid }));
+            } else if (type.startsWith('video/')) {
+                body.replaceChildren(h('video', { src: URL.createObjectURL(blob), controls: true, preload: 'metadata' }));
+            } else if (type.startsWith('audio/')) {
+                body.replaceChildren(h('audio', { src: URL.createObjectURL(blob), controls: true }));
+            } else if (type.startsWith('text/') || /json|xml|yaml/.test(type)) {
+                const text = await blob.slice(0, 4096).text();
+                body.replaceChildren(h('pre', null, text + (blob.size > 4096 ? '\n…' : '')));
+            }
+        }
+
+        // ---------- Rail ----------
+
+        // The collection filter text. The rail rebuilds on every navigation, so it lives out here.
+        let collFilter = '';
+
+        async function renderRail(id, target, view) {
+            const active = (v, coll) => (view || '') === (v || '') && (target.collection || '') === (coll || '') && !target.rkey;
+            const avatar = h('img', { alt: '', hidden: true });
+            const who = h('div', { class: 'who' },
+                avatar,
+                h('div', { class: 'who-text' },
+                    h('div', { class: 'who-handle' }, id.handle || id.did, ' ',
+                        id.handle ? chip(id.handleVerified ? '✓' : '✗', id.handleVerified ? 'good' : 'bad') : null),
+                    h('div', { class: 'who-did' }, id.did)));
+
+            const base = { authority: id.did };
+            const views = h('ul', { class: 'nav-list' },
+                [['Overview', ''], ['DID document', 'identity'], ['PDS', 'pds'], ['Blobs', 'blobs']].map(([label, v]) =>
+                    h('li', null, navLink(label, base, v, active(v) ? 'active' : null))));
+
+            const collBody = h('div', null, loading());
+            const collMeta = h('span', { class: 'rail-section-meta' });
+
+            railEl.replaceChildren(
+                h('div', { class: 'rail-section' }, who),
+                h('div', { class: 'rail-section' },
+                    h('div', { class: 'rail-section-header' }, h('h2', null, 'Views')),
+                    views),
+                h('div', { class: 'rail-section' },
+                    h('div', { class: 'rail-section-header' }, h('h2', null, 'Collections'), collMeta),
+                    collBody));
+
+            let repo;
+            try {
+                repo = await repoInfo(id);
+            } catch (e) {
+                collBody.replaceChildren(errorBox(e));
+                return;
+            }
+            const colls = repo.collections || [];
+            collMeta.textContent = String(colls.length);
+            if (!colls.length) {
+                collBody.replaceChildren(h('div', { class: 'rail-empty' }, 'No collections.'));
+            } else {
+                // Group by NSID authority so the list scans like a tree.
+                const groups = new Map();
+                for (const c of colls) {
+                    const i = c.lastIndexOf('.');
+                    const g = c.slice(0, i);
+                    if (!groups.has(g)) groups.set(g, []);
+                    groups.get(g).push(c);
+                }
+                const groupEls = [...groups].map(([g, cs]) => {
+                    const items = cs.map((c) => h('li', { dataset: { nsid: c.toLowerCase() } },
+                        navLink(c.slice(g.length + 1), { authority: id.did, collection: c }, null,
+                            (target.collection === c && !view) ? 'active' : null)));
+                    return { items, el: h('div', { class: 'nsid-group' }, h('div', { class: 'nsid-group-title' }, g), h('ul', { class: 'nav-list' }, items)) };
+                });
+                const noMatch = h('div', { class: 'rail-empty', hidden: true }, 'No matching collections.');
+                const filter = h('input', {
+                    type: 'search', class: 'rail-filter', value: collFilter, placeholder: 'Filter collections',
+                    'aria-label': 'Filter collections', autocomplete: 'off', spellcheck: 'false',
+                });
+                // Match any part of the full NSID, so "app." matches everything under app.bsky.*.
+                const applyFilter = () => {
+                    collFilter = filter.value;
+                    const q = collFilter.trim().toLowerCase();
+                    let shown = 0;
+                    for (const g of groupEls) {
+                        let any = false;
+                        for (const li of g.items) {
+                            const match = !q || li.dataset.nsid.includes(q);
+                            li.hidden = !match;
+                            if (match) { any = true; shown++; }
+                        }
+                        g.el.hidden = !any;
+                    }
+                    noMatch.hidden = shown > 0;
+                    collMeta.textContent = q ? `${shown} / ${colls.length}` : String(colls.length);
+                };
+                filter.addEventListener('input', applyFilter);
+                filter.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') { filter.value = ''; applyFilter(); }
+                });
+                collBody.replaceChildren(filter, ...groupEls.map((g) => g.el), noMatch);
+                applyFilter();
+            }
+
+            if (colls.includes('app.bsky.actor.profile')) {
+                try {
+                    const p = await getJSON(xrpcURL(id.pds, 'com.atproto.repo.getRecord', { repo: id.did, collection: 'app.bsky.actor.profile', rkey: 'self' }));
+                    const blobs = p.value && p.value.avatar ? findBlobs(p.value.avatar) : [];
+                    if (blobs.length) {
+                        avatar.src = blobURL(id, blobs[0].cid);
+                        avatar.hidden = false;
+                    }
+                } catch (_) { /* avatar is decorative */ }
+            }
+        }
+
+        // ---------- Views ----------
+
+        function header(id, target, title) {
+            const parts = [navLink(id.handle || id.did, { authority: id.did })];
+            if (target.collection) {
+                parts.push(h('span', { class: 'sep' }, '/'), navLink(target.collection, { authority: id.did, collection: target.collection }));
+            }
+            if (target.rkey) parts.push(h('span', { class: 'sep' }, '/'), target.rkey);
+            return [h('div', { class: 'crumbs' }, 'at://', parts), h('div', { class: 'view-title' }, title)];
+        }
+
+        // asyncCard renders a card whose body fills in when its promise settles.
+        function asyncCard(title, opts, fn) {
+            const body = h('div', null, loading());
+            const c = card(title, opts, body);
+            Promise.resolve().then(fn).then(
+                (node) => body.replaceChildren(...[node].flat()),
+                (e) => body.replaceChildren(errorBox(e)));
+            return c;
+        }
+
+        function methodRow(label, detail, res, did) {
+            let result;
+            if (!res) result = h('span', { class: 'muted' }, 'not checked');
+            else if (res.error) result = h('span', { class: 'muted' }, res.error);
+            else result = [mono(res.did), ' ', res.did === did ? chip('match', 'good') : chip('mismatch', 'bad')];
+            return h('tr', null, h('td', null, label, h('div', { class: 'muted mono', style: 'font-size:11px' }, detail)), h('td', null, result));
+        }
+
+        function viewOverview(id) {
+            const m = id.methods || {};
+            const handleCard = card('Handle', null,
+                id.handle ? [
+                    h('p', { style: 'margin-bottom:10px' }, h('strong', null, id.handle), ' ',
+                        id.handleVerified ? chip('verified', 'good') : chip('not verified', 'bad')),
+                    h('table', { class: 'list method-table' },
+                        h('thead', null, h('tr', null, h('th', null, 'Method'), h('th', null, 'Result'))),
+                        h('tbody', null,
+                            methodRow('DNS TXT', `_atproto.${id.handle}`, m.dns, id.did),
+                            methodRow('HTTPS', `${id.handle}/.well-known/atproto-did`, m.http, id.did),
+                            methodRow('AppView', 'com.atproto.identity.resolveHandle', m.appview, id.did),
+                            h('tr', null,
+                                h('td', null, 'DID doc', h('div', { class: 'muted mono', style: 'font-size:11px' }, 'alsoKnownAs')),
+                                h('td', null, id.docHandle ? [mono('at://' + id.docHandle), ' ',
+                                    id.docHandle === id.handle ? chip('match', 'good') : chip('mismatch', 'bad')]
+                                    : h('span', { class: 'muted' }, 'no at:// alias'))))),
+                    h('p', { class: 'muted', style: 'margin-top:8px;font-size:12px' },
+                        'HTTPS lookups often fail from a browser because many hosts omit CORS headers. DNS or AppView agreement is enough.'),
+                ] : h('div', { class: 'muted' }, 'This DID document does not claim a handle.'));
+
+            const vm = findVerificationMethod(id.doc, 'atproto');
+            const didCard = card('DID', { actions: [navLink('Document', { authority: id.did }, 'identity'), extLink(didDocURL(id.did), 'Raw')] },
+                kv([
+                    ['DID', mono(id.did)],
+                    ['Method', id.did.split(':')[1]],
+                    ['Also known as', (id.doc.alsoKnownAs || []).map((a, i) => [i ? ', ' : '', linkString(a)])],
+                    ['Signing key', vm ? mono(vm.publicKeyMultibase || vm.id) : null],
+                    ['Services', (id.doc.service || []).map((s) =>
+                        h('div', null, mono(s.id), ' ', h('span', { class: 'muted' }, s.type), ' ', extLink(String(s.serviceEndpoint))))],
+                ]));
+
+            const repoCard = asyncCard('Repository', { actions: id.pds ? [extLink(xrpcURL(id.pds, 'com.atproto.sync.getRepo', { did: id.did }), 'Download CAR')] : null }, async () => {
+                if (!id.pds) throw new Error('No PDS listed in the DID document.');
+                const [repo, status, commit] = await Promise.all([
+                    repoInfo(id),
+                    getJSON(xrpcURL(id.pds, 'com.atproto.sync.getRepoStatus', { did: id.did })).catch((e) => ({ error: e.message })),
+                    getJSON(xrpcURL(id.pds, 'com.atproto.sync.getLatestCommit', { did: id.did })).catch((e) => ({ error: e.message })),
+                ]);
+                return kv([
+                    ['PDS', [extLink(id.pds), ' ', navLink('details', { authority: id.did }, 'pds')]],
+                    ['Status', status.error ? h('span', { class: 'muted' }, status.error)
+                        : [status.active ? chip('active', 'good') : chip(status.status || 'inactive', 'bad')]],
+                    ['handleIsCorrect', String(repo.handleIsCorrect)],
+                    ['Revision', commit.rev ? [mono(commit.rev), ' ', h('span', { class: 'muted' }, fmtDate(tidToDate(commit.rev)))] : null],
+                    ['Commit CID', commit.cid ? mono(commit.cid) : null],
+                    ['Collections', String((repo.collections || []).length)],
+                ]);
+            });
+
+            return [
+                header(id, {}, 'Overview'),
+                handleCard, didCard, repoCard,
+                elsewhereCard(id),
+            ];
+        }
+
+        // ELSEWHERE lists apps with a per-account web page. A link shows only when the repo has the signal collection.
+        // A signal ending in "." matches any collection with that prefix.
+        const ELSEWHERE = [
+            { name: 'bsky.app', signal: 'app.bsky.actor.profile', url: (id) => `https://bsky.app/profile/${id.did}` },
+            // Older Tangled accounts may lack sh.tangled.actor.profile, so any sh.tangled.* collection counts.
+            { name: 'tangled.org', signal: 'sh.tangled.', url: (id) => `https://tangled.org/${id.did}` },
+            // Leaflet also writes the shared site.standard.* collections, so only pub.leaflet.* counts.
+            { name: 'leaflet.pub', signal: 'pub.leaflet.', url: (id) => `https://leaflet.pub/p/${id.did}` },
+            { name: 'whtwnd.com', signal: 'com.whtwnd.blog.entry', url: (id) => `https://whtwnd.com/${id.did}` },
+            { name: 'frontpage.fyi', signal: 'fyi.unravel.frontpage.post', url: (id) => `https://frontpage.fyi/profile/${id.did}` },
+            { name: 'linkat.blue', signal: 'blue.linkat.board', url: (id) => `https://linkat.blue/${id.did}` },
+            { name: 'grain.social', signal: 'social.grain.actor.profile', url: (id) => `https://grain.social/profile/${id.did}` },
+            { name: 'sprk.so', signal: 'so.sprk.actor.profile', url: (id) => `https://sprk.so/profile/${id.did}` },
+            { name: 'pinksea.art', signal: 'com.shinolabs.pinksea.oekaki', url: (id) => `https://pinksea.art/${id.did}` },
+            { name: 'bookhive.buzz', signal: 'buzz.bookhive.book', url: (id) => `https://bookhive.buzz/profile/${id.did}` },
+            { name: 'blento.app', signal: 'app.blento.', url: (id) => `https://blento.app/${id.did}` },
+            { name: 'plyr.fm', signal: 'fm.plyr.actor.profile', url: (id) => `https://plyr.fm/u/${id.did}` },
+            { name: 'sifa.id', signal: 'id.sifa.', url: (id) => `https://sifa.id/p/${id.did}` },
+            { name: 'semble.so', signal: 'network.cosmik.', url: (id) => `https://semble.so/profile/${id.did}` },
+            { name: 'atstore.fyi', signal: 'fyi.atstore.profile', url: (id) => `https://atstore.fyi/profile/${id.did}` },
+            { name: 'popfeed.social', signal: 'social.popfeed.', url: (id) => `https://popfeed.social/profile/${id.did}` },
+            { name: 'anisota.net', signal: 'net.anisota.', url: (id) => `https://anisota.net/profile/${id.did}` },
+            // Chat viewers also write place.stream.* records, so only streamers' livestream records count.
+            { name: 'stream.place', signal: 'place.stream.livestream', url: (id) => `https://stream.place/${id.did}` },
+            // Local entries point at sibling klyn pages.
+            { name: 'statusphere.html', signal: 'xyz.statusphere.status', local: true, url: (id) => `statusphere.html?at=${id.did}` },
+        ];
+
+        function hasSignal(colls, signal) {
+            return signal.endsWith('.') ? colls.some((c) => c.startsWith(signal)) : colls.includes(signal);
+        }
+
+        function elsewhereCard(id) {
+            const c = card('Elsewhere', null);
+            c.hidden = true;
+            repoInfo(id).then((repo) => {
+                const colls = repo.collections || [];
+                const links = ELSEWHERE.filter((app) => hasSignal(colls, app.signal)).map((app) => app.local
+                    ? h('a', { href: app.url(id), class: 'ext', title: 'Opens outside atproto Explorer' }, app.name)
+                    : extLink(app.url(id), app.name));
+                if (!links.length) return;
+                c.append(h('div', { class: 'card-actions' }, links));
+                c.hidden = false;
+            }, () => { /* the Repository card already shows the error */ });
+            return c;
+        }
+
+        function viewIdentity(id) {
+            const nodes = [
+                header(id, {}, 'DID document'),
+                card('Document', { actions: [extLink(didDocURL(id.did), 'Raw')] }, renderJSON(id.doc, id)),
+            ];
+            if (id.did.startsWith('did:plc:')) {
+                nodes.push(asyncCard('PLC operation log', { actions: [extLink(`${PLC}/${id.did}/log/audit`, 'Raw')] }, async () => {
+                    const log = await getJSON(`${PLC}/${id.did}/log/audit`);
+                    return renderPlcLog(log, id);
+                }));
+            }
+            return nodes;
+        }
+
+        // normalizeOp maps legacy "create" ops and current "plc_operation" ops onto one shape.
+        function normalizeOp(op) {
+            if (!op) return null;
+            if (op.type === 'plc_tombstone') return { tombstone: true };
+            if (op.type === 'create') {
+                return {
+                    aka: op.handle ? ['at://' + op.handle] : [],
+                    services: op.service ? { atproto_pds: op.service } : {},
+                    rotationKeys: [op.recoveryKey, op.signingKey].filter(Boolean),
+                    vms: op.signingKey ? { atproto: op.signingKey } : {},
+                };
+            }
+            const services = {};
+            for (const [k, v] of Object.entries(op.services || {})) services[k] = v.endpoint;
+            return { aka: op.alsoKnownAs || [], services, rotationKeys: op.rotationKeys || [], vms: op.verificationMethods || {} };
+        }
+
+        function diffOps(prev, cur) {
+            if (cur.tombstone) return ['DID tombstoned'];
+            const out = [];
+            const listDiff = (label, a, b, fmt) => {
+                for (const x of b) if (!a.includes(x)) out.push(`+ ${label} ${fmt(x)}`);
+                for (const x of a) if (!b.includes(x)) out.push(`− ${label} ${fmt(x)}`);
+            };
+            const mapDiff = (label, a, b, fmt) => {
+                for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) {
+                    if (a[k] === b[k]) continue;
+                    if (!(k in a)) out.push(`+ ${label} ${k}: ${fmt(b[k])}`);
+                    else if (!(k in b)) out.push(`− ${label} ${k}`);
+                    else out.push(`~ ${label} ${k}: ${fmt(a[k])} → ${fmt(b[k])}`);
+                }
+            };
+            const p = prev && !prev.tombstone ? prev : { aka: [], services: {}, rotationKeys: [], vms: {} };
+            const ident = (x) => x;
+            const key = (x) => shorten(String(x), 16, 6);
+            listDiff('alias', p.aka, cur.aka, ident);
+            mapDiff('service', p.services, cur.services, ident);
+            mapDiff('key', p.vms, cur.vms, key);
+            listDiff('rotation key', p.rotationKeys, cur.rotationKeys, key);
+            if (!out.length) out.push('no visible changes');
+            return out;
+        }
+
+        function renderPlcLog(log, id) {
+            let prev = null;
+            const items = log.map((entry, i) => {
+                const cur = normalizeOp(entry.operation);
+                const changes = diffOps(prev, cur);
+                // Nullified ops were overridden by a recovery, so the next diff starts from the last valid op.
+                if (!entry.nullified) prev = cur;
+                const kind = i === 0 ? 'created' : cur.tombstone ? 'tombstoned' : 'updated';
+                return h('li', { class: entry.nullified ? 'nullified' : null },
+                    h('div', null, h('strong', null, kind), ' ',
+                        h('span', { class: 'when' }, fmtDate(new Date(entry.createdAt))), ' ',
+                        entry.nullified ? chip('nullified', 'bad') : null),
+                    h('ul', { class: 'changes' }, changes.map((c) => h('li', null, mono(c)))),
+                    h('details', null, h('summary', null, mono(shorten(entry.cid, 14, 8))), renderJSON(entry.operation, id)));
+            });
+            items.reverse();
+            return [h('p', { class: 'muted', style: 'margin-bottom:10px' }, `${log.length} operation${log.length === 1 ? '' : 's'}, newest first.`),
+                h('ul', { class: 'timeline' }, items)];
+        }
+
+        function viewPds(id) {
+            if (!id.pds) return [header(id, {}, 'PDS'), errorBox('No #atproto_pds service in the DID document.')];
+            const pds = id.pds;
+            return [
+                header(id, {}, 'PDS'),
+                card('Server', { actions: [extLink(pds)] }, (() => {
+                    const body = h('div', null, loading());
+                    Promise.all([
+                        getJSON(xrpcURL(pds, '_health')).catch((e) => ({ error: e.message })),
+                        getJSON(xrpcURL(pds, 'com.atproto.server.describeServer')),
+                    ]).then(([health, desc]) => {
+                        const nodes = [kv([
+                            ['URL', extLink(pds)],
+                            ['Version', health.version ? mono(health.version) : h('span', { class: 'muted' }, health.error || 'unknown')],
+                            ['Server DID', desc.did ? mono(desc.did) : null],
+                            ['User domains', (desc.availableUserDomains || []).join(', ')],
+                            ['Invite required', String(!!desc.inviteCodeRequired)],
+                            ['Links', Object.entries(desc.links || {}).map(([k, v]) => h('div', null, k, ': ', extLink(v)))],
+                        ]), h('div', { style: 'margin-top:12px' }, renderJSON(desc, id))];
+                        body.replaceChildren(...nodes);
+                        if (desc.did && desc.did.startsWith('did:web:')) body.after(serverDidDoc(desc.did, id));
+                    }, (e) => body.replaceChildren(errorBox(e)));
+                    return body;
+                })()),
+                asyncCard('This account on the PDS', null, async () => {
+                    const [status, commit] = await Promise.all([
+                        getJSON(xrpcURL(pds, 'com.atproto.sync.getRepoStatus', { did: id.did })),
+                        getJSON(xrpcURL(pds, 'com.atproto.sync.getLatestCommit', { did: id.did })).catch((e) => ({ error: e.message })),
+                    ]);
+                    return [renderJSON(status, id), h('div', { style: 'margin-top:8px' }, renderJSON(commit, id))];
+                }),
+            ];
+        }
+
+        function serverDidDoc(did, id) {
+            const body = h('div', { style: 'margin-top:12px' }, loading('Fetching server DID document…'));
+            getJSON(didWebURL(did)).then(
+                (doc) => body.replaceChildren(h('h2', { class: 'muted', style: 'font-size:11px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px' }, 'Server DID document'), renderJSON(doc, id)),
+                (e) => body.replaceChildren(h('div', { class: 'muted', style: 'font-size:12px' }, `Server DID document unavailable: ${e.message}`)));
+            return body;
+        }
+
+        function viewCollection(id, target) {
+            const coll = target.collection;
+            const tbody = h('tbody');
+            const status = h('span', { class: 'muted' });
+            const moreBtn = h('button', { class: 'ghost-button', type: 'button', hidden: true }, 'Load more');
+            const orderBtn = h('button', { class: 'ghost-button', type: 'button' });
+            let cursor = null;
+            let reverse = false;
+            let count = 0;
+
+            const load = async (reset) => {
+                if (reset) { cursor = null; count = 0; tbody.replaceChildren(); }
+                moreBtn.disabled = true;
+                orderBtn.textContent = reverse ? 'Oldest first' : 'Newest first';
+                status.textContent = 'Loading…';
+                try {
+                    const j = await getJSON(xrpcURL(id.pds, 'com.atproto.repo.listRecords', {
+                        repo: id.did, collection: coll, limit: PAGE_SIZE, cursor, reverse: reverse ? 'true' : null,
+                    }));
+                    for (const rec of j.records || []) {
+                        const rkey = rec.uri.split('/').pop();
+                        const sum = summarize(rec.value);
+                        tbody.append(h('tr', null,
+                            h('td', { class: 'rkey' }, navLink(rkey, { authority: id.did, collection: coll, rkey })),
+                            h('td', { class: 'when' }, fmtDate(recordDate(rkey, rec.value))),
+                            h('td', { class: 'summary' }, sum.length > 200 ? sum.slice(0, 200) + '…' : linkString(sum))));
+                    }
+                    const n = (j.records || []).length;
+                    count += n;
+                    // PDSes often return a cursor on the last page too. A short page means the end.
+                    cursor = j.cursor && n >= PAGE_SIZE ? j.cursor : null;
+                    status.textContent = `${count} record${count === 1 ? '' : 's'}${cursor ? '' : ', end of collection'}`;
+                    moreBtn.hidden = !cursor;
+                } catch (e) {
+                    status.replaceChildren(errorBox(e));
+                } finally {
+                    moreBtn.disabled = false;
+                }
+            };
+            moreBtn.addEventListener('click', () => load(false));
+            orderBtn.addEventListener('click', () => { reverse = !reverse; load(true); });
+            load(true);
+
+            return [
+                header(id, target, coll),
+                card('Records', { actions: [orderBtn] },
+                    h('table', { class: 'list' },
+                        h('thead', null, h('tr', null, h('th', null, 'rkey'), h('th', null, 'When'), h('th', null, 'Summary'))),
+                        tbody),
+                    h('div', { class: 'more-row' }, moreBtn, status)),
+            ];
+        }
+
+        async function viewRecord(id, target) {
+            const url = xrpcURL(id.pds, 'com.atproto.repo.getRecord', { repo: id.did, collection: target.collection, rkey: target.rkey });
+            const rec = await getJSON(url);
+            const value = rec.value || {};
+            const blobs = findBlobs(value);
+            const links = [extLink(url, 'Raw')];
+            if (target.collection === 'app.bsky.feed.post') {
+                links.push(extLink(`https://bsky.app/profile/${id.did}/post/${target.rkey}`, 'bsky.app'));
+            }
+            const nodes = [
+                header(id, target, target.rkey),
+                card('Record', { actions: links }, kv([
+                    ['URI', mono(rec.uri)],
+                    ['CID', rec.cid ? mono(rec.cid) : null],
+                    ['Type', value.$type ? mono(value.$type) : null],
+                    ['When', fmtDate(recordDate(target.rkey, value))],
+                ])),
+                card('Value', null, renderJSON(value, id)),
+            ];
+            if (blobs.length) {
+                const tiles = blobs.map((b) => blobTile(id, b.cid, b));
+                nodes.push(card(`Blobs (${blobs.length})`, null, h('div', { class: 'blob-grid' }, tiles)));
+                // Images referenced by a single record are cheap enough to load right away.
+                blobs.forEach((b, i) => {
+                    if (b.mimeType && b.mimeType.startsWith('image/')) tiles[i].preview();
+                });
+            }
+            return nodes;
+        }
+
+        function viewBlobs(id) {
+            if (!id.pds) return [header(id, {}, 'Blobs'), errorBox('No #atproto_pds service in the DID document.')];
+            const grid = h('div', { class: 'blob-grid' });
+            const status = h('span', { class: 'muted' });
+            const moreBtn = h('button', { class: 'ghost-button', type: 'button', hidden: true }, 'Load more');
+            const previewAllBtn = h('button', { class: 'ghost-button', type: 'button' }, 'Preview all loaded');
+            let cursor = null;
+            let count = 0;
+
+            const load = async () => {
+                moreBtn.disabled = true;
+                status.textContent = 'Loading…';
+                try {
+                    const j = await getJSON(xrpcURL(id.pds, 'com.atproto.sync.listBlobs', { did: id.did, limit: BLOB_PAGE_SIZE, cursor }));
+                    const cids = j.cids || [];
+                    for (const cid of cids) grid.append(blobTile(id, cid));
+                    count += cids.length;
+                    cursor = j.cursor && cids.length >= BLOB_PAGE_SIZE ? j.cursor : null;
+                    status.textContent = `${count} blob${count === 1 ? '' : 's'}${cursor ? '' : ', end of list'}`;
+                    moreBtn.hidden = !cursor;
+                } catch (e) {
+                    status.replaceChildren(errorBox(e));
+                } finally {
+                    moreBtn.disabled = false;
+                }
+            };
+            moreBtn.addEventListener('click', load);
+            previewAllBtn.addEventListener('click', () => {
+                for (const tile of grid.children) tile.preview();
+            });
+            load();
+
+            return [
+                header(id, {}, 'Blobs'),
+                h('p', { class: 'muted', style: 'margin-bottom:12px' },
+                    'listBlobs returns CIDs only. Each preview downloads the blob to learn its type.'),
+                card('Blobs', { actions: [previewAllBtn] }, grid, h('div', { class: 'more-row' }, moreBtn, status)),
+            ];
+        }
+
+        function viewWelcome() {
+            const ex = (s) => navLink(s, parseTarget(s));
+            return h('div', { class: 'welcome' },
+                h('div', { class: 'view-title' }, 'Browse an atproto account'),
+                h('p', null, 'Enter a handle, a DID, or an at:// URI above. Every request goes straight from your browser to the public services:'),
+                h('ul', null,
+                    h('li', null, 'Handles resolve through DNS-over-HTTPS, ', mono('/.well-known/atproto-did'), ', and the Bluesky AppView.'),
+                    h('li', null, 'DID documents come from ', mono('plc.directory'), ' or the ', mono('did:web'), ' host.'),
+                    h('li', null, 'Records and blobs come from the account\'s own PDS.')),
+                h('p', null, 'Examples: ', ex('ripta.i6y.me'), ', ', ex('bsky.app'), ', ',
+                    ex('at://ripta.i6y.me/app.bsky.actor.profile/self'), '.'));
+        }
+
+        // ---------- Render loop ----------
+
+        let renderSeq = 0;
+
+        async function render() {
+            const seq = ++renderSeq;
+            const params = new URLSearchParams(location.search);
+            const target = parseTarget(params.get('at'));
+            const view = params.get('view') || '';
+            const inner = h('div', { class: 'content-inner' });
+            contentEl.replaceChildren(inner);
+            contentEl.scrollTop = 0;
+
+            if (!target) {
+                qEl.value = '';
+                document.title = 'atproto Explorer';
+                railEl.replaceChildren(h('div', { class: 'rail-section' }, h('div', { class: 'rail-empty' }, 'Nothing loaded yet.')));
+                inner.append(viewWelcome());
+                return;
+            }
+
+            qEl.value = 'at://' + targetString(target);
+            document.title = `${targetString(target)} · atproto Explorer`;
+            inner.append(loading(`Resolving ${target.authority}…`));
+            railEl.replaceChildren(h('div', { class: 'rail-section' }, loading()));
+
+            let id;
+            try {
+                id = await resolveIdentity(target.authority);
+            } catch (e) {
+                if (seq !== renderSeq) return;
+                railEl.replaceChildren(h('div', { class: 'rail-section' }, h('div', { class: 'rail-empty' }, 'Could not resolve.')));
+                inner.replaceChildren(errorBox(e));
+                return;
+            }
+            if (seq !== renderSeq) return;
+
+            renderRail(id, target, view);
+
+            let nodes;
+            try {
+                if (target.collection && !id.pds) throw new Error('No #atproto_pds service in the DID document.');
+                if (target.collection && target.rkey) nodes = await viewRecord(id, target);
+                else if (target.collection) nodes = viewCollection(id, target);
+                else if (view === 'identity') nodes = viewIdentity(id);
+                else if (view === 'pds') nodes = viewPds(id);
+                else if (view === 'blobs') nodes = viewBlobs(id);
+                else nodes = viewOverview(id);
+            } catch (e) {
+                nodes = [header(id, target, target.rkey || target.collection || ''), errorBox(e)];
+            }
+            if (seq !== renderSeq) return;
+            inner.replaceChildren();
+            appendKids(inner, [nodes]);
+        }
+
+        render();
+    </script>
+</body>
+</html>
