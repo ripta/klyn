@@ -148,6 +148,9 @@
         }
 
         .file-button {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
             background: var(--accent);
             color: white;
             border: none;
@@ -161,6 +164,17 @@
         }
 
         .file-button:hover { background: #b45309; }
+        .file-button:focus-within { outline: 2px solid var(--accent-ring); outline-offset: 2px; }
+
+        /* Visually hidden, not display: none. Some browsers won't open the
+           picker for an input that isn't rendered. */
+        .file-button input[type="file"] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
 
         .ghost-button {
             background: transparent;
@@ -491,8 +505,10 @@
         <div class="header-content">
             <h1>Claude Code Sessions</h1>
             <span class="file-info" id="fileInfo"></span>
-            <button class="file-button" id="openButton">Open JSONL</button>
-            <input type="file" id="fileInput" accept=".jsonl,.json,.txt,application/json" hidden>
+            <label class="file-button">
+                <input type="file" id="fileInput" accept=".jsonl,.json,.txt,application/json">
+                <span>Open JSONL</span>
+            </label>
             <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
                 <span role="img" aria-label="Light mode">☀️</span>
                 <span role="img" aria-label="Dark mode">🌙</span>
@@ -1508,7 +1524,6 @@
 
         // ---------- wiring ----------
 
-        $('openButton').addEventListener('click', () => $('fileInput').click());
         $('fileInput').addEventListener('change', (e) => {
             const f = e.target.files[0];
             if (f) load(f);
