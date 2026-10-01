@@ -597,10 +597,17 @@
 
         // Wrap tall content so it starts collapsed with a "Show more" button.
         // The height check waits a frame so the content has been laid out.
+        // Inside a closed <details> nothing has a height yet, so the check
+        // waits until the details is opened.
         function clamp(el) {
             const wrap = h('div', { class: 'clamp' }, el);
             const outer = h('div', null, wrap);
-            requestAnimationFrame(() => {
+            const measure = () => {
+                const closed = wrap.closest('details:not([open])');
+                if (closed) {
+                    closed.addEventListener('toggle', () => requestAnimationFrame(measure), { once: true });
+                    return;
+                }
                 if (wrap.scrollHeight <= wrap.clientHeight + 4) {
                     wrap.classList.remove('clamp');
                     return;
@@ -613,7 +620,8 @@
                         e.target.textContent = open ? 'Show more' : 'Show less';
                     },
                 }));
-            });
+            };
+            requestAnimationFrame(measure);
             return outer;
         }
 
