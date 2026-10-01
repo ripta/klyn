@@ -1303,7 +1303,7 @@
             const coll = target.collection;
             const tbody = h('tbody');
             const status = h('span', { class: 'muted' });
-            const moreBtn = h('button', { class: 'ghost-button', type: 'button' }, 'Load more');
+            const moreBtn = h('button', { class: 'ghost-button', type: 'button', hidden: true }, 'Load more');
             const orderBtn = h('button', { class: 'ghost-button', type: 'button' });
             let cursor = null;
             let reverse = false;
@@ -1326,8 +1326,10 @@
                             h('td', { class: 'when' }, fmtDate(recordDate(rkey, rec.value))),
                             h('td', { class: 'summary' }, sum.length > 200 ? sum.slice(0, 200) + '…' : linkString(sum))));
                     }
-                    count += (j.records || []).length;
-                    cursor = j.cursor && (j.records || []).length ? j.cursor : null;
+                    const n = (j.records || []).length;
+                    count += n;
+                    // PDSes often return a cursor on the last page too. A short page means the end.
+                    cursor = j.cursor && n >= PAGE_SIZE ? j.cursor : null;
                     status.textContent = `${count} record${count === 1 ? '' : 's'}${cursor ? '' : ', end of collection'}`;
                     moreBtn.hidden = !cursor;
                 } catch (e) {
@@ -1384,7 +1386,7 @@
             if (!id.pds) return [header(id, {}, 'Blobs'), errorBox('No #atproto_pds service in the DID document.')];
             const grid = h('div', { class: 'blob-grid' });
             const status = h('span', { class: 'muted' });
-            const moreBtn = h('button', { class: 'ghost-button', type: 'button' }, 'Load more');
+            const moreBtn = h('button', { class: 'ghost-button', type: 'button', hidden: true }, 'Load more');
             const previewAllBtn = h('button', { class: 'ghost-button', type: 'button' }, 'Preview all loaded');
             let cursor = null;
             let count = 0;
@@ -1397,7 +1399,7 @@
                     const cids = j.cids || [];
                     for (const cid of cids) grid.append(blobTile(id, cid));
                     count += cids.length;
-                    cursor = j.cursor && cids.length ? j.cursor : null;
+                    cursor = j.cursor && cids.length >= BLOB_PAGE_SIZE ? j.cursor : null;
                     status.textContent = `${count} blob${count === 1 ? '' : 's'}${cursor ? '' : ', end of list'}`;
                     moreBtn.hidden = !cursor;
                 } catch (e) {
