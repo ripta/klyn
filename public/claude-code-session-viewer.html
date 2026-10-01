@@ -654,12 +654,12 @@
         function fmtFull(d) {
             return d.toLocaleString(undefined, {
                 year: 'numeric', month: 'short', day: 'numeric',
-                hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23', timeZoneName: 'short',
             });
         }
 
         function fmtTime(d) {
-            return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
         }
 
         function fmtDuration(ms) {
