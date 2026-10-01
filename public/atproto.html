@@ -1242,6 +1242,15 @@
             { name: 'bsky.app', signal: 'app.bsky.actor.profile', url: (id) => `https://bsky.app/profile/${id.did}` },
             // Older Tangled accounts may lack sh.tangled.actor.profile, so any sh.tangled.* collection counts.
             { name: 'tangled.org', signal: 'sh.tangled.', url: (id) => `https://tangled.org/${id.did}` },
+            // Leaflet also writes the shared site.standard.* collections, so only pub.leaflet.* counts.
+            { name: 'leaflet.pub', signal: 'pub.leaflet.', url: (id) => `https://leaflet.pub/p/${id.did}` },
+            { name: 'whtwnd.com', signal: 'com.whtwnd.blog.entry', url: (id) => `https://whtwnd.com/${id.did}` },
+            { name: 'frontpage.fyi', signal: 'fyi.unravel.frontpage.post', url: (id) => `https://frontpage.fyi/profile/${id.did}` },
+            { name: 'linkat.blue', signal: 'blue.linkat.board', url: (id) => `https://linkat.blue/${id.did}` },
+            { name: 'grain.social', signal: 'social.grain.actor.profile', url: (id) => `https://grain.social/profile/${id.did}` },
+            { name: 'sprk.so', signal: 'so.sprk.actor.profile', url: (id) => `https://sprk.so/profile/${id.did}` },
+            { name: 'pinksea.art', signal: 'com.shinolabs.pinksea.oekaki', url: (id) => `https://pinksea.art/${id.did}` },
+            { name: 'bookhive.buzz', signal: 'buzz.bookhive.book', url: (id) => `https://bookhive.buzz/profile/${id.did}` },
         ];
 
         function hasSignal(colls, signal) {
