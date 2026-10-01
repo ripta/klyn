@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statusphere</title>
+    <style>
+        :root {
+            /* Surfaces */
+            --bg:          #fafaf9;
+            --panel:       #ffffff;
+            --panel-soft:  #f5f5f4;
+
+            /* Ink */
+            --ink:         #1c1917;
+            --ink-soft:    #44403c;
+            --muted:       #78716c;
+
+            /* Rules */
+            --rule:        #e7e5e4;
+            --rule-strong: #d6d3d1;
+
+            /* Accent (amber) */
+            --accent:      #d97706;
+            --accent-soft: #fef3c7;
+            --accent-ring: rgba(217, 119, 6, 0.35);
+
+            /* Status */
+            --danger:      #b91c1c;  --danger-soft: #fee2e2;
+            --good:        #15803d;  --good-soft:   #dcfce7;
+
+            --shadow:      0 1px 2px rgba(28, 25, 23, 0.04), 0 1px 1px rgba(28, 25, 23, 0.03);
+
+            --toggle-bg:     #e7e5e4;
+            --toggle-handle: #ffffff;
+
+            --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        }
+
+        [data-theme="dark"] {
+            --bg:          #1a1a1a;
+            --panel:       #242424;
+            --panel-soft:  #2d2d2d;
+
+            --ink:         #e9ecef;
+            --ink-soft:    #c9ced3;
+            --muted:       #9aa0a6;
+
+            --rule:        #3a3a3a;
+            --rule-strong: #4a4a4a;
+
+            --accent:      #f59e0b;
+            --accent-soft: #3a2a08;
+            --accent-ring: rgba(245, 158, 11, 0.45);
+
+            --danger:      #f87171;  --danger-soft: #3a1818;
+            --good:        #4ade80;  --good-soft:   #14301e;
+
+            --shadow:      0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.2);
+
+            --toggle-bg:     #3a3a3a;
+            --toggle-handle: #e9ecef;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--ink);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.45;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* Links that leave this page get a trailing arrow. */
+        a.ext::after {
+            content: '↗';
+            display: inline-block;
+            margin-left: 2px;
+            font-size: 0.85em;
+            color: var(--muted);
+        }
+
+        .mono { font-family: var(--mono); font-size: 0.92em; }
+        .muted { color: var(--muted); }
+
+        /* Header */
+
+        .header {
+            position: sticky;
+            top: 0;
+            background-color: var(--panel);
+            border-bottom: 1px solid var(--rule);
+            padding: 12px 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header h1 { font-size: 18px; font-weight: 600; flex: 0 0 auto; }
+        .header h1 a { color: var(--ink); }
+        .header h1 a:hover { color: var(--accent); text-decoration: none; }
+
+        .lookup { flex: 1 1 auto; display: flex; gap: 8px; }
+
+        .lookup input {
+            flex: 1 1 auto;
+            min-width: 0;
+            font: inherit;
+            font-family: var(--mono);
+            font-size: 13px;
+            padding: 7px 10px;
+            border: 1px solid var(--rule-strong);
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--ink);
+        }
+
+        .lookup input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-ring);
+        }
+
+        .file-button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 7px 14px;
+            font: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+
+        .file-button:hover { background: #b45309; }
+
+        .ghost-button {
+            background: transparent;
+            border: 1px solid var(--rule-strong);
+            color: var(--ink-soft);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font: inherit;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .ghost-button:hover { background: var(--panel-soft); color: var(--ink); }
+        .ghost-button:disabled { opacity: 0.5; cursor: default; }
+
+        .theme-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background-color: var(--toggle-bg);
+            border-radius: 15px;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6px;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background-color: var(--toggle-handle);
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        [data-theme="dark"] .theme-toggle::before { transform: translateX(30px); }
+        .theme-toggle span { position: relative; z-index: 0; line-height: 1; }
+
+        /* Content */
+
+        .container {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 20px 20px 48px;
+        }
+
+        .view-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 4px;
+        }
+
+        .view-title { font-size: 18px; font-weight: 600; }
+        .view-note { color: var(--muted); margin-bottom: 16px; }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--rule);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .card h2 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .error {
+            padding: 8px 12px;
+            background: var(--danger-soft);
+            color: var(--danger);
+            border-radius: 6px;
+            font-size: 13px;
+            word-break: break-word;
+            margin-bottom: 16px;
+        }
+
+        .loading { color: var(--muted); font-style: italic; }
+
+        .chip {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 0 8px;
+            font-size: 11px;
+            font-weight: 500;
+            border: 1px solid var(--rule-strong);
+            background: var(--panel-soft);
+            color: var(--ink-soft);
+            vertical-align: 1px;
+            white-space: nowrap;
+        }
+
+        .chip.good { background: var(--good-soft); border-color: var(--good); color: var(--good); }
+        .chip.bad  { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--panel-soft);
+            border: 1px solid var(--rule);
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-weight: 600;
+            overflow: hidden;
+        }
+
+        .avatar.big { width: 64px; height: 64px; font-size: 24px; }
+
+        /* Status sizing. One grapheme is oversized, a few are medium, longer text is plain. */
+        .status { line-height: 1.1; word-break: break-word; }
+        .status.g1 { font-size: 30px; }
+        .status.g3 { font-size: 18px; }
+        .status.text { font-size: 14px; line-height: 1.45; }
+        .status.empty { color: var(--muted); font-size: 18px; }
+        .status.xl.g1 { font-size: 96px; }
+        .status.xl.g3 { font-size: 48px; }
+
+        /* Feed rows */
+
+        .feed { list-style: none; }
+
+        .row {
+            display: grid;
+            grid-template-columns: 36px 52px 1fr;
+            gap: 12px;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--rule);
+        }
+
+        .row:last-child { border-bottom: none; }
+
+        .row-glyph { text-align: center; }
+        .row-main { min-width: 0; }
+        .row-head { word-break: break-word; }
+        .row-head .who { font-weight: 600; color: var(--ink); }
+        .row-head .who:hover { color: var(--accent); }
+        .row-meta { font-size: 12px; color: var(--muted); }
+        .row-meta > * + *::before { content: '·'; margin: 0 6px; color: var(--muted); }
+        .row .status.text { display: block; margin-top: 2px; }
+
+        /* User view */
+
+        .profile {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .profile-text { min-width: 0; }
+        .profile-name { font-size: 16px; font-weight: 600; word-break: break-word; }
+        .profile-did { font-family: var(--mono); font-size: 11px; color: var(--muted); word-break: break-all; }
+        .profile-links { margin-top: 4px; font-size: 12px; }
+
+        .current {
+            text-align: center;
+            padding: 8px 0 4px;
+        }
+
+        .current .since { color: var(--muted); margin-top: 6px; }
+
+        .tally { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        .tally-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid var(--rule-strong);
+            background: var(--panel-soft);
+            border-radius: 999px;
+            padding: 2px 10px 2px 6px;
+        }
+
+        .tally-item .status.g1, .tally-item .status.g3 { font-size: 20px; }
+        .tally-item .count { font-size: 12px; color: var(--muted); }
+
+        @media (max-width: 640px) {
+            .header-content { flex-wrap: wrap; padding: 0 16px; }
+            .lookup { order: 3; flex-basis: 100%; }
+            .theme-toggle { margin-left: auto; }
+            .container { padding: 16px 16px 40px; }
+            .row { grid-template-columns: 36px 44px 1fr; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1><a href="?" data-nav="1">Statusphere</a></h1>
+            <form class="lookup" id="lookup">
+                <input id="q" type="text" placeholder="handle or DID" autocomplete="off" spellcheck="false" aria-label="Handle or DID">
+                <button type="submit" class="file-button">Go</button>
+            </form>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                <span role="img" aria-label="Light mode">☀️</span>
+                <span role="img" aria-label="Dark mode">🌙</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="container" id="content"></main>
+
+    <script>
+        // Theme handling. Same pattern as index.html.
+        (() => {
+            const themeToggle = document.getElementById('themeToggle');
+            const root = document.documentElement;
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+            const apply = (theme) => {
+                if (theme === 'dark') root.setAttribute('data-theme', 'dark');
+                else root.removeAttribute('data-theme');
+            };
+            apply(localStorage.getItem('theme') || (prefersDark.matches ? 'dark' : 'light'));
+            themeToggle.addEventListener('click', () => {
+                const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                apply(next);
+                localStorage.setItem('theme', next);
+            });
+            prefersDark.addEventListener('change', (e) => {
+                if (!localStorage.getItem('theme')) apply(e.matches ? 'dark' : 'light');
+            });
+        })();
+    </script>
+
+    <script>
+        const DOH = 'https://cloudflare-dns.com/dns-query';
+        const PLC = 'https://plc.directory';
+        const APPVIEW = 'https://public.api.bsky.app';
+        const UFOS = 'https://ufos-api.microcosm.blue';
+        const COLLECTION = 'xyz.statusphere.status';
+        const FETCH_TIMEOUT_MS = 15000;
+        // The user view lists this many statuses. The tally looks further back.
+        const USER_LIMIT = 10;
+        const TALLY_LIMIT = 100;
+        // getProfiles accepts at most 25 actors per call.
+        const PROFILE_BATCH = 25;
+
+        const contentEl = document.getElementById('content');
+        const qEl = document.getElementById('q');
+
+        // ---------- DOM helpers ----------
+
+        // h builds an element. Strings become text nodes, so untrusted data is never parsed as HTML.
+        function h(tag, attrs, ...kids) {
+            const el = document.createElement(tag);
+            for (const [k, v] of Object.entries(attrs || {})) {
+                if (v == null || v === false) continue;
+                if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+                else if (k === 'class') el.className = v;
+                else if (k === 'dataset') Object.assign(el.dataset, v);
+                else el.setAttribute(k, v === true ? '' : v);
+            }
+            for (const kid of kids.flat(Infinity)) {
+                if (kid == null || kid === false) continue;
+                el.append(kid instanceof Node ? kid : String(kid));
+            }
+            return el;
+        }
+
+        function errorBox(err) {
+            return h('div', { class: 'error' }, err instanceof Error ? err.message : String(err));
+        }
+
+        function chip(text, kind) {
+            return h('span', { class: 'chip' + (kind ? ' ' + kind : '') }, text);
+        }
+
+        function extLink(url, text, title) {
+            return h('a', { href: url, class: 'ext', target: '_blank', rel: 'noopener noreferrer', title }, text);
+        }
+
+        function navLink(text, at, cls) {
+            return h('a', { href: hrefFor(at), class: cls, dataset: { nav: '1' } }, text);
+        }
+
+        function recordLink(did, rkey) {
+            const href = `atproto.html?at=${did}/${COLLECTION}/${encodeURIComponent(rkey)}`;
+            return extLink(href, 'record', 'Open this record in atproto Explorer');
+        }
+
+        const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+        const UNITS = [['year', 31536000], ['month', 2592000], ['week', 604800], ['day', 86400], ['hour', 3600], ['minute', 60], ['second', 1]];
+
+        function timeEl(d) {
+            if (!d || isNaN(d)) return null;
+            const s = (d.getTime() - Date.now()) / 1000;
+            const [unit, n] = UNITS.find(([, n]) => Math.abs(s) >= n) || UNITS[UNITS.length - 1];
+            return h('time', { datetime: d.toISOString(), title: d.toLocaleString() }, rtf.format(Math.round(s / n), unit));
+        }
+
+        // ---------- Status rendering ----------
+
+        const segmenter = typeof Intl.Segmenter === 'function' ? new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : null;
+
+        function graphemes(s) {
+            return segmenter ? [...segmenter.segment(s)].map((x) => x.segment) : [...s];
+        }
+
+        // statusEl renders an untrusted status string. The lexicon asks for one grapheme, but nothing enforces it.
+        function statusEl(raw, size) {
+            const g = graphemes(typeof raw === 'string' ? raw.trim() : '');
+            const cls = (kind) => `status ${kind}${size ? ' ' + size : ''}`;
+            if (!g.length) return h('span', { class: cls('empty'), title: 'Empty status' }, '∅');
+            if (g.length === 1) return h('span', { class: cls('g1') }, g[0]);
+            if (g.length <= 3) return h('span', { class: cls('g3') }, g.join(''));
+            const text = g.length > 140 ? g.slice(0, 140).join('') + '…' : g.join('');
+            return h('span', { class: cls('text') }, text);
+        }
+
+        function isShortStatus(raw) {
+            const n = graphemes(typeof raw === 'string' ? raw.trim() : '').length;
+            return n >= 1 && n <= 3;
+        }
+
+        function avatarEl(url, label, big) {
+            const cls = 'avatar' + (big ? ' big' : '');
+            if (typeof url === 'string' && url.startsWith('https://')) {
+                return h('img', { class: cls, src: url, alt: '', loading: 'lazy' });
+            }
+            return h('span', { class: cls, 'aria-hidden': 'true' }, (label || '?').charAt(0).toUpperCase());
+        }
+
+        // ---------- Routing ----------
+
+        function hrefFor(at) {
+            return at ? '?at=' + encodeURIComponent(at).replace(/%3A/gi, ':') : '?';
+        }
+
+        function parseInput(raw) {
+            const s = (raw || '').trim().replace(/^at:\/\//i, '').replace(/^@/, '').split('/')[0];
+            if (!s) return null;
+            return s.startsWith('did:') ? s : s.toLowerCase();
+        }
+
+        function navigate(href) {
+            try {
+                history.pushState(null, '', href);
+            } catch (_) {
+                // Some browsers refuse pushState on file:// pages. A full load still works.
+                location.assign(href);
+                return;
+            }
+            render();
+        }
+
+        document.addEventListener('click', (e) => {
+            const a = e.target.closest('a[data-nav]');
+            if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            e.preventDefault();
+            navigate(a.getAttribute('href'));
+        });
+
+        window.addEventListener('popstate', render);
+
+        document.getElementById('lookup').addEventListener('submit', (e) => {
+            e.preventDefault();
+            navigate(hrefFor(parseInput(qEl.value)));
+        });
+
+        // ---------- Network ----------
+
+        async function fetchX(url, opts = {}) {
+            const host = new URL(url).host;
+            try {
+                return await fetch(url, { ...opts, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+            } catch (e) {
+                if (e.name === 'TimeoutError') throw new Error(`Timed out talking to ${host}.`);
+                throw new Error(`Network error talking to ${host}. It may be down or may not allow cross-origin requests.`);
+            }
+        }
+
+        async function getJSON(url, opts) {
+            const r = await fetchX(url, opts);
+            if (!r.ok) {
+                let msg = `${r.status} ${r.statusText}`.trim();
+                try {
+                    const j = await r.json();
+                    const detail = [j.error, j.message].filter(Boolean).join(': ');
+                    if (detail) msg += ` (${detail})`;
+                } catch (_) { /* body was not JSON */ }
+                throw new Error(`${new URL(url).host} responded ${msg}.`);
+            }
+            return r.json();
+        }
+
+        function xrpcURL(base, nsid, params) {
+            const u = new URL('/xrpc/' + nsid, base);
+            for (const [k, v] of Object.entries(params || {})) {
+                for (const x of [].concat(v)) if (x != null && x !== '') u.searchParams.append(k, x);
+            }
+            return u.toString();
+        }
+
+        // ---------- Identity ----------
+
+        async function resolveViaDNS(handle) {
+            const j = await getJSON(`${DOH}?name=_atproto.${encodeURIComponent(handle)}&type=TXT`, { headers: { accept: 'application/dns-json' } });
+            const hit = (j.Answer || [])
+                .filter((a) => a.type === 16)
+                .map((a) => a.data.replace(/^"|"$/g, '').replace(/"\s*"/g, ''))
+                .find((t) => t.startsWith('did='));
+            if (!hit) throw new Error(`No did= TXT record at _atproto.${handle}.`);
+            return hit.slice(4);
+        }
+
+        async function resolveViaHTTP(handle) {
+            const r = await fetchX(`https://${handle}/.well-known/atproto-did`);
+            if (!r.ok) throw new Error(`${handle} responded ${r.status}.`);
+            const text = (await r.text()).trim();
+            if (!text.startsWith('did:')) throw new Error('Response is not a DID.');
+            return text;
+        }
+
+        async function resolveViaAppView(handle) {
+            return (await getJSON(xrpcURL(APPVIEW, 'com.atproto.identity.resolveHandle', { handle }))).did;
+        }
+
+        // resolveHandle tries DNS, then HTTPS, then the AppView. The HTTPS check often fails CORS.
+        async function resolveHandle(handle) {
+            const errors = [];
+            for (const fn of [resolveViaDNS, resolveViaHTTP, resolveViaAppView]) {
+                try { return await fn(handle); } catch (e) { errors.push(e.message); }
+            }
+            throw new Error(`Could not resolve handle ${handle}. ${errors.join(' ')}`);
+        }
+
+        function didDocURL(did) {
+            if (did.startsWith('did:plc:')) return `${PLC}/${did}`;
+            if (did.startsWith('did:web:')) {
+                const parts = did.slice('did:web:'.length).split(':').map(decodeURIComponent);
+                const host = parts.shift();
+                return parts.length ? `https://${host}/${parts.join('/')}/did.json` : `https://${host}/.well-known/did.json`;
+            }
+            throw new Error(`Unsupported DID method: ${did}`);
+        }
+
+        async function resolveIdentity(input) {
+            const did = input.startsWith('did:') ? input : await resolveHandle(input);
+            const doc = await getJSON(didDocURL(did));
+            const aka = (doc.alsoKnownAs || []).find((a) => a.startsWith('at://'));
+            const handle = aka ? aka.slice('at://'.length).toLowerCase() : null;
+            const svc = (doc.service || []).find((s) => s.id === '#atproto_pds' || s.id === did + '#atproto_pds');
+            const pds = svc ? String(svc.serviceEndpoint).replace(/\/+$/, '') : null;
+            // A handle is verified when it resolves back to the same DID.
+            let verified = false;
+            if (handle) {
+                verified = handle === input || (await resolveHandle(handle).catch(() => null)) === did;
+            }
+            return { did, handle, verified, pds };
+        }
+
+        // ---------- Profiles ----------
+
+        // profileCache maps a DID to a promise of its AppView profile, or null if the AppView has none.
+        const profileCache = new Map();
+
+        function loadProfiles(dids) {
+            const need = [...new Set(dids)].filter((d) => !profileCache.has(d));
+            for (let i = 0; i < need.length; i += PROFILE_BATCH) {
+                const batch = need.slice(i, i + PROFILE_BATCH);
+                const p = getJSON(xrpcURL(APPVIEW, 'app.bsky.actor.getProfiles', { actors: batch }))
+                    .then((j) => new Map((j.profiles || []).map((x) => [x.did, x])), () => new Map());
+                for (const d of batch) profileCache.set(d, p.then((m) => m.get(d) || null));
+            }
+            return Promise.all(dids.map((d) => profileCache.get(d)));
+        }
+
+        // handleFromPLC is the fallback for accounts the AppView does not know.
+        async function handleFromPLC(did) {
+            if (!did.startsWith('did:plc:')) return null;
+            const doc = await getJSON(`${PLC}/${did}`);
+            const aka = (doc.alsoKnownAs || []).find((a) => a.startsWith('at://'));
+            return aka ? aka.slice('at://'.length) : null;
+        }
+
+        // ---------- atproto helpers ----------
+
+        const S32 = '234567abcdefghijklmnopqrstuvwxyz';
+
+        function tidToDate(s) {
+            if (typeof s !== 'string' || !/^[2-7a-j][2-7a-z]{12}$/.test(s)) return null;
+            let n = 0n;
+            for (const c of s) n = n * 32n + BigInt(S32.indexOf(c));
+            const d = new Date(Number((n >> 10n) / 1000n));
+            const y = d.getUTCFullYear();
+            return y >= 2022 && y < 2100 ? d : null;
+        }
+
+        function statusDate(rkey, value) {
+            const fromTid = tidToDate(rkey);
+            if (fromTid) return fromTid;
+            const d = value && typeof value.createdAt === 'string' ? new Date(value.createdAt) : null;
+            return d && !isNaN(d) ? d : null;
+        }
+
+        // ---------- Views ----------
+
+        function feedRow({ did, rkey, status, when }) {
+            const who = navLink(did, did, 'who mono');
+            const avatar = h('span', { class: 'avatar', 'aria-hidden': 'true' });
+            const short = isShortStatus(status);
+            const row = h('li', { class: 'row' },
+                avatar,
+                h('div', { class: 'row-glyph' }, short ? statusEl(status) : h('span', { class: 'status g3 muted' }, '“')),
+                h('div', { class: 'row-main' },
+                    h('div', { class: 'row-head' }, who),
+                    short ? null : statusEl(status),
+                    h('div', { class: 'row-meta' }, timeEl(when), recordLink(did, rkey))));
+
+            profileCache.get(did).then(async (p) => {
+                const handle = (p && p.handle !== 'handle.invalid' && p.handle) || await handleFromPLC(did).catch(() => null);
+                if (handle) {
+                    who.textContent = handle;
+                    who.classList.remove('mono');
+                }
+                avatar.replaceWith(avatarEl(p && p.avatar, handle || did));
+            });
+            return row;
+        }
+
+        async function viewNetwork(seq) {
+            const list = h('ul', { class: 'feed' });
+            const note = h('div', { class: 'view-note' }, 'Loading…');
+            const refresh = h('button', { class: 'ghost-button', type: 'button', onclick: () => render() }, 'Refresh');
+            contentEl.replaceChildren(
+                h('div', { class: 'view-head' }, h('div', { class: 'view-title' }, 'Latest across the network'), refresh),
+                note,
+                h('section', { class: 'card' }, list));
+
+            let records;
+            try {
+                records = await getJSON(`${UFOS}/records?collection=${COLLECTION}`);
+            } catch (e) {
+                if (seq === renderSeq) note.replaceWith(errorBox(e));
+                return;
+            }
+            if (seq !== renderSeq) return;
+
+            // UFOs returns a fixed recent window with no paging. Sort it newest first by firehose time.
+            const rows = (Array.isArray(records) ? records : [])
+                .filter((r) => r && typeof r.did === 'string' && typeof r.rkey === 'string' && r.record)
+                .map((r) => ({ did: r.did, rkey: r.rkey, status: r.record.status, when: new Date(r.time_us / 1000) }))
+                .sort((a, b) => b.when - a.when);
+
+            const accounts = new Set(rows.map((r) => r.did));
+            note.replaceChildren(
+                `${rows.length} recent status${rows.length === 1 ? '' : 'es'} from ${accounts.size} account${accounts.size === 1 ? '' : 's'}, as seen on the firehose by `,
+                extLink('https://ufos.microcosm.blue', 'UFOs'), '.');
+            if (!rows.length) {
+                list.replaceChildren(h('li', { class: 'muted' }, 'No recent statuses.'));
+                return;
+            }
+            loadProfiles([...accounts]);
+            list.replaceChildren(...rows.map(feedRow));
+        }
+
+        async function viewUser(input, seq) {
+            contentEl.replaceChildren(h('div', { class: 'loading' }, `Resolving ${input}…`));
+            let id, records, profile;
+            try {
+                id = await resolveIdentity(input);
+                if (!id.pds) throw new Error('The DID document lists no #atproto_pds service.');
+                [records, [profile]] = await Promise.all([
+                    getJSON(xrpcURL(id.pds, 'com.atproto.repo.listRecords', { repo: id.did, collection: COLLECTION, limit: TALLY_LIMIT })),
+                    loadProfiles([id.did]),
+                ]);
+            } catch (e) {
+                if (seq === renderSeq) contentEl.replaceChildren(errorBox(e), h('p', null, navLink('← Back to the network feed', null)));
+                return;
+            }
+            if (seq !== renderSeq) return;
+
+            const name = id.handle || id.did;
+            document.title = `${name} · Statusphere`;
+            const statuses = (records.records || [])
+                .map((r) => {
+                    const rkey = r.uri.split('/').pop();
+                    return { rkey, status: r.value && r.value.status, when: statusDate(rkey, r.value) };
+                })
+                .sort((a, b) => (b.when || 0) - (a.when || 0));
+
+            const profileCard = h('section', { class: 'card' },
+                h('div', { class: 'profile' },
+                    avatarEl(profile && profile.avatar, name, true),
+                    h('div', { class: 'profile-text' },
+                        h('div', { class: 'profile-name' }, name, ' ',
+                            id.handle ? (id.verified ? chip('verified', 'good') : chip('not verified', 'bad')) : null),
+                        profile && profile.displayName ? h('div', { class: 'muted' }, profile.displayName) : null,
+                        h('div', { class: 'profile-did' }, id.did),
+                        h('div', { class: 'profile-links' },
+                            extLink(`atproto.html?at=${id.did}`, 'Explore in atproto Explorer', 'Open this account in atproto Explorer')))));
+
+            const nodes = [
+                h('p', { class: 'view-note' }, navLink('← Network feed', null)),
+                profileCard,
+            ];
+
+            if (!statuses.length) {
+                nodes.push(h('section', { class: 'card' }, h('div', { class: 'muted' }, 'No statuses yet.')));
+                contentEl.replaceChildren(...nodes);
+                return;
+            }
+
+            const [latest] = statuses;
+            nodes.push(h('section', { class: 'card' },
+                h('h2', null, 'Current status'),
+                h('div', { class: 'current' },
+                    statusEl(latest.status, 'xl'),
+                    h('div', { class: 'since' }, 'since ', timeEl(latest.when) || 'an unknown time', ' · ', recordLink(id.did, latest.rkey)))));
+
+            nodes.push(h('section', { class: 'card' },
+                h('h2', null, `Latest ${Math.min(USER_LIMIT, statuses.length)}`),
+                h('ul', { class: 'feed' }, statuses.slice(0, USER_LIMIT).map((s) => {
+                    const short = isShortStatus(s.status);
+                    return h('li', { class: 'row', style: 'grid-template-columns: 52px 1fr' },
+                        h('div', { class: 'row-glyph' }, short ? statusEl(s.status) : h('span', { class: 'status g3 muted' }, '“')),
+                        h('div', { class: 'row-main' },
+                            short ? null : statusEl(s.status),
+                            h('div', { class: 'row-meta' }, timeEl(s.when), recordLink(id.did, s.rkey))));
+                }))));
+
+            // Tally the short statuses. Longer text would not fit in a chip.
+            const counts = new Map();
+            let other = 0;
+            for (const s of statuses) {
+                if (isShortStatus(s.status)) {
+                    const k = s.status.trim();
+                    counts.set(k, (counts.get(k) || 0) + 1);
+                } else {
+                    other++;
+                }
+            }
+            const top = [...counts].sort((a, b) => b[1] - a[1]).slice(0, 12);
+            nodes.push(h('section', { class: 'card' },
+                h('h2', null, `Most used, last ${statuses.length}`),
+                h('div', { class: 'tally' },
+                    top.map(([k, n]) => h('span', { class: 'tally-item' }, statusEl(k), h('span', { class: 'count' }, `×${n}`))),
+                    other ? h('span', { class: 'tally-item' }, h('span', { class: 'count' }, `other ×${other}`)) : null)));
+
+            contentEl.replaceChildren(...nodes);
+        }
+
+        // ---------- Render loop ----------
+
+        let renderSeq = 0;
+
+        function render() {
+            const seq = ++renderSeq;
+            const at = parseInput(new URLSearchParams(location.search).get('at'));
+            qEl.value = at || '';
+            document.title = 'Statusphere';
+            window.scrollTo(0, 0);
+            if (at) viewUser(at, seq);
+            else viewNetwork(seq);
+        }
+
+        render();
+    </script>
+</body>
+</html>
