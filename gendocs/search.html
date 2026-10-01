@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search</title>
+  <link rel="stylesheet" href="/klyn.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <a class="page-title" href="/">Search</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" role="switch" aria-checked="false">
+        <span class="sun-icon" aria-hidden="true">☀️</span>
+        <span class="moon-icon" aria-hidden="true">🌙</span>
+      </button>
+    </div>
+  </header>
+  <main class="container search-page">
+    <form class="search-form search-form--hero" id="search" action="/search.html" method="get">
+      <input type="search" name="q" id="search-input" placeholder="Search" aria-label="Search" autocomplete="off">
+    </form>
+    <p id="search-status" class="search-status"></p>
+    <ol id="search-results" class="search-results"></ol>
+  </main>
+  <script src="/site.js"></script>
+  <script type="module">
+    const input = document.getElementById('search-input');
+    const status = document.getElementById('search-status');
+    const results = document.getElementById('search-results');
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function renderResult(r) {
+      const subResults = r.sub_results.slice(1);
+      const subHtml = subResults.length
+        ? `<ul class="search-sub-results">${subResults.map((sr) => `
+            <li>
+              <a href="${sr.url}">${escapeHtml(sr.title)}</a>
+              <p>${sr.excerpt}</p>
+            </li>
+          `).join('')}</ul>`
+        : '';
+      return `
+        <li class="search-result">
+          <h2><a href="${r.url}">${escapeHtml(r.meta.title || r.url)}</a></h2>
+          <p>${r.excerpt}</p>
+          ${subHtml}
+        </li>
+      `;
+    }
+
+    async function runSearch(query) {
+      if (!query) {
+        status.textContent = '';
+        results.innerHTML = '';
+        return;
+      }
+
+      status.textContent = 'Searching…';
+      results.innerHTML = '';
+
+      const pagefind = await import('/pagefind/pagefind.js');
+      await pagefind.init();
+      const search = await pagefind.search(query);
+      const data = await Promise.all(search.results.map((r) => r.data()));
+
+      status.textContent = `${data.length} result${data.length === 1 ? '' : 's'} for "${query}"`;
+      results.innerHTML = data.map(renderResult).join('');
+    }
+
+    const params = new URLSearchParams(location.search);
+    const initialQuery = params.get('q') || '';
+    input.value = initialQuery;
+    runSearch(initialQuery);
+
+    document.getElementById('search').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const query = input.value.trim();
+      const url = new URL(location.href);
+      if (query) {
+        url.searchParams.set('q', query);
+      } else {
+        url.searchParams.delete('q');
+      }
+      history.pushState({}, '', url);
+      runSearch(query);
+    });
+  </script>
+</body>
+</html>
