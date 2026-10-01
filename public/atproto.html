@@ -296,8 +296,25 @@
         .nav-list a:hover { background: var(--panel-soft); color: var(--ink); text-decoration: none; }
         .nav-list a.active { background: var(--accent-soft); color: var(--ink); font-weight: 500; }
 
+        .rail-filter {
+            width: 100%;
+            font: inherit;
+            font-family: var(--mono);
+            font-size: 12px;
+            padding: 5px 8px;
+            border: 1px solid var(--rule-strong);
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--ink);
+        }
+
+        .rail-filter:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-ring);
+        }
+
         .nsid-group { margin-top: 8px; }
-        .nsid-group:first-child { margin-top: 0; }
         .nsid-group-title { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 2px; }
         .nsid-group .nav-list a { font-family: var(--mono); font-size: 12px; padding-left: 16px; }
 
@@ -1035,6 +1052,9 @@
 
         // ---------- Rail ----------
 
+        // The collection filter text. The rail rebuilds on every navigation, so it lives out here.
+        let collFilter = '';
+
         async function renderRail(id, target, view) {
             const active = (v, coll) => (view || '') === (v || '') && (target.collection || '') === (coll || '') && !target.rkey;
             const avatar = h('img', { alt: '', hidden: true });
@@ -1082,12 +1102,40 @@
                     if (!groups.has(g)) groups.set(g, []);
                     groups.get(g).push(c);
                 }
-                collBody.replaceChildren(...[...groups].map(([g, cs]) =>
-                    h('div', { class: 'nsid-group' },
-                        h('div', { class: 'nsid-group-title' }, g),
-                        h('ul', { class: 'nav-list' }, cs.map((c) =>
-                            h('li', null, navLink(c.slice(g.length + 1), { authority: id.did, collection: c }, null,
-                                (target.collection === c && !view) ? 'active' : null)))))));
+                const groupEls = [...groups].map(([g, cs]) => {
+                    const items = cs.map((c) => h('li', { dataset: { nsid: c.toLowerCase() } },
+                        navLink(c.slice(g.length + 1), { authority: id.did, collection: c }, null,
+                            (target.collection === c && !view) ? 'active' : null)));
+                    return { items, el: h('div', { class: 'nsid-group' }, h('div', { class: 'nsid-group-title' }, g), h('ul', { class: 'nav-list' }, items)) };
+                });
+                const noMatch = h('div', { class: 'rail-empty', hidden: true }, 'No matching collections.');
+                const filter = h('input', {
+                    type: 'search', class: 'rail-filter', value: collFilter, placeholder: 'Filter collections',
+                    'aria-label': 'Filter collections', autocomplete: 'off', spellcheck: 'false',
+                });
+                // Match any part of the full NSID, so "app." matches everything under app.bsky.*.
+                const applyFilter = () => {
+                    collFilter = filter.value;
+                    const q = collFilter.trim().toLowerCase();
+                    let shown = 0;
+                    for (const g of groupEls) {
+                        let any = false;
+                        for (const li of g.items) {
+                            const match = !q || li.dataset.nsid.includes(q);
+                            li.hidden = !match;
+                            if (match) { any = true; shown++; }
+                        }
+                        g.el.hidden = !any;
+                    }
+                    noMatch.hidden = shown > 0;
+                    collMeta.textContent = q ? `${shown} / ${colls.length}` : String(colls.length);
+                };
+                filter.addEventListener('input', applyFilter);
+                filter.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') { filter.value = ''; applyFilter(); }
+                });
+                collBody.replaceChildren(filter, ...groupEls.map((g) => g.el), noMatch);
+                applyFilter();
             }
 
             if (colls.includes('app.bsky.actor.profile')) {
